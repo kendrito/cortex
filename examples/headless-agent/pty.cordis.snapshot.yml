@@ -1,0 +1,21 @@
+# Keyless opt-in PTY composition for the headless stream-json snapshot.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: sandbox-policy
+            name: '@cortex/sandbox-policy'
+            config:
+              mode: danger-full-access
+          - id: pty
+            name: '@cortex/terminal'
+          - id: pty-snapshot-backend
+            name: '../acp-agent/pty-snapshot-backend.mjs'
+          - id: tool-terminal
+            name: '@cortex/tool-terminal'
+            config:
+              maxResultBytes: 64
+          - id: llm-replay
+            name: '@cortex/llm-replay'

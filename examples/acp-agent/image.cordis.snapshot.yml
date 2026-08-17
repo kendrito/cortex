@@ -1,0 +1,38 @@
+# Keyless replay for the read-image success scenario. Include patches cannot
+# target entries behind a nested include, so this restates the replay overlay
+# directly over the base cordis.yml (the fs.cordis.snapshot.yml pattern) and
+# re-pins the recorded flash model. The replay catalog declares image input on
+# flash, so the strict read_image gate accepts the route and the tool result
+# carries the durable image block; the live Cortex route cannot record this.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-flash
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: none
+          workspaceContext:
+            maxBytes: 65536
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: attachment-local
+            name: '@cortex/attachment-local'
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                      inputModalities: [text, image]
+                    - id: cortex-v4-pro
+                      inputModalities: [text]

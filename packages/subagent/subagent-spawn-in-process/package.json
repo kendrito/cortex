@@ -1,0 +1,59 @@
+{
+  "name": "@cortex/subagent-spawn-in-process",
+  "description": "In-process spawn subagent backend: runs a fresh child agent on ctx.agents",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/subagent/subagent-spawn-in-process"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/invariants": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/subagent-in-process-driver": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-loop": "workspace:^",
+    "@cortex/agent-loop-testkit": "workspace:^",
+    "@cortex/bash-local": "workspace:^",
+    "@cortex/subprocess-local": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/subagent-in-process-driver": "workspace:^",
+    "@cortex/tool-bash": "workspace:^",
+    "@cortex/tool-subagent": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

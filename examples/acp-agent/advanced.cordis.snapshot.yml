@@ -1,0 +1,37 @@
+# Replay counterpart to advanced.cordis.yml; only the live model is replaced.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-flash
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: 'none'
+          workspaceContext:
+            maxBytes: 65536
+          tools:
+            mode: both
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: code-runtime
+            name: '@cortex/code-runtime-worker-thread'
+          - id: cordis-host-runner
+            name: '@cortex/cordis-host-runner'
+          - id: tool-cordis
+            name: '@cortex/tool-cordis'
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro

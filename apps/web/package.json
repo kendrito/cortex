@@ -1,0 +1,51 @@
+{
+  "name": "@cortex/web-frontend",
+  "description": "Web application entry: vite build over the @cortex/client-web shell library; dist/ served by apps/cli's cortex web",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "apps/web"
+  },
+  "type": "module",
+  "exports": {
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "watch": "vite build --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/client-web": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-group": "workspace:^",
+    "@cortex/client-modules": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/client-web-react": "workspace:^",
+    "@cortex/cmdline": "workspace:^",
+    "@cortex/pwsh-local": "workspace:^",
+    "@types/node": "^22.0.0",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "playwright": "^1.49.0",
+    "typescript": "^6.0.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.8",
+    "fflate": "^0.8.2"
+  }
+}

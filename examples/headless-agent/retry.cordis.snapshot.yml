@@ -1,0 +1,9 @@
+# Keyless provider-retry composition for the headless stream-json snapshot.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: retry-snapshot-backend
+            name: './tests/fixtures/retry-snapshot-backend.mjs'

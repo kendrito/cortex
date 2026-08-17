@@ -1,0 +1,52 @@
+{
+  "name": "@cortex/pwsh-sandbox",
+  "description": "Sandbox-consuming implementation of the Cortex PowerShell executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/shell/pwsh-sandbox"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/shell": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/pwsh-local": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/shell": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/pwsh-local": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-local": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/subprocess-local": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

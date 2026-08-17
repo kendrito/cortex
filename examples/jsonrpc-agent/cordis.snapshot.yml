@@ -1,0 +1,23 @@
+# Keyless replay includes the live `cordis.yml` and inserts `llm-replay` into
+# the open llm seam to serve recorded JSONL without a key or network; every
+# other entry remains shared. The replay provider catalog claims the
+# `cortex-official` provider so the SDK server's `initialize` finds a
+# registered adapter for the route. The SDK snapshot suite passes this path
+# explicitly through `CORTEX_CORDIS_CONFIG` (the jsonrpc-demo bin performs no
+# CORTEX_SNAPSHOT config swap of its own), and `llm-replay` reads
+# `CORTEX_SNAPSHOT_FILE` / `CORTEX_SNAPSHOT_CHILD_FILES` from the harness.
+# Stdout remains reserved for JSON-RPC frames.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash

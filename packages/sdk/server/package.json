@@ -1,0 +1,61 @@
+{
+  "name": "@cortex/sdk-jsonrpc-server",
+  "description": "Stdio JSON-RPC server plugin for out-of-process Cortex SDK clients",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/sdk/server"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^"
+  },
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/sdk-protocol": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-spine-demo": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/llm-pi-ai": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/sdk-protocol": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence-jsonl": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

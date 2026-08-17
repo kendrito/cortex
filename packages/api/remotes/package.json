@@ -1,0 +1,96 @@
+{
+  "name": "@cortex/api-remotes",
+  "description": "Remote BFF assembly and Host Agent/Session lookup policy",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/api/remotes"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-gateway"
+      ],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "dependencies": {
+    "@cortex/typert-protocol": "workspace:^"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/api-gateway": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/credentials": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/host-plugin-inventory": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/message-feedback": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/typert-registry": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/api-gateway": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/credentials": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/host-plugin-inventory": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/message-feedback": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/typert-registry": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

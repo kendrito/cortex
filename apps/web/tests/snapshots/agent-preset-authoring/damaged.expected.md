@@ -1,0 +1,96 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General":
+      - img
+      - text: General
+    - button "Models":
+      - img
+      - text: Models
+    - button "Plugins":
+      - img
+      - text: Plugins
+    - button "Agent presets":
+      - img
+      - text: Agent presets
+  - button "Open configuration file"
+  - button "Close":
+    - img
+    - text: Close
+  - heading "Agent presets" [level=2]
+  - paragraph: A preset is the plugin composition one session's agent runs — its tools, prompt, and capabilities. Duplicate an existing one and make it yours, or let the agent draft one for you in Creator mode.
+  - heading "Built-in" [level=3]
+  - list:
+    - listitem:
+      - 'button "In use: Standard mode" [disabled] [pressed]':
+        - text: Standard mode Built-in In use Full coding agent with file editing, shell, file and web search, skills, planning, goals, subagents, and workflows.
+        - code: standard
+      - 'button "View: Standard mode"':
+        - img
+        - text: View
+      - 'button "Duplicate: Standard mode"':
+        - img
+        - text: Duplicate
+    - listitem:
+      - 'button "Set as default: Code mode"':
+        - text: Code mode Built-in All Standard mode capabilities, with tools exposed through the Code Mode SDK so the model can combine multi-step operations in one TypeScript program.
+        - code: code
+      - 'button "View: Code mode"':
+        - img
+        - text: View
+      - 'button "Duplicate: Code mode"':
+        - img
+        - text: Duplicate
+    - listitem:
+      - 'button "Set as default: Minimal mode"':
+        - text: Minimal mode Built-in Two-tool coding agent with persistent bash and str_replace_editor.
+        - code: minimal
+      - 'button "View: Minimal mode"':
+        - img
+        - text: View
+      - 'button "Duplicate: Minimal mode"':
+        - img
+        - text: Duplicate
+    - listitem:
+      - 'button "Set as default: Creator mode"':
+        - text: Creator mode Built-in Built for creating custom agent presets, with all Standard mode capabilities plus runtime inspection, plugin experiments, and preset-authoring guidance.
+        - code: cordis
+      - 'button "View: Creator mode"':
+        - img
+        - text: View
+      - 'button "Duplicate: Creator mode"':
+        - img
+        - text: Duplicate
+  - heading "Custom" [level=3]
+  - list:
+    - listitem:
+      - 'button "Failed to load: broken-yaml" [disabled]':
+        - text: broken-yaml Failed to load Custom No description.
+        - alert: "the composition is not valid YAML: unexpected end of the stream within a flow collection (3:1)"
+        - code: broken-yaml
+      - 'button "Show location: broken-yaml"':
+        - img
+        - text: Show location
+      - 'button "Duplicate: broken-yaml" [disabled]':
+        - img
+        - text: A preset that failed to load cannot be duplicated
+      - 'button "Delete: broken-yaml"':
+        - img
+        - text: Delete
+    - listitem:
+      - 'button "Failed to load: Ghost preset" [disabled]':
+        - text: Ghost preset Failed to load Custom The composition was deleted by hand.
+        - alert: the composition file agent.cordis.yml is missing — the directory still occupies the id; delete it or restore the file
+        - code: ghost
+      - 'button "Show location: Ghost preset"':
+        - img
+        - text: Show location
+      - 'button "Duplicate: Ghost preset" [disabled]':
+        - img
+        - text: A preset that failed to load cannot be duplicated
+      - 'button "Delete: Ghost preset"':
+        - img
+        - text: Delete
+  - button "Draft a custom preset with Creator mode":
+    - img
+    - text: Draft a custom preset with Creator mode

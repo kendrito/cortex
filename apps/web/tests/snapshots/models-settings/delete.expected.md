@@ -1,0 +1,7 @@
+- dialog "Delete mistral?":
+  - heading "Delete mistral?" [level=2]
+  - button "Close":
+    - img
+  - paragraph: Deleting mistral removes its configuration and stored API key.
+  - button "Cancel"
+  - button "Delete mistral"

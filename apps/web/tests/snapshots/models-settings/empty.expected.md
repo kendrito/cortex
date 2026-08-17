@@ -1,0 +1,51 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General":
+      - img
+      - text: General
+    - button "Models":
+      - img
+      - text: Models
+    - button "Plugins":
+      - img
+      - text: Plugins
+    - button "Agent presets":
+      - img
+      - text: Agent presets
+  - button "Open configuration file"
+  - button "Close":
+    - img
+    - text: Close
+  - heading "Models" [level=2]
+  - paragraph: Enter your API keys to use models from the following providers.
+  - list
+  - text: Provider
+  - combobox "Provider":
+    - option "amazon-bedrock"
+    - option "anthropic"
+    - option "azure-openai-responses"
+    - option "cerebras"
+    - option "cloudflare-ai-gateway"
+    - option "cloudflare-workers-ai"
+    - option "fireworks"
+    - option "github-copilot"
+    - option "google"
+    - option "google-vertex"
+    - option "groq"
+    - option "huggingface"
+    - option "mistral" [selected]
+    - option "nvidia"
+    - option "openai"
+    - option "opencode"
+    - option "opencode-go"
+    - option "openrouter"
+    - option "together"
+    - option "vercel-ai-gateway"
+    - option "xai"
+  - text: API key
+  - textbox "API key":
+    - /placeholder: Enter an API key, or leave blank to use environment authentication
+  - group: Customized settings
+  - button "Cancel"
+  - button "Apply"

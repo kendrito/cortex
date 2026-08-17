@@ -1,0 +1,41 @@
+# Bundled default config. The runtime still requires an explicit
+# $CORTEX_CORDIS_CONFIG or argv path; the SDK injects this path for bundled
+# zero-config launches. SDK-set session-root and cwd variables have manual-run fallbacks.
+
+# Stdio JSON-RPC server entry; without it the agent has no SDK client.
+- id: sdk-jsonrpc-server
+  name: '@cortex/sdk-jsonrpc-server'
+
+# Agent spine; the SDK server creates agents per sessionId.
+- id: agent-core
+  name: '@cortex/agent-spine-demo'
+  config:
+    workspaceContext:
+      maxBytes: 65536
+
+- id: sessions
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js process.env.CORTEX_SESSION_ROOT ?? './.sessions'
+
+# Persistence owns durable storage; this separate policy explicitly selects
+# the request, tool-dispatch, and completed-step durability checkpoints.
+- id: session-checkpoints
+  name: '@cortex/session-checkpoint-policy'
+
+# Local bash executor; $CORTEX_CWD wins over the process cwd.
+# Managed child-process groups for the bash executor (spawn/kill/output plumbing).
+- id: subprocess
+  name: '@cortex/subprocess-local'
+
+- id: bash
+  name: '@cortex/bash-local'
+  config:
+    cwd: !!js process.env.CORTEX_CWD ?? process.cwd()
+
+# Local filesystem provider for workspace instruction loading. This does not
+# expose model-facing file tools by itself.
+- id: fs-local
+  name: '@cortex/fs-local'
+  config:
+    cwd: !!js process.env.CORTEX_CWD ?? process.cwd()

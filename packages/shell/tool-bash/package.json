@@ -1,0 +1,73 @@
+{
+  "name": "@cortex/tool-bash",
+  "description": "Model-facing bash tool with optional generic background-job and sandbox-escalation support",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/shell/tool-bash"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/shell": "workspace:^",
+    "@cortex/shell-env": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-loop": "workspace:^",
+    "@cortex/agent-loop-testkit": "workspace:^",
+    "@cortex/shell": "workspace:^",
+    "@cortex/shell-env": "workspace:^",
+    "@cortex/bash-local": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/subprocess-local": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence-jsonl": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/jobs-local": "workspace:^",
+    "@cortex/tool-jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

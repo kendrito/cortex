@@ -1,0 +1,77 @@
+{
+  "name": "@cortex/client-ui-jobs",
+  "description": "Session-header background-job list: live registry state mirrored from session/jobs frames",
+  "version": "0.1.0-rc.5",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-locale",
+        "@cortex/client-runtime",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-primitives"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-jobs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-test-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@types/react": "~18.3.1",
+    "@cortex/cordis": "workspace:^"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

@@ -1,0 +1,24 @@
+# Keyless replay counterpart to pty.cordis.yml.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: pty
+            name: '@cortex/terminal'
+          - id: pty-snapshot-backend
+            name: './pty-snapshot-backend.mjs'
+          - id: tool-terminal
+            name: '@cortex/tool-terminal'
+            config:
+              maxResultBytes: 64
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro

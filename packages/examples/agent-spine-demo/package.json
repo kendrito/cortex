@@ -1,0 +1,100 @@
+{
+  "name": "@cortex/agent-spine-demo",
+  "description": "The default executor-less/UI-less agent spine with fallback session titles, provider-routed retry, and optional persisted goals",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/examples/agent-spine-demo"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis-plugin-timer": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-loop": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/goal-round-driver": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/home-paths": "workspace:^",
+    "@cortex/llm-retry": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-title": "workspace:^",
+    "@cortex/skill": "workspace:^",
+    "@cortex/skill-filesystem": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/jobs-local": "workspace:^",
+    "@cortex/shell-env": "workspace:^",
+    "@cortex/tool-bash": "workspace:^",
+    "@cortex/tool-goal": "workspace:^",
+    "@cortex/tool-skill": "workspace:^",
+    "@cortex/tool-jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/agent-instructions": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-timer": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-loop": "workspace:^",
+    "@cortex/shell-env": "workspace:^",
+    "@cortex/bash-local": "workspace:^",
+    "@cortex/bash-sandbox": "workspace:^",
+    "@cortex/fs-local": "workspace:^",
+    "@cortex/fs-observation-policy": "workspace:^",
+    "@cortex/fs-sandbox": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/goal-round-driver": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/home-paths": "workspace:^",
+    "@cortex/llm-retry": "workspace:^",
+    "@cortex/subprocess-local": "workspace:^",
+    "@cortex/sandbox-local": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-title": "workspace:^",
+    "@cortex/skill": "workspace:^",
+    "@cortex/skill-filesystem": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/jobs-local": "workspace:^",
+    "@cortex/tool-bash": "workspace:^",
+    "@cortex/tool-fs": "workspace:^",
+    "@cortex/tool-goal": "workspace:^",
+    "@cortex/tool-skill": "workspace:^",
+    "@cortex/tool-jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/agent-instructions": "workspace:^",
+    "@cortex/node-addon-landlock-run": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^"
+  }
+}

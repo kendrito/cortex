@@ -1,0 +1,57 @@
+{
+  "name": "@cortex/tool-cordis",
+  "description": "Self-referential cordis toolset: inspect the live runtime, mount and dispose model-written plugins",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/extensions/tool-cordis"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

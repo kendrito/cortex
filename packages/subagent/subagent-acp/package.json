@@ -1,0 +1,61 @@
+{
+  "name": "@cortex/subagent-acp",
+  "description": "Out-of-process ACP subagent backend: drives a child agent in a spawned subprocess over the Agent Client Protocol",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/subagent/subagent-acp"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/subprocess": "workspace:^",
+    "@cortex/timeout": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "0.25.1",
+    "@cortex/schemastery": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/loader-smoke": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/subprocess": "workspace:^",
+    "@cortex/subprocess-local": "workspace:^",
+    "@cortex/timeout": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

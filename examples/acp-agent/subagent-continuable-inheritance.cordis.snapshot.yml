@@ -1,0 +1,43 @@
+# Keyless counterpart to subagent-continuable-inheritance.cordis.yml: replace
+# the live adapter with replay and switch the root session to read-only at
+# creation.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-flash
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: none
+          workspaceContext:
+            maxBytes: 65536
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - id: sandbox
+        name: '@cortex/sandbox-local'
+        config:
+          runnerCommand:
+            - bash
+            - -c
+            - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
+            - passthrough-runner
+          runnerFailureSignatures:
+            - 'passthrough-runner: profile rejected'
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro
+          - id: parent-sandbox-override
+            name: './tests/fixtures/parent-sandbox-override.ts'

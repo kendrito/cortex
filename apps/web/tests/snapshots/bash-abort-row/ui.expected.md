@@ -1,0 +1,36 @@
+- banner:
+  - navigation "Session hierarchy":
+    - 'button "Run two shell commands: wait" [disabled]'
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- text: "Run two shell commands: wait for cancellation, then write skipped.txt. {{date}} {{clock}}"
+- button "Copy":
+  - img
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- 'button "Failed Bash Error: tool call aborted" [expanded]':
+  - img
+  - text: "Failed Bash Error: tool call aborted"
+- text: "IN { \"command\": \"node -e \\\"require('node:fs').writeFileSync('started.txt', 'started'); setInterval(() => {}, 1000)\\\"\", \"description\": \"Wait until cancellation\" } OUT Error: tool call aborted"
+- button "Inspect"
+- 'button "Failed Bash Error: tool call aborted before dispatch"':
+  - img
+  - text: "Failed Bash Error: tool call aborted before dispatch"
+- text: This turn 2 failed
+- textbox "Message the agent"
+- button "Commands":
+  - img
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Cortex-V4-Flash":
+  - text: Cortex-V4-Flash
+  - img
+- button "Send message" [disabled]
+- text: 1 turns · 1 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 0% Input 10 tok · Output 10 tok

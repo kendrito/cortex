@@ -1,0 +1,35 @@
+# Minimal keyless composition: real app, bash, and search tool; replayed model.
+- id: llm-replay
+  name: '@cortex/llm-replay'
+  config:
+    providers:
+      - id: cortex-official
+        name: Cortex
+        models:
+          - id: cortex-v4-pro
+
+- id: subprocess
+  name: '@cortex/subprocess-local'
+
+- id: bash
+  name: '@cortex/bash-local'
+
+- id: acp-agent
+  name: '@cortex/acp-demo'
+  config:
+    provider: cortex-official
+    model: cortex-v4-pro
+    persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+    persistenceCompression: none
+    workspaceContext: false
+    skills:
+      enabled: false
+    toolJobs: false
+    goals: false
+    persona: You are a concise snapshot agent working in {{cwd}}.
+
+- id: tool-fs-search
+  name: '@cortex/tool-fs-search'
+  config:
+    sampleOverCapGlobResults: true
+    globMaxResults: 4

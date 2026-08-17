@@ -1,0 +1,39 @@
+# Keyless replay for the retry overlay: insert `llm-replay` into the open llm
+# seam and give its provider the same deterministic 1 ms zero-jitter retry
+# policy as the live sibling. The app patch still restates its whole config
+# for raw JSONL persistence and the recorded model.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-flash
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: none
+          workspaceContext:
+            maxBytes: 65536
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  retryPolicy:
+                    mode: normal
+                    maxRetries: 2
+                    backoff:
+                      initialDelayMs: 1
+                      maxDelayMs: 1
+                      jitterRatio: 0
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro

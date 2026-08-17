@@ -1,0 +1,17 @@
+# Keyless replay keeps the complete minimal composition intact and fills its
+# open llm seam with the fixture-backed provider. The replay catalog claims
+# the same route initialized by the SDK.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./minimal.cordis.yml
+    patches:
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash

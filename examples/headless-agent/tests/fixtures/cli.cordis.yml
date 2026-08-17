@@ -1,0 +1,26 @@
+- id: cli-mock-llm
+  name: './cli-mock-llm.ts'
+
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ../../cordis.yml
+    patches:
+      - id: agent-spine
+        name: '@cortex/agent-spine-demo'
+        config:
+          agents:
+            - id: main
+              provider: cli-mock
+              model: cli-mock
+              cwd: !!js process.cwd()
+          workspaceContext: false
+          cortexHome: './.cortex-home'
+          skills:
+            filesystem:
+              agentsHome: './.agents-home'
+          persona: 'Keyless headless-agent smoke.'
+      - id: persistence
+        name: '@cortex/session-persistence-jsonl'
+        config:
+          root: './.sessions'

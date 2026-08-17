@@ -1,0 +1,14 @@
+/* Base variables referenced by the token sheets and component CSS — supplied
+ * here so the composite --cortex-font-* variables resolve and motion rides one
+ * shared curve. The code font stack deliberately omits a bare `monospace`
+ * tail so every platform resolves an explicit face. */
+:root {
+  --cortex-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+    Helvetica, Arial, sans-serif;
+  --cortex-font-family-code: 'SF Mono', 'JetBrains Mono', 'Fira Code', Consolas,
+    'Liberation Mono', Menlo, Courier;
+  --cortex-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --cortex-transition-duration: 0.2s;
+  --cortex-transition-duration-fast: 0.1s;
+  --cortex-transition-duration-slow: 0.3s;
+}

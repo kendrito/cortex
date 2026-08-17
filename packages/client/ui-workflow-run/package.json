@@ -1,0 +1,82 @@
+{
+  "name": "@cortex/client-ui-workflow-run",
+  "description": "Durable workflow-run Conversation Node and nested member disclosure for cortex web",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-workflow-run"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-locale",
+        "@cortex/client-runtime",
+        "@cortex/client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/tool-workflow": "workspace:^",
+    "@cortex/workflow": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-test-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/tool-workflow": "workspace:^",
+    "@cortex/workflow": "workspace:^",
+    "@types/react": "~18.3.1",
+    "@cortex/cordis": "workspace:^"
+  }
+}

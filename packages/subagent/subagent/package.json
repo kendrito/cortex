@@ -1,0 +1,106 @@
+{
+  "name": "@cortex/subagent",
+  "description": "Abstract subagent seam (ctx.subagents): named-provider registry for delegating to child agents",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/subagent/subagent"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/brand": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/session-projection-cache": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/agent-presets": {
+      "optional": true
+    },
+    "@cortex/sandbox": {
+      "optional": true
+    },
+    "@cortex/sandbox-policy": {
+      "optional": true
+    },
+    "@cortex/session-persistence": {
+      "optional": true
+    },
+    "@cortex/session-projection": {
+      "optional": true
+    },
+    "@cortex/session-projection-cache": {
+      "optional": true
+    },
+    "@cortex/jobs": {
+      "optional": true
+    },
+    "@cortex/user-approval": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/brand": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/scope": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/session-projection-cache": "workspace:^",
+    "@cortex/storage": "workspace:^",
+    "@cortex/storage-domain": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

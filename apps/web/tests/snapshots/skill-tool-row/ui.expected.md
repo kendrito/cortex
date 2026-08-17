@@ -1,0 +1,55 @@
+- banner:
+  - navigation "Session hierarchy":
+    - button "Load the snapshot-skill skill with" [disabled]
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- text: Load the snapshot-skill skill with the skill tool, then reply DONE. {{date}} {{clock}}
+- button "Copy":
+  - img
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- button "Context injection skill-catalog":
+  - img
+  - img
+  - text: Context injection skill-catalog
+- button "Think Load the requested skill.":
+  - img
+  - img
+  - text: Think Load the requested skill.
+- button "Skill snapshot-skill" [expanded]:
+  - img
+  - text: Skill snapshot-skill
+- region "Instructions": "Instructions <skill_content name=\"snapshot-skill\"> <skill_resources> Base directory for this skill: {{cwd}}/.cortex/skills/snapshot-skill Resolve relative paths mentioned by this skill against the base directory before using them. Load referenced resources only as needed. </skill_resources> <skill_instructions> Follow these snapshot-only instructions. Resolve referenced resources relative to this skill directory. </skill_instructions> </skill_content>"
+- button "Inspect"
+- button "Think The skill is loaded.":
+  - img
+  - img
+  - text: Think The skill is loaded.
+- paragraph: DONE
+- text: This turn 1 read
+- button "Copy":
+  - img
+- button "Good response":
+  - img
+- button "Bad response":
+  - img
+- button "Branch into a new conversation":
+  - img
+- text: {{date}} {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
+- textbox "Message the agent"
+- button "Commands":
+  - img
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Cortex-V4-Flash":
+  - text: Cortex-V4-Flash
+  - img
+- button "Send message" [disabled]
+- text: 1 turns · 2 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 0% Input 280 tok · Output 30 tok

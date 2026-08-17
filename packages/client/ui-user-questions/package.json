@@ -1,0 +1,78 @@
+{
+  "name": "@cortex/client-ui-user-questions",
+  "description": "Web ask_user_question feature: host tool mount plus composer-takeover question UI",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-user-questions"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-locale",
+        "@cortex/client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/client-connection": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "clsx": "^2.0.0",
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/invariants": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-questions": "workspace:^",
+    "@types/react": "~18.3.1"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

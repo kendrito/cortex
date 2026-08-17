@@ -1,0 +1,30 @@
+- banner:
+  - navigation "Session hierarchy":
+    - button "Reply with a one-sentence description" [disabled]
+  - img
+  - text: Standard mode
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- text: Reply with a one-sentence description of event sourcing, then stop. {{clock}}
+- button "Copy":
+  - img
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- paragraph: partial
+- status: Deep diving...
+- textbox "Message the agent"
+- button "Commands":
+  - img
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Cortex-V4-Flash":
+  - text: Cortex-V4-Flash
+  - img
+- button "Stop generating"

@@ -1,0 +1,10 @@
+- dialog "Enable Full access?":
+  - heading "Enable Full access?" [level=2]
+  - button "Close":
+    - img
+  - img
+  - paragraph: Full access reduces confirmation steps and lets the agent perform more actions directly, including sensitive operations, file changes, or external commands. Only use it when you trust the current task.
+  - checkbox "I understand the risks and want to continue"
+  - text: I understand the risks and want to continue
+  - button "Cancel"
+  - button "Enable Full access" [disabled]

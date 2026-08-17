@@ -1,0 +1,3 @@
+name: PTC mode
+description: Everything Standard mode can do, with tools surfaced through the Code Mode SDK so the model composes multi-step operations as one TypeScript program.
+order: 2

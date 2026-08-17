@@ -1,0 +1,218 @@
+- banner:
+  - navigation "Session hierarchy":
+    - button "workspace" [disabled]
+  - img
+  - text: Standard mode
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- group "Command input": /goal Do two turns, and in each turn output the file structure of one random package. Note that once you finish a turn, output the content directly and stop; our system will open another turn for you, and you just do a similar one there.
+- 'button "goal Goal created Status: active Objective: Do two turns, and in each turn output the file structure of one random package. Note that once you finish a turn, output the content directly and stop; our system will open another turn for you, and you just do a similar one there. Rounds: 0/256 Activation: armed Commands: /goal edit <objective>, /goal pause, /goal clear"':
+  - img
+  - img
+  - text: "goal Goal created Status: active Objective: Do two turns, and in each turn output the file structure of one random package. Note that once you finish a turn, output the content directly and stop; our system will open another turn for you, and you just do a similar one there. Rounds: 0/256 Activation: armed Commands: /goal edit <objective>, /goal pause, /goal clear"
+- button "Context injection goal":
+  - img
+  - img
+  - text: Context injection goal
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- 'button "Think The user''s goal is: \"Do two turns, and in each turn output the file structure of one random package. Note that once you finish a turn, output the content directly and stop; our system will open another turn for you, and you just do a similar one there.\""':
+  - img
+  - img
+  - text: "Think The user's goal is: \"Do two turns, and in each turn output the file structure of one random package. Note that once you finish a turn, output the content directly and stop; our system will open another turn for you, and you just do a similar one there.\""
+- button "Bash Show working directory and its contents":
+  - img
+  - img
+  - text: Bash Show working directory and its contents
+- 'button "Tool call get_goal · {}"':
+  - img
+  - img
+  - text: "Tool call get_goal · {}"
+- 'button "Think There''s a `packages` directory. Let me look inside to see what packages are available."':
+  - img
+  - img
+  - text: "Think There's a `packages` directory. Let me look inside to see what packages are available."
+- button "Bash List packages directory contents":
+  - img
+  - img
+  - text: Bash List packages directory contents
+- button "Think There are 4 packages:":
+  - img
+  - img
+  - text: "Think There are 4 packages:"
+- button "Failed Bash Randomly pick one package directory":
+  - img
+  - text: Failed Bash Randomly pick one package directory
+- 'button "Think shuf is not available on macOS. I''ll use a different approach for random selection. Let me use $RANDOM in bash or use `sort -R` or Python."':
+  - img
+  - img
+  - text: "Think shuf is not available on macOS. I'll use a different approach for random selection. Let me use $RANDOM in bash or use `sort -R` or Python."
+- button "Bash Randomly select one package with Python":
+  - img
+  - img
+  - text: Bash Randomly select one package with Python
+- 'button "Think The random pick for turn 1 is `packages/context/session-reference`. Now I''ll output its file structure. Let me get the file tree."':
+  - img
+  - img
+  - text: "Think The random pick for turn 1 is `packages/context/session-reference`. Now I'll output its file structure. Let me get the file tree."
+- button "Bash List all files in session-reference package":
+  - img
+  - img
+  - text: Bash List all files in session-reference package
+- 'button "Think Turn 1 is done. Per the objective: \"once you finish a turn, output the content directly and stop\" — the system will open another turn."':
+  - img
+  - img
+  - text: "Think Turn 1 is done. Per the objective: \"once you finish a turn, output the content directly and stop\" — the system will open another turn."
+- paragraph:
+  - strong: Turn 1 / 2
+  - text: "— randomly picked package:"
+  - code: packages/context/session-reference
+  - text: 📦
+- button "Copy"
+- code: session-reference ├── README.md ├── package.json ├── src │ ├── index.ts │ └── uri.ts └── tests └── session-reference.spec.ts
+- button "Copy"
+- code: "session-reference/ ├── README.md # package overview ├── package.json # package metadata and dependencies ├── src/ │ ├── index.ts # entry point, exports the public API │ └── uri.ts # session-reference URI implementation └── tests/ └── session-reference.spec.ts # unit tests"
+- paragraph: A very typical lightweight TypeScript package layout — entry + implementation + tests. This round ends here; waiting for the system to open the next turn.
+- text: This turn 1 read ·5 ran
+- button "Copy":
+  - img
+- button "Good response":
+  - img
+- button "Bad response":
+  - img
+- button "Branch into a new conversation":
+  - img
+- text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
+- button "Context injection goal":
+  - img
+  - img
+  - text: Context injection goal
+- 'button "Think This is turn 2 of 2. I need to randomly pick another package and output its file structure. In the first turn I picked `packages/context/session-reference`. Let me pick a different one randomly this time."':
+  - img
+  - img
+  - text: "Think This is turn 2 of 2. I need to randomly pick another package and output its file structure. In the first turn I picked `packages/context/session-reference`. Let me pick a different one randomly this time."
+- button "Bash Randomly select another package with Python":
+  - img
+  - img
+  - text: Bash Randomly select another package with Python
+- 'button "Think The random pick returned the same package as turn 1. Since turn 1 already covered `session-reference`, it would be better to pick a different one for variety. Let me re-roll, excluding the already-covered package."':
+  - img
+  - img
+  - text: "Think The random pick returned the same package as turn 1. Since turn 1 already covered `session-reference`, it would be better to pick a different one for variety. Let me re-roll, excluding the already-covered package."
+- button "Bash Re-roll excluding the package from turn 1":
+  - img
+  - img
+  - text: Bash Re-roll excluding the package from turn 1
+- button "Bash List all files in token-meter package":
+  - img
+  - img
+  - text: Bash List all files in token-meter package
+- 'button "Think This is turn 2 of 2. I''ve output the file structure for `packages/llm/token-meter`. Both turns are done. I should output the content, stop, and then mark the goal as complete since both turns are finished."':
+  - img
+  - img
+  - text: "Think This is turn 2 of 2. I've output the file structure for `packages/llm/token-meter`. Both turns are done. I should output the content, stop, and then mark the goal as complete since both turns are finished."
+- paragraph:
+  - strong: Turn 2 / 2
+  - text: "— randomly picked package:"
+  - code: packages/llm/token-meter
+  - text: 📦
+- button "Copy"
+- code: token-meter ├── README.md ├── package.json ├── src │ └── index.ts └── tests └── token-meter.spec.ts
+- button "Copy"
+- code: "token-meter/ ├── README.md # package overview ├── package.json # package metadata and dependencies ├── src/ │ └── index.ts # entry point, exports the public API (token metering logic) └── tests/ └── token-meter.spec.ts # unit tests"
+- paragraph:
+  - text: "Both turns are done (turn 1:"
+  - code: session-reference
+  - text: ", turn 2:"
+  - code: token-meter
+  - text: ). This round ends here.
+- 'button "Tool call get_goal · {}"':
+  - img
+  - img
+  - text: "Tool call get_goal · {}"
+- paragraph: Both turns are complete and the objective is achieved; marking the goal as complete.
+- button "Tool call update_goal · goal-{{uuid}}":
+  - img
+  - img
+  - text: Tool call update_goal · goal-{{uuid}}
+- 'button "Context injection tool-goal complete: Do two turns, and in each turn output the file structure of one random package. Note that once you finish a t…"':
+  - img
+  - img
+  - text: "Context injection tool-goal complete: Do two turns, and in each turn output the file structure of one random package. Note that once you finish a t…"
+- paragraph: Both turns are done ✅
+- paragraph:
+  - strong: "Summary:"
+- list:
+  - listitem:
+    - strong: Turn 1
+    - text: — randomly picked
+    - code: packages/context/session-reference
+    - text: "and output its file structure:"
+    - button "Copy"
+    - code: session-reference/ ├── README.md ├── package.json ├── src/ │ ├── index.ts │ └── uri.ts └── tests/ └── session-reference.spec.ts
+  - listitem:
+    - strong: Turn 2
+    - text: — randomly picked
+    - code: packages/llm/token-meter
+    - text: "and output its file structure:"
+    - button "Copy"
+    - code: token-meter/ ├── README.md ├── package.json ├── src/ │ └── index.ts └── tests/ └── token-meter.spec.ts
+- paragraph:
+  - strong: "Verification:"
+  - text: both random picks were drawn with
+  - code: python3 random.choice
+  - text: from the 4 candidate packages actually enumerated under the workspace's
+  - code: packages/
+  - text: directory (
+  - code: ui-conversation
+  - text: ","
+  - code: session-reference
+  - text: ","
+  - code: token-meter
+  - text: ","
+  - code: skill-filesystem
+  - text: ), and each file structure was produced by listing the real files with
+  - code: find
+  - text: ", excluding"
+  - code: node_modules
+  - text: and
+  - code: .git
+  - text: . The second draw landed on the same package as turn 1, so it was re-rolled to a different one to avoid a repeat.
+- paragraph:
+  - strong: "Note:"
+  - text: this run made no file changes or commits — the task itself was "output the file structure", so everything it produced is in the message text above.
+- paragraph:
+  - text: If you would also like the structure of the remaining two packages (
+  - code: ui-conversation
+  - text: ","
+  - code: skill-filesystem
+  - text: ), or a different output format (for example a tree with file sizes), just let me know.
+- text: This turn 1 read ·3 ran ·1 other
+- button "Copy":
+  - img
+- button "Good response":
+  - img
+- button "Bad response":
+  - img
+- button "Branch into a new conversation":
+  - img
+- tooltip "Branch into a new conversation"
+- text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
+- textbox "Message the agent"
+- button "Commands":
+  - img
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Cortex-V4-Flash":
+  - text: Cortex-V4-Flash
+  - img
+- button "9% of context used"
+- button "Send message" [disabled]
+- text: 2 turns · 12 steps LLM {{duration}} · Tool call {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 91% Input 113K tok · Output 2.4K tok

@@ -1,0 +1,47 @@
+# Keyless counterpart to child-question.cordis.yml: keep the real interaction
+# seam, model-facing tool, and tripwire provider while replacing Cortex with
+# per-session replay.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: sandbox
+        name: '@cortex/sandbox-local'
+        config:
+          runnerCommand:
+            - bash
+            - -c
+            - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
+            - passthrough-runner
+          runnerFailureSignatures:
+            - 'passthrough-runner: profile rejected'
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-flash
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: none
+          workspaceContext:
+            maxBytes: 65536
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro
+          - id: user-questions
+            name: '@cortex/user-questions'
+          - id: tool-ask-user
+            name: '@cortex/tool-ask-user'
+          - id: child-question-tripwire
+            name: './tests/fixtures/child-question-tripwire.ts'

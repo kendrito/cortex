@@ -1,0 +1,26 @@
+# Keyless twin of product-subagent-codex.cordis.yml: keep the same product
+# provider/tool composition and replace only the external model adapter.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - insert:
+          - id: llm-replay
+            name: '@cortex/llm-replay'
+            config:
+              providers:
+                - id: cortex-official
+                  name: Cortex
+                  models:
+                    - id: cortex-v4-flash
+                    - id: cortex-v4-pro
+          - id: subagent-codex
+            name: '@cortex/subagent-codex'
+          - id: tool-subagent-codex
+            name: '@cortex/tool-subagent'
+            config:
+              provider: codex
+              toolName: subagent_codex
+              enableRunInBackground: false
+              maxDepth: provider-managed

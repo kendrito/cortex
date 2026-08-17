@@ -1,0 +1,76 @@
+{
+  "name": "@cortex/client-ui-settings",
+  "description": "Settings domain base plugin: the settings-namespace scope service and the canonical settings slot-type contract",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-settings"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-connection",
+        "@cortex/client-runtime",
+        "@cortex/api-remotes"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-connection": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-schema-form": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-schema-form": "workspace:^",
+    "@cortex/client-test-runtime": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

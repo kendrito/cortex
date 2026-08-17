@@ -1,0 +1,30 @@
+- banner:
+  - navigation "Session hierarchy":
+    - button "Ask a research subagent to"
+    - text: /
+    - button "event-sourcing researcher" [disabled]
+  - img
+  - text: Standard mode
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- text: Explain event sourcing in one sentence. {{clock}}
+- button "Copy":
+  - img
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- paragraph: partial
+- status: Deep diving...
+- textbox "Parent session offline; sending is unavailable but you can still stop the run" [disabled]
+- button "Commands" [disabled]:
+  - img
+- 'button "Access mode, current: Custom" [disabled]': Custom
+- button "Stop generating"
+- button "Send message" [disabled]

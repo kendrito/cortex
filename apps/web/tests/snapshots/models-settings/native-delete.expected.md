@@ -1,0 +1,7 @@
+- dialog "Delete mistral?":
+  - heading "Delete mistral?" [level=2]
+  - button "Close":
+    - img
+  - paragraph: Deleting mistral removes its configuration. Any credential it uses is managed elsewhere and will be kept.
+  - button "Cancel"
+  - button "Delete mistral"

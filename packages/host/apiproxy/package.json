@@ -1,0 +1,94 @@
+{
+  "name": "@cortex/host-apiproxy",
+  "description": "API gateway: the ApiProxy contract (api/), the fetch carrier pair (fetch/), and the host-side gateway plugin providing ctx.apiProxy",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/host/apiproxy"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./api": {
+      "types": "./lib/types/api/index.d.ts",
+      "default": "./lib/types/api/index.js"
+    },
+    "./api/*": {
+      "types": "./lib/types/api/*.d.ts",
+      "default": "./lib/types/api/*.js"
+    },
+    "./client": {
+      "types": "./lib/types/fetch/client.d.ts",
+      "default": "./lib/types/fetch/client.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/attachment": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-default-model": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/brand": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/credentials": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/host-directory-picker": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/native-command": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/session-projection-cache": "workspace:^",
+    "@cortex/session-query": "workspace:^",
+    "@cortex/session-title": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/skill": "workspace:^",
+    "@cortex/subagent": "workspace:^",
+    "@cortex/jobs": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/user-questions": "workspace:^",
+    "@cortex/workspace": "workspace:^",
+    "@cortex/schemastery": "workspace:^",
+    "fflate": "^0.8.2",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/invariants": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:^",
+    "@cortex/agent-presets": "workspace:^",
+    "@cortex/cordis-host-runner": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/storage": "workspace:^",
+    "@cortex/storage-domain": "workspace:^",
+    "@cortex/typert-protocol": "workspace:^",
+    "@cortex/typert-registry": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

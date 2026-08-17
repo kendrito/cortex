@@ -1,0 +1,30 @@
+/**
+ * Package-owned invariant companion for `@cortex/hooks-codex`.
+ * @module @cortex/hooks-codex/invariant
+ */
+
+/* jscpd:ignore-start */
+import type { Context } from '@cortex/cordis'
+import type { InvariantInstaller } from '@cortex/invariants'
+
+const PACKAGE_NAME = '@cortex/hooks-codex'
+
+/** Cordis companion plugin name. */
+export const name = 'hooks-codex-invariant'
+/** Service required before the companion can reserve package ownership. */
+export const inject = ['invariants']
+
+/**
+ * No runtime invariant: this bridge publishes hook-protocol session events, whose companion owns
+ * which invocation event each result cites.
+ */
+const install: InvariantInstaller = () => {}
+
+/**
+ * Register this package's invariant companion.
+ * @param ctx - Cordis context carrying the invariant service.
+ * @returns the installed registration's disposer after setup succeeds.
+ */
+export const apply = (ctx: Context): Promise<() => void> =>
+  Promise.resolve(ctx.invariants.register(PACKAGE_NAME, install))
+/* jscpd:ignore-end */

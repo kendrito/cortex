@@ -1,0 +1,44 @@
+- banner:
+  - navigation "Session hierarchy":
+    - button "/user-invoke-demo and confirm the fixtur" [disabled]
+  - img
+  - text: Standard mode
+  - button "Session log":
+    - text: Session log
+    - img
+  - tablist:
+    - tab "Chat" [selected]
+    - tab "Trajectory"
+    - tab "Code"
+    - button "Pin editor"
+- text: /user-invoke-demo and confirm the fixture wiring {{clock}}
+- button "Copy":
+  - img
+- button "Context injection @cortex/system-prompt":
+  - img
+  - img
+  - text: Context injection @cortex/system-prompt
+- button "Context injection user-invoke-demo":
+  - img
+  - img
+  - text: Context injection user-invoke-demo
+- paragraph: USER_INVOKE_REPLY acknowledged; following the injected skill.
+- button "Copy":
+  - img
+- button "Good response":
+  - img
+- button "Bad response":
+  - img
+- button "Branch into a new conversation":
+  - img
+- text: {{clock}} Ran for {{duration}} TTFT {{duration}} {{throughput}} tok/s
+- textbox "Message the agent"
+- button "Commands":
+  - img
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Cortex-V4-Flash":
+  - text: Cortex-V4-Flash
+  - img
+- button "0% of context used"
+- button "Send message" [disabled]
+- text: 1 turns · 1 steps LLM {{duration}} TTFT avg {{duration}} · {{throughput}} tok/s Cache hit 0% Input 256 tok · Output 16 tok

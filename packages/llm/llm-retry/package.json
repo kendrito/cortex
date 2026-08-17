@@ -1,0 +1,68 @@
+{
+  "name": "@cortex/llm-retry",
+  "description": "Provider-routed LLM request retry policy for the Cortex",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/llm/llm-retry"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/brand": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/timeout": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/brand": "workspace:^",
+    "@cortex/cordis-plugin-include": "workspace:^",
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/agent": "workspace:^",
+    "@cortex/agent-loop": "workspace:^",
+    "@cortex/agent-loop-testkit": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/llm-mock-server": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-persistence-jsonl": "workspace:^",
+    "@cortex/session-persistence-sqlite": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/timeout": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}

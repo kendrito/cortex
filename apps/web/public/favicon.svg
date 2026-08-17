@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 24 24" fill="none">
+	<style>
+		path, circle { fill: #111; stroke: #111; }
+		@media (prefers-color-scheme: dark) {
+			path, circle { fill: #fff; stroke: #fff; }
+		}
+	</style>
+	<path d="M12 6.4V9.2M16.85 15.1L14.42 13.7M7.15 15.1L9.58 13.7" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+	<circle cx="12" cy="11.6" r="2.9" stroke="none"/>
+	<circle cx="12" cy="4.3" r="2.1" stroke="none"/>
+	<circle cx="18.3" cy="16.3" r="2.1" stroke="none"/>
+	<circle cx="5.7" cy="16.3" r="2.1" stroke="none"/>
+</svg>

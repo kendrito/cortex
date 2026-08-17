@@ -1,0 +1,46 @@
+# Replay counterpart to advanced.cordis.yml. It includes the base `cordis.yml`
+# directly — a config patch cannot target an entry behind a nested include — and
+# restates advanced.cordis.yml's overlay (the agent and persistence configs plus the
+# code-runtime and tool-cordis inserts) so the whole app config lives in one patch.
+# It re-pins `cortex-v4-flash`: `cordis.yml` ships `cortex-v4-pro`, but the
+# recorded corpus (request headers, provenance) was captured on flash, so replay
+# holds the recorded model to stay reproducible without a re-record. It also
+# inserts `llm-replay` into the open llm seam to serve recorded JSONL without
+# a key or network.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: agent-spine
+        name: '@cortex/agent-spine-demo'
+        config:
+          agents:
+            - id: main
+              provider: cortex-official
+              model: cortex-v4-flash
+              cwd: !!js process.cwd()
+          workspaceContext:
+            maxBytes: 65536
+          tools:
+            mode: both
+          persona: |
+            You are headless-agent, a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - id: persistence
+        name: '@cortex/session-persistence-jsonl'
+        config:
+          root: './.sessions'
+          # Replay fixtures are raw JSONL; the whole-config patch must restate
+          # the compression choice or the default zstd frames hide the logs.
+          compression: none
+      - insert:
+          - id: code-runtime
+            name: '@cortex/code-runtime-worker-thread'
+          - id: cordis-host-runner
+            name: '@cortex/cordis-host-runner'
+          - id: tool-cordis
+            name: '@cortex/tool-cordis'
+          - id: llm-replay
+            name: '@cortex/llm-replay'

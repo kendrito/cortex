@@ -1,0 +1,84 @@
+{
+  "name": "@cortex/client-ui-goal",
+  "description": "Session goal surface: GoalBar docked above the composer, read from the goal session projection",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-goal"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-runtime",
+        "@cortex/api-remotes",
+        "@cortex/client-locale",
+        "@cortex/client-ui-conversation"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/cordis": "workspace:^",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-test-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/goal": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "~18.3.1",
+    "@cortex/cordis": "workspace:^",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

@@ -1,0 +1,29 @@
+# Add Code Mode and Cordis tools to the base spawn/workflow stack, exercising
+# all four boundaries in one ACP snapshot.
+- id: base
+  name: '@cortex/cordis-plugin-include'
+  config:
+    path: ./cordis.yml
+    patches:
+      - id: acp-agent
+        name: '@cortex/acp-demo'
+        config:
+          provider: cortex-official
+          model: cortex-v4-pro
+          persistenceRoot: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+          persistenceCompression: !!js "process.env.CORTEX_SNAPSHOT === undefined ? 'zstd' : 'none'"
+          workspaceContext:
+            maxBytes: 65536
+          tools:
+            mode: both
+          persona: |
+            You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+            Verify your work by running the code or tests. Keep answers brief and factual.
+      - insert:
+          - id: code-runtime
+            name: '@cortex/code-runtime-worker-thread'
+          - id: cordis-host-runner
+            name: '@cortex/cordis-host-runner'
+          - id: tool-cordis
+            name: '@cortex/tool-cordis'

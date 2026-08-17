@@ -1,0 +1,14 @@
+- dialog "Duplicate preset · Copied from Minimal mode":
+  - heading "Duplicate preset · Copied from Minimal mode" [level=2]
+  - button "Close":
+    - img
+  - paragraph: The whole preset is copied on this machine. The identifier becomes its directory name and cannot be changed later; everything else is edited in the preset's own files.
+  - text: Identifier
+  - textbox "Identifier":
+    - /placeholder: my-agent
+  - text: Name
+  - textbox "Name":
+    - /placeholder: Shown in the picker; defaults to the identifier
+  - alert: Give the preset an identifier.
+  - button "Cancel"
+  - button "Create" [disabled]

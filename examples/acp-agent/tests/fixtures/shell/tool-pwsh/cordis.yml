@@ -1,0 +1,27 @@
+# Minimal tool-pwsh composition: real app boot path, real pwsh executor, real
+# foreground + background tool calls; driven by the package's loader.spec.ts.
+- id: system-prompt
+  name: '@cortex/system-prompt'
+
+- id: tools
+  name: '@cortex/tools'
+
+- id: subprocess
+  name: '@cortex/subprocess-local'
+
+- id: bash
+  name: '@cortex/pwsh-local'
+  config:
+    graceMs: 200
+
+- id: shell-env
+  name: '@cortex/shell-env'
+
+- id: tasks
+  name: '@cortex/jobs-local'
+
+- id: tool-jobs
+  name: '@cortex/tool-jobs'
+
+- id: tool-pwsh
+  name: '@cortex/tool-pwsh'

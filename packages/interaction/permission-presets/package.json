@@ -1,0 +1,71 @@
+{
+  "name": "@cortex/permission-presets",
+  "description": "User-facing permission presets (ctx.permissionPresets) for the Cortex: one product-level Permissions select bundling the sandbox-mode and approval-policy knobs, written through to their own session events",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/interaction/permission-presets"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/shell": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cortex/shell": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/sandbox": "workspace:^",
+    "@cortex/sandbox-policy": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/user-approval": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  }
+}
