@@ -119,7 +119,7 @@ describe('searchRecord', () => {
   const issues = [
     {
       key: 'A-1', summary: 'First', status: { name: 'Done', category: 'Done' }, issue_type: { name: 'Bug' },
-      priority: { name: 'High' }, assignee: { display_name: 'Kendrito' }, updated: '2026-08-18',
+      priority: { name: 'High' }, assignee: { display_name: 'Avery Quinn' }, updated: '2026-08-18',
     },
     { key: 'A-2', summary: 'Second', assignee: { display_name: 'Unassigned' }, status: { name: 'Odd' } },
     { summary: 'no key' },
@@ -134,7 +134,7 @@ describe('searchRecord', () => {
       query: 'project = A',
       total: 12,
       rows: [
-        { key: 'A-1', summary: 'First', status: { name: 'Done', category: 'done' }, type: 'Bug', priority: 'High', assignee: 'Kendrito', updated: '2026-08-18' },
+        { key: 'A-1', summary: 'First', status: { name: 'Done', category: 'done' }, type: 'Bug', priority: 'High', assignee: 'Avery Quinn', updated: '2026-08-18' },
         { key: 'A-2', summary: 'Second', status: { name: 'Odd', category: 'unknown' } },
       ],
     })

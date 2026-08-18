@@ -1,0 +1,61 @@
+{
+  "name": "mcp-bitbucket",
+  "version": "2.1.2",
+  "description": "A Node.js/TypeScript MCP server for Atlassian Bitbucket that enables AI systems to interact with repositories, pull requests, and code.",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "start": "node dist/index.js",
+    "start:sse": "ENABLE_SSE_TRANSPORT=1 node dist/index.js",
+    "start:http": "ENABLE_HTTP_TRANSPORT=1 node dist/index.js",
+    "start:http-streaming": "npm run start:http",
+    "dev": "tsc -w",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "inspector": "ENABLE_HTTP_TRANSPORT=false npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "axios": "1.16.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "inversify": "^8.1.0",
+    "reflect-metadata": "^0.2.2",
+    "winston": "^3.19.0",
+    "zod": "^4.4.3",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/helmet": "^4.0.0",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
+    "eslint": "^10.3.0",
+    "eslint-plugin-security-node": "^1.1.4",
+    "jest": "^30.4.0",
+    "ts-jest": "^29.4.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "bitbucket",
+    "atlassian",
+    "ai",
+    "llm",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "n11 Elektronik Ticaret ve Bilişim Hizmetleri A.Ş.",
+  "license": "Apache-2.0"
+}

@@ -1,0 +1,4 @@
+# Runtime residue of `uv run` when UV_PROJECT_ENVIRONMENT is not set.
+.venv/
+__pycache__/
+*.pyc

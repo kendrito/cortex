@@ -36,7 +36,7 @@ describe('IssueView', () => {
     expect(screen.getAllByText('In Progress').length).toBe(2)
     expect(screen.getByText('High')).toBeTruthy()
     expect(screen.getByText('auth')).toBeTruthy()
-    expect(screen.getAllByText('Kendrito').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Avery Quinn').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Jordan Alvarez').length).toBeGreaterThan(0)
     expect(screen.getByText('Sprint 42')).toBeTruthy()
     expect(screen.getAllByText('5').length).toBeGreaterThan(0)

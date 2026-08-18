@@ -14,7 +14,7 @@ describe('pageRecordFromRest', () => {
       space: { key: 'ENG', name: 'Engineering' },
       version: 12,
       versionAt: '2026-08-17T11:20:00.000Z',
-      versionBy: { name: 'Kendrito', id: 'kendrito', avatar: '/pic.png' },
+      versionBy: { name: 'Avery Quinn', id: 'aquinn', avatar: '/pic.png' },
       created: '2025-11-02T09:00:00.000Z',
       author: { name: 'Jordan Alvarez', id: 'jalvarez' },
       ancestors: [{ id: '100', title: 'Platform' }, { id: '200', title: '' }],
@@ -56,7 +56,7 @@ describe('ConfluenceRest', () => {
     'GET /rest/api/content?spaceKey=ENG&title=Auth+service+runbook&expand=body.view%2Cversion%2Cspace%2Cancestors%2Chistory%2Cmetadata.labels&limit=1': { body: { results: [CONFLUENCE_PAGE] } },
     'GET /rest/api/content?spaceKey=ENG&title=Missing&expand=body.view%2Cversion%2Cspace%2Cancestors%2Chistory%2Cmetadata.labels&limit=1': { body: { results: [] } },
     'GET /rest/api/content?spaceKey=ENG&title=Odd&expand=body.view%2Cversion%2Cspace%2Cancestors%2Chistory%2Cmetadata.labels&limit=1': { body: 'not an object' },
-    'GET /rest/api/user/current': { body: { displayName: 'Kendrito' } },
+    'GET /rest/api/user/current': { body: { displayName: 'Avery Quinn' } },
   }
 
   it('fetches by id and by space + title', async () => {
@@ -71,7 +71,7 @@ describe('ConfluenceRest', () => {
 
   it('probes the authenticated user', async () => {
     const confluence = new ConfluenceRest(fakeFetch(routes).fetchImpl, { baseUrl: BASE, token: 't' })
-    await expect(confluence.myself()).resolves.toBe('Kendrito')
+    await expect(confluence.myself()).resolves.toBe('Avery Quinn')
     const byUsername = new ConfluenceRest(fakeFetch({ 'GET /rest/api/user/current': { body: { username: 'ken' } } }).fetchImpl, { baseUrl: BASE, token: 't' })
     await expect(byUsername.myself()).resolves.toBe('ken')
     const anonymous = new ConfluenceRest(fakeFetch({ 'GET /rest/api/user/current': { body: {} } }).fetchImpl, { baseUrl: BASE, token: 't' })

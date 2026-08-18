@@ -15,7 +15,7 @@ const summary = (overrides: { [K in keyof PrSummary]?: PrSummary[K] | undefined 
     ref: { project: 'PROJ', repo: 'webapp', id: 42 },
     key: 'PROJ/webapp#42',
     title: 'Fix SSO redirect loop',
-    author: { name: 'Kendrito' },
+    author: { name: 'Avery Quinn' },
     state: 'OPEN',
     updated: new Date(NOW - 3_600_000).toISOString(),
     approvals: 1,

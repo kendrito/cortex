@@ -55,7 +55,9 @@
   "peerDependencies": {
     "@cortex/agent": "workspace:^",
     "@cortex/commands": "workspace:^",
+    "@cortex/cordis": "workspace:^",
     "@cortex/credentials": "workspace:^",
+    "@cortex/home-paths": "workspace:^",
     "@cortex/invariants": "workspace:^",
     "@cortex/llm": "workspace:^",
     "@cortex/mcp-client": "workspace:^",
@@ -64,8 +66,7 @@
     "@cortex/settings": "workspace:^",
     "@cortex/system-prompt": "workspace:^",
     "@cortex/tools": "workspace:^",
-    "@cortex/typert-protocol": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/typert-protocol": "workspace:^"
   },
   "dependencies": {
     "@cortex/schemastery": "workspace:^",
@@ -78,6 +79,7 @@
     "@cortex/cordis-plugin-include": "workspace:^",
     "@cortex/cordis-plugin-loader": "workspace:^",
     "@cortex/credentials": "workspace:^",
+    "@cortex/home-paths": "workspace:^",
     "@cortex/invariants": "workspace:^",
     "@cortex/llm": "workspace:^",
     "@cortex/mcp-client": "workspace:^",

@@ -95,10 +95,10 @@ const PR_PATH = '/bitbucket/rest/api/1.0/projects/PROJ/repos/webapp/pull-request
 
 /** Default fake REST routes covering the fixtures. */
 export const DEFAULT_ROUTES: Routes = {
-  'GET /jira/rest/api/2/myself': { body: { displayName: 'Kendrito' } },
+  'GET /jira/rest/api/2/myself': { body: { displayName: 'Avery Quinn' } },
   'GET /jira/rest/api/2/issue/PROJ-123*': { body: JIRA_ISSUE },
   'GET /jira/rest/api/2/issue/PROJ-404*': { status: 404, body: { errorMessages: ['Issue Does Not Exist'] } },
-  'GET /confluence/rest/api/user/current': { body: { displayName: 'Kendrito' } },
+  'GET /confluence/rest/api/user/current': { body: { displayName: 'Avery Quinn' } },
   'GET /confluence/rest/api/content/98765*': { body: CONFLUENCE_PAGE },
   'GET /confluence/rest/api/content?spaceKey=ENG&title=Auth+service+runbook*': { body: { results: [CONFLUENCE_PAGE] } },
   'GET /bitbucket/rest/api/1.0/inbox/pull-requests/count': { body: { count: 2 } },

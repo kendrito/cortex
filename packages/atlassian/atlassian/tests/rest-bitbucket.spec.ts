@@ -37,7 +37,7 @@ describe('prRecordFromRest / prSummaryFromRest', () => {
       title: 'Fix SSO redirect loop after IdP callback',
       description: 'Reads the redirect target **after** the session cookie is set.',
       state: 'OPEN',
-      author: { name: 'Kendrito', id: 'kendrito', avatar: 'http://b/k.png' },
+      author: { name: 'Avery Quinn', id: 'aquinn', avatar: 'http://b/k.png' },
       reviewers: [
         { user: { name: 'Jordan Alvarez', id: 'jalvarez' }, role: 'REVIEWER', status: 'APPROVED' },
         { user: { name: 'Mei Chen', id: 'mchen' }, role: 'REVIEWER', status: 'NEEDS_WORK' },
@@ -65,7 +65,7 @@ describe('prRecordFromRest / prSummaryFromRest', () => {
       ref: REF,
       key: 'PROJ/webapp#42',
       title: 'Fix SSO redirect loop after IdP callback',
-      author: { name: 'Kendrito', id: 'kendrito', avatar: 'http://b/k.png' },
+      author: { name: 'Avery Quinn', id: 'aquinn', avatar: 'http://b/k.png' },
       state: 'OPEN',
       updated: new Date(1_787_060_000_000).toISOString(),
       approvals: 1,

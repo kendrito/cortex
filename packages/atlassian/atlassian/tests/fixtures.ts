@@ -28,7 +28,7 @@ export const JIRA_ISSUE = {
     status: { name: 'In Progress', statusCategory: { key: 'indeterminate', name: 'In Progress' } },
     issuetype: { name: 'Story' },
     priority: { name: 'High' },
-    assignee: { name: 'kendrito', displayName: 'Kendrito', avatarUrls: { '48x48': 'http://j/a48.png' } },
+    assignee: { name: 'aquinn', displayName: 'Avery Quinn', avatarUrls: { '48x48': 'http://j/a48.png' } },
     reporter: { name: 'jalvarez', displayName: 'Jordan Alvarez', avatarUrls: { '32x32': 'http://j/a32.png' } },
     labels: ['auth', 'frontend'],
     components: [{ name: 'web' }, { nope: true }],
@@ -47,7 +47,7 @@ export const JIRA_ISSUE = {
     comment: {
       comments: [
         { id: '1001', author: { name: 'jalvarez', displayName: 'Jordan Alvarez' }, created: '2026-08-16T09:12:00.000+0000', body: 'Repro: *bold*' },
-        { id: '1002', author: { name: 'kendrito', displayName: 'Kendrito' }, created: '2026-08-17T15:40:00.000+0000', body: 'x'.repeat(2500) },
+        { id: '1002', author: { name: 'aquinn', displayName: 'Avery Quinn' }, created: '2026-08-17T15:40:00.000+0000', body: 'x'.repeat(2500) },
         'not a comment',
         { body: 'no id' },
       ],
@@ -83,7 +83,7 @@ export const CONFLUENCE_PAGE = {
   type: 'page',
   title: 'Auth service runbook',
   space: { key: 'ENG', name: 'Engineering' },
-  version: { number: 12, when: '2026-08-17T11:20:00.000Z', by: { displayName: 'Kendrito', username: 'kendrito', profilePicture: { path: '/pic.png' } } },
+  version: { number: 12, when: '2026-08-17T11:20:00.000Z', by: { displayName: 'Avery Quinn', username: 'aquinn', profilePicture: { path: '/pic.png' } } },
   history: { createdDate: '2025-11-02T09:00:00.000Z', createdBy: { displayName: 'Jordan Alvarez', username: 'jalvarez' } },
   ancestors: [{ id: '100', title: 'Platform' }, { id: '200' }, { title: 'no id' }],
   metadata: { labels: { results: [{ name: 'runbook' }, { name: 'auth' }, { noname: true }] } },
@@ -102,7 +102,7 @@ export const BITBUCKET_PR = {
   updatedDate: 1_787_060_000_000,
   fromRef: { id: 'refs/heads/feature/PROJ-123-sso', displayId: 'feature/PROJ-123-sso', latestCommit: 'a1b2c3', repository: { slug: 'webapp', project: { key: 'PROJ' } } },
   toRef: { id: 'refs/heads/main', displayId: 'main', latestCommit: '0f9e8d', repository: { slug: 'webapp', project: { key: 'PROJ' } } },
-  author: { user: { name: 'kendrito', displayName: 'Kendrito', slug: 'kendrito', avatarUrl: 'http://b/k.png' }, role: 'AUTHOR', approved: false, status: 'UNAPPROVED' },
+  author: { user: { name: 'aquinn', displayName: 'Avery Quinn', slug: 'aquinn', avatarUrl: 'http://b/k.png' }, role: 'AUTHOR', approved: false, status: 'UNAPPROVED' },
   reviewers: [
     { user: { name: 'jalvarez', displayName: 'Jordan Alvarez', slug: 'jalvarez' }, role: 'REVIEWER', approved: true, status: 'APPROVED' },
     { user: { name: 'mchen', displayName: 'Mei Chen', slug: 'mchen' }, role: 'REVIEWER', approved: false, status: 'NEEDS_WORK' },

@@ -23,8 +23,8 @@ Jira, Confluence, and Bitbucket **Data Center** integration for the Cortex harne
 | `jiraTokenRef`, `confluenceTokenRef`, `bitbucketTokenRef` | `ATLASSIAN_JIRA_TOKEN`, `ATLASSIAN_CONFLUENCE_TOKEN`, `ATLASSIAN_BITBUCKET_TOKEN` | Credential references resolved through `ctx.credentials` per operation; the tokens themselves live in the credentials store, never in settings. |
 | `jiraProjectsFilter`, `confluenceSpacesFilter` | `''` | Forwarded as `JIRA_PROJECTS_FILTER` / `CONFLUENCE_SPACES_FILTER`. |
 | `bitbucketDefaultProject` | `''` | Project key used when the model or a PR reference omits one (`BITBUCKET_DEFAULT_PROJECT`). |
-| `atlassianLaunch` | `uvx mcp-atlassian` | Launch line of the Jira/Confluence server. |
-| `bitbucketLaunch` | `docker run -i --rm -e BITBUCKET_URL -e BITBUCKET_TOKEN -e BITBUCKET_DEFAULT_PROJECT ghcr.io/n11techhub/mcp-bitbucket:latest` | Launch line of the Bitbucket server (`node /path/to/mcp-bitbucket/dist/index.js` for a source checkout). |
+| `atlassianLaunch` | `uv run --frozen --project <repo>/third_party/mcp-atlassian mcp-atlassian` | Launch line of the Jira/Confluence server. The default runs the pinned copy embedded under [`third_party/`](../../../third_party/README.md); when that tree is absent it falls back to `uvx mcp-atlassian`. |
+| `bitbucketLaunch` | `node <repo>/third_party/mcp-bitbucket/server.mjs` | Launch line of the Bitbucket server. The default runs the prebuilt self-contained bundle embedded under `third_party/` (no npm install, no Docker); when absent it falls back to the `ghcr.io/n11techhub/mcp-bitbucket` container image. The mount also sets `PROJECT_ROOT` to `$CORTEX_HOME/mcp-bitbucket` so the server's log directory stays out of the repository. |
 | `writes` | `ask` | Write gate policy. |
 | `toolsets`, `enabledTools` | `default`, `''` | Forwarded as `TOOLSETS` / `ENABLED_TOOLS` to bound the 98-tool catalog. |
 

@@ -5,7 +5,8 @@ import SystemPrompt from '@cortex/system-prompt'
 import ToolRuntime from '@cortex/tools'
 import { MCP_TOOL_TIMEOUT_MS, McpMounts, commandExists, planMounts, type MountPlan, type StdioMountConfig } from '../src/mounts.ts'
 import { containing, rejectWith } from './fixtures.ts'
-import { DEFAULT_ATLASSIAN_SETTINGS } from '../src/settings.ts'
+import { cortexHomePath } from '@cortex/home-paths'
+import { DEFAULT_ATLASSIAN_SETTINGS, atlassianLaunchDefault, bitbucketLaunchDefault } from '../src/settings.ts'
 import { ATLASSIAN_SERVER, BITBUCKET_SERVER } from '../src/tools.ts'
 
 const URLS = { jira: 'https://jira', confluence: 'https://confluence', bitbucket: 'https://bitbucket' }
@@ -29,6 +30,10 @@ describe('planMounts', () => {
   it('builds the child configs with the forwarded environment', () => {
     const settings = {
       ...DEFAULT_ATLASSIAN_SETTINGS,
+      // Pin the fallback launch lines: the defaults resolve the embedded
+      // third_party paths, which are machine-absolute.
+      atlassianLaunch: atlassianLaunchDefault(undefined),
+      bitbucketLaunch: bitbucketLaunchDefault(undefined),
       jiraProjectsFilter: ' PROJ,OPS ',
       confluenceSpacesFilter: 'ENG',
       bitbucketDefaultProject: ' PROJ ',
@@ -45,6 +50,7 @@ describe('planMounts', () => {
       env: {
         TOOLSETS: 'default',
         MCP_VERBOSE: 'false',
+        UV_PROJECT_ENVIRONMENT: cortexHomePath('mcp-atlassian-venv'),
         ENABLED_TOOLS: 'jira_get_issue,jira_search',
         JIRA_URL: URLS.jira,
         JIRA_PERSONAL_TOKEN: TOKENS.jira,
@@ -60,17 +66,32 @@ describe('planMounts', () => {
     expect(bitbucket.config).toMatchObject({
       serverName: BITBUCKET_SERVER,
       command: 'docker',
-      env: { BITBUCKET_URL: URLS.bitbucket, BITBUCKET_TOKEN: TOKENS.bitbucket, BITBUCKET_DEFAULT_PROJECT: 'PROJ' },
+      env: {
+        BITBUCKET_URL: URLS.bitbucket,
+        BITBUCKET_TOKEN: TOKENS.bitbucket,
+        PROJECT_ROOT: cortexHomePath('mcp-bitbucket'),
+        BITBUCKET_DEFAULT_PROJECT: 'PROJ',
+      },
     })
     // Only one of the two Atlassian services configured still mounts the server.
     const jiraOnly = planMounts({ ...DEFAULT_ATLASSIAN_SETTINGS, toolsets: 'all' }, { jira: URLS.jira }, { jira: TOKENS.jira })[0]
-    expect(jiraOnly.config?.env).toEqual({ TOOLSETS: 'all', MCP_VERBOSE: 'false', JIRA_URL: URLS.jira, JIRA_PERSONAL_TOKEN: TOKENS.jira })
+    expect(jiraOnly.config?.env).toEqual({
+      TOOLSETS: 'all',
+      MCP_VERBOSE: 'false',
+      UV_PROJECT_ENVIRONMENT: cortexHomePath('mcp-atlassian-venv'),
+      JIRA_URL: URLS.jira,
+      JIRA_PERSONAL_TOKEN: TOKENS.jira,
+    })
     const confluenceOnly = planMounts(DEFAULT_ATLASSIAN_SETTINGS, { confluence: URLS.confluence }, { confluence: TOKENS.confluence })[0]
-    expect(confluenceOnly.config?.env).toEqual({
+    expect(confluenceOnly.config?.env).toEqual({ UV_PROJECT_ENVIRONMENT: cortexHomePath('mcp-atlassian-venv'),
       TOOLSETS: 'default', MCP_VERBOSE: 'false', CONFLUENCE_URL: URLS.confluence, CONFLUENCE_PERSONAL_TOKEN: TOKENS.confluence,
     })
-    const bare = planMounts(DEFAULT_ATLASSIAN_SETTINGS, URLS, TOKENS)[1]
-    expect(bare.config?.env).toEqual({ BITBUCKET_URL: URLS.bitbucket, BITBUCKET_TOKEN: TOKENS.bitbucket })
+    const bare = planMounts(FALLBACK_SETTINGS, URLS, TOKENS)[1]
+    expect(bare.config?.env).toEqual({
+      BITBUCKET_URL: URLS.bitbucket,
+      BITBUCKET_TOKEN: TOKENS.bitbucket,
+      PROJECT_ROOT: cortexHomePath('mcp-bitbucket'),
+    })
   })
 })
 
@@ -80,8 +101,16 @@ interface FakeChild {
   dispose: (() => Promise<unknown>) & ReturnType<typeof vi.fn>
 }
 
+/** The default settings with the launch lines pinned to their machine-independent fallbacks. */
+const FALLBACK_SETTINGS = {
+  ...DEFAULT_ATLASSIAN_SETTINGS,
+  atlassianLaunch: atlassianLaunchDefault(undefined),
+  bitbucketLaunch: bitbucketLaunchDefault(undefined),
+}
+
+/** Plans over {@link FALLBACK_SETTINGS}. */
 function plansWith(): [MountPlan, MountPlan] {
-  return planMounts(DEFAULT_ATLASSIAN_SETTINGS, URLS, TOKENS)
+  return planMounts(FALLBACK_SETTINGS, URLS, TOKENS)
 }
 
 /** Register one fake `mcp__<server>__probe` tool so a mounted child counts as connected; returns its disposer. */
@@ -148,13 +177,13 @@ describe('McpMounts', () => {
     expect(children).toHaveLength(2)
     expect(children[0]?.dispose).not.toHaveBeenCalled()
     // A changed Bitbucket plan remounts only that child.
-    const changed = planMounts({ ...DEFAULT_ATLASSIAN_SETTINGS, bitbucketDefaultProject: 'X' }, URLS, TOKENS)
+    const changed = planMounts({ ...FALLBACK_SETTINGS, bitbucketDefaultProject: 'X' }, URLS, TOKENS)
     await mounts.reconcile(changed)
     expect(children).toHaveLength(3)
     expect(children[1]?.dispose).toHaveBeenCalledTimes(1)
     expect(children[0]?.dispose).not.toHaveBeenCalled()
     // A plan that lost its config unmounts and reports what is missing.
-    const partial = planMounts(DEFAULT_ATLASSIAN_SETTINGS, { jira: URLS.jira }, { jira: TOKENS.jira })
+    const partial = planMounts(FALLBACK_SETTINGS, { jira: URLS.jira }, { jira: TOKENS.jira })
     await mounts.reconcile(partial)
     expect(children[2]?.dispose).toHaveBeenCalledTimes(1)
     expect(mounts.status(BITBUCKET_SERVER)).toEqual({ phase: 'off', toolCount: 0, missing: ['url', 'token'] })
@@ -243,7 +272,7 @@ describe('McpMounts', () => {
     live = ctx
     const warn = vi.spyOn(ctx.logger, 'warn').mockImplementation(() => undefined)
     await mounts.reconcile(plansWith())
-    await mounts.reconcile(planMounts(DEFAULT_ATLASSIAN_SETTINGS, { jira: URLS.jira }, { jira: TOKENS.jira }))
+    await mounts.reconcile(planMounts(FALLBACK_SETTINGS, { jira: URLS.jira }, { jira: TOKENS.jira }))
     expect(children[1]?.dispose).toHaveBeenCalledTimes(1)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('MCP child teardown failed: stuck'))
     const throwing = new McpMounts(ctx, () => { throw new Error('mount exploded') })

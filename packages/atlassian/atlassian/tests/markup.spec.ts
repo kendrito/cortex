@@ -44,7 +44,7 @@ describe('wikiToMarkdown', () => {
       '{panel:title=Note}panel body{panel}',
       '{color:red}colored{color}',
       '!screen.png|thumbnail! and !other.png!',
-      'See [Jira|https://jira.example.com/browse/A-1] and [https://example.com] and [~kendrito].',
+      'See [Jira|https://jira.example.com/browse/A-1] and [https://example.com] and [~aquinn].',
       '||Head A||Head B||',
       '|cell 1|cell 2|',
       '----',
@@ -62,7 +62,7 @@ describe('wikiToMarkdown', () => {
     expect(markdown).toContain('> panel body')
     expect(markdown).toContain('colored')
     expect(markdown).toContain('[image: screen.png] and [image: other.png]')
-    expect(markdown).toContain('[Jira](https://jira.example.com/browse/A-1) and <https://example.com> and @kendrito.')
+    expect(markdown).toContain('[Jira](https://jira.example.com/browse/A-1) and <https://example.com> and @aquinn.')
     expect(markdown).toContain('| Head A | Head B |\n| --- | --- |\n| cell 1 | cell 2 |')
     expect(markdown).toContain('\n---\n')
     expect(markdown).toContain('line one  \nline two')
@@ -93,7 +93,7 @@ describe('htmlToMarkdown', () => {
       '<table></table>',
       '<hr/>',
       '<img src="x.png" alt="Alt text"><img src="y.png">',
-      '<ac:emoticon ac:name="smile"/> <ri:user ri:username="kendrito"/>',
+      '<ac:emoticon ac:name="smile"/> <ri:user ri:username="aquinn"/>',
       '<section>end</section>',
     ].join('\n')
     const markdown = htmlToMarkdown(html)
@@ -111,7 +111,7 @@ describe('htmlToMarkdown', () => {
     expect(markdown).toContain('| H1 | H\\|2 |\n| --- | --- |\n| a | b |')
     expect(markdown).toContain('---')
     expect(markdown).toContain('[image: Alt text][image]')
-    expect(markdown).toContain(':smile: @kendrito')
+    expect(markdown).toContain(':smile: @aquinn')
     expect(markdown).toContain('end')
   })
 

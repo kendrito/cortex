@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
+import { tmpdir } from 'node:os'
 import {
   ATLASSIAN_SETTINGS_NAMESPACE, AtlassianSettingsSchema, DEFAULT_ATLASSIAN_LAUNCH, DEFAULT_ATLASSIAN_SETTINGS,
-  DEFAULT_BITBUCKET_LAUNCH, DEFAULT_TOKEN_REFS, normalizeBaseUrl, parseLaunchLine,
+  DEFAULT_BITBUCKET_LAUNCH, DEFAULT_TOKEN_REFS, atlassianLaunchDefault, bitbucketLaunchDefault, findRepoAsset,
+  normalizeBaseUrl, parseLaunchLine,
 } from '../src/settings.ts'
 import type { AtlassianSettings } from '../src/types.ts'
 
@@ -25,6 +27,32 @@ describe('AtlassianSettingsSchema', () => {
     })
     expect(() => parseSection({ jiraTokenRef: 'not a ref' })).toThrow()
     expect(() => parseSection({ writes: 'sometimes' })).toThrow()
+  })
+})
+
+describe('embedded launch defaults', () => {
+  it('finds the embedded servers walking up from this package', () => {
+    // The repository carries both third_party trees, so the walking defaults
+    // resolve to them (module scope already took this branch).
+    expect(findRepoAsset('third_party/mcp-bitbucket/server.mjs')).toMatch(/third_party\/mcp-bitbucket\/server\.mjs$/)
+    expect(DEFAULT_BITBUCKET_LAUNCH).toContain('third_party/mcp-bitbucket/server.mjs')
+    expect(DEFAULT_ATLASSIAN_LAUNCH).toContain('third_party/mcp-atlassian')
+    expect(parseLaunchLine(DEFAULT_BITBUCKET_LAUNCH)?.command).toBe('node')
+    expect(parseLaunchLine(DEFAULT_ATLASSIAN_LAUNCH)?.command).toBe('uv')
+  })
+
+  it('answers undefined for an asset no ancestor holds, from any start directory', () => {
+    expect(findRepoAsset('third_party/definitely-absent/nothing.txt')).toBeUndefined()
+    expect(findRepoAsset('third_party/mcp-bitbucket/server.mjs', tmpdir())).toBeUndefined()
+  })
+
+  it('falls back to the published package and the container image without the embedded trees', () => {
+    expect(atlassianLaunchDefault(undefined)).toBe('uvx mcp-atlassian')
+    expect(atlassianLaunchDefault('/repo/third_party/mcp-atlassian'))
+      .toBe('uv run --frozen --project "/repo/third_party/mcp-atlassian" mcp-atlassian')
+    expect(bitbucketLaunchDefault(undefined)).toContain('ghcr.io/n11techhub/mcp-bitbucket:latest')
+    expect(bitbucketLaunchDefault('/repo/third_party/mcp-bitbucket/server.mjs'))
+      .toBe('node "/repo/third_party/mcp-bitbucket/server.mjs"')
   })
 })
 

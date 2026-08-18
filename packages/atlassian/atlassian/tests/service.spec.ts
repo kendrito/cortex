@@ -372,8 +372,8 @@ describe('system prompt', () => {
 describe('Remote API', () => {
   it('probes each service', async () => {
     live = await boot()
-    await expect(live.service.probe({ service: 'jira' })).resolves.toEqual({ service: 'jira', ok: true, user: 'Kendrito' })
-    await expect(live.service.probe({ service: 'confluence' })).resolves.toEqual({ service: 'confluence', ok: true, user: 'Kendrito' })
+    await expect(live.service.probe({ service: 'jira' })).resolves.toEqual({ service: 'jira', ok: true, user: 'Avery Quinn' })
+    await expect(live.service.probe({ service: 'confluence' })).resolves.toEqual({ service: 'confluence', ok: true, user: 'Avery Quinn' })
     await expect(live.service.probe({ service: 'bitbucket' })).resolves.toEqual({ service: 'bitbucket', ok: true, user: '2 pull request(s) in your review inbox' })
     live.service.fetchImpl = () => Promise.resolve(new Response('{"message":"bad token"}', { status: 401 }))
     await expect(live.service.probe({ service: 'jira' })).resolves.toEqual({ service: 'jira', ok: false, error: 'HTTP 401: bad token — check the personal access token' })

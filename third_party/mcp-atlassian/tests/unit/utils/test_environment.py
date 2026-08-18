@@ -1,0 +1,567 @@
+"""Tests for the environment utilities module."""
+
+import logging
+import os
+
+import pytest
+
+from mcp_atlassian.utils.environment import get_available_services
+from tests.utils.assertions import assert_log_contains
+from tests.utils.mocks import MockEnvironment
+
+
+@pytest.fixture(autouse=True)
+def setup_logger():
+    """Ensure logger is set to INFO level for capturing log messages."""
+    logger = logging.getLogger("mcp-atlassian.utils.environment")
+    original_level = logger.level
+    logger.setLevel(logging.INFO)
+    yield
+    logger.setLevel(original_level)
+
+
+@pytest.fixture
+def env_scenarios():
+    """Environment configuration scenarios for testing."""
+    return {
+        "oauth_cloud": {
+            "CONFLUENCE_URL": "https://company.atlassian.net",
+            "JIRA_URL": "https://company.atlassian.net",
+            "ATLASSIAN_OAUTH_CLIENT_ID": "client_id",
+            "ATLASSIAN_OAUTH_CLIENT_SECRET": "client_secret",
+            "ATLASSIAN_OAUTH_REDIRECT_URI": "http://localhost:8080/callback",
+            "ATLASSIAN_OAUTH_SCOPE": "read:jira-user",
+            "ATLASSIAN_OAUTH_CLOUD_ID": "cloud_id",
+        },
+        "basic_auth_cloud": {
+            "CONFLUENCE_URL": "https://company.atlassian.net",
+            "CONFLUENCE_USERNAME": "user@company.com",
+            "CONFLUENCE_API_TOKEN": "api_token",
+            "JIRA_URL": "https://company.atlassian.net",
+            "JIRA_USERNAME": "user@company.com",
+            "JIRA_API_TOKEN": "api_token",
+        },
+        "pat_server": {
+            "CONFLUENCE_URL": "https://confluence.company.com",
+            "CONFLUENCE_PERSONAL_TOKEN": "pat_token",
+            "JIRA_URL": "https://jira.company.com",
+            "JIRA_PERSONAL_TOKEN": "pat_token",
+        },
+        "basic_auth_server": {
+            "CONFLUENCE_URL": "https://confluence.company.com",
+            "CONFLUENCE_USERNAME": "admin",
+            "CONFLUENCE_API_TOKEN": "password",
+            "JIRA_URL": "https://jira.company.com",
+            "JIRA_USERNAME": "admin",
+            "JIRA_API_TOKEN": "password",
+        },
+        "mtls_server": {
+            "CONFLUENCE_URL": "https://confluence.company.com",
+            "CONFLUENCE_CLIENT_CERT": "/path/to/confluence-client.pem",
+            "JIRA_URL": "https://jira.company.com",
+            "JIRA_CLIENT_CERT": "/path/to/jira-client.pem",
+        },
+    }
+
+
+def _assert_service_availability(result, confluence_expected, jira_expected):
+    """Helper to assert service availability."""
+    assert result == {"confluence": confluence_expected, "jira": jira_expected}
+
+
+def _assert_authentication_logs(caplog, auth_type, services):
+    """Helper to assert authentication log messages."""
+    log_patterns = {
+        "oauth": "OAuth 2.0 (3LO) authentication (Cloud)",
+        "cloud_basic": "Cloud Basic Authentication (API Token)",
+        "server": "Server/Data Center authentication (PAT or Basic Auth)",
+        "mtls": "mTLS client certificate authentication",
+        "not_configured": "is not configured or required environment variables are missing",
+    }
+
+    for service in services:
+        service_name = service.title()
+        if auth_type == "not_configured":
+            assert_log_contains(
+                caplog, "INFO", f"{service_name} {log_patterns[auth_type]}"
+            )
+        else:
+            assert_log_contains(
+                caplog, "INFO", f"Using {service_name} {log_patterns[auth_type]}"
+            )
+
+
+class TestGetAvailableServices:
+    """Test cases for get_available_services function."""
+
+    def test_no_services_configured(self, caplog):
+        """Test that no services are available when no environment variables are set."""
+        with MockEnvironment.clean_env():
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+            _assert_authentication_logs(
+                caplog, "not_configured", ["confluence", "jira"]
+            )
+
+    @pytest.mark.parametrize(
+        "scenario,expected_confluence,expected_jira",
+        [
+            ("oauth_cloud", True, True),
+            ("basic_auth_cloud", True, True),
+            ("pat_server", True, True),
+            ("basic_auth_server", True, True),
+            ("mtls_server", True, True),
+        ],
+    )
+    def test_valid_authentication_scenarios(
+        self, env_scenarios, scenario, expected_confluence, expected_jira, caplog
+    ):
+        """Test various valid authentication scenarios."""
+        with MockEnvironment.clean_env():
+            for key, value in env_scenarios[scenario].items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result,
+                confluence_expected=expected_confluence,
+                jira_expected=expected_jira,
+            )
+
+            # Verify appropriate log messages based on scenario
+            if scenario == "oauth_cloud":
+                _assert_authentication_logs(caplog, "oauth", ["confluence", "jira"])
+            elif scenario == "basic_auth_cloud":
+                _assert_authentication_logs(
+                    caplog, "cloud_basic", ["confluence", "jira"]
+                )
+            elif scenario in ["pat_server", "basic_auth_server"]:
+                _assert_authentication_logs(caplog, "server", ["confluence", "jira"])
+            elif scenario == "mtls_server":
+                _assert_authentication_logs(caplog, "mtls", ["confluence", "jira"])
+
+    def test_mtls_client_cert_alone_does_not_enable_cloud_services(self, caplog):
+        """Test that client certificates alone do not enable Cloud services."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["CONFLUENCE_URL"] = "https://company.atlassian.net"
+            os.environ["CONFLUENCE_CLIENT_CERT"] = "/path/to/confluence-client.pem"
+            os.environ["JIRA_URL"] = "https://company.atlassian.net"
+            os.environ["JIRA_CLIENT_CERT"] = "/path/to/jira-client.pem"
+
+            result = get_available_services()
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+            _assert_authentication_logs(
+                caplog, "not_configured", ["confluence", "jira"]
+            )
+            assert "mTLS client certificate authentication" not in caplog.text
+
+    @pytest.mark.parametrize(
+        "missing_oauth_var",
+        [
+            "ATLASSIAN_OAUTH_CLIENT_ID",
+            "ATLASSIAN_OAUTH_CLIENT_SECRET",
+            "ATLASSIAN_OAUTH_CLOUD_ID",
+        ],
+    )
+    def test_oauth_missing_required_vars(
+        self, env_scenarios, missing_oauth_var, caplog
+    ):
+        """Test that Cloud OAuth fails when core variables are missing.
+
+        Cloud OAuth detection requires client_id, client_secret, and cloud_id.
+        redirect_uri and scope are config-level concerns validated during
+        config loading, not during service detection.
+        """
+        with MockEnvironment.clean_env():
+            oauth_config = env_scenarios["oauth_cloud"]
+            # Remove one required OAuth variable
+            del oauth_config[missing_oauth_var]
+
+            for key, value in oauth_config.items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    @pytest.mark.parametrize(
+        "missing_basic_vars,service",
+        [
+            (["CONFLUENCE_USERNAME", "JIRA_USERNAME"], "username"),
+            (["CONFLUENCE_API_TOKEN", "JIRA_API_TOKEN"], "token"),
+        ],
+    )
+    def test_basic_auth_missing_credentials(
+        self, env_scenarios, missing_basic_vars, service
+    ):
+        """Test that basic auth fails when credentials are missing."""
+        with MockEnvironment.clean_env():
+            basic_config = env_scenarios["basic_auth_cloud"].copy()
+
+            # Remove required variables
+            for var in missing_basic_vars:
+                del basic_config[var]
+
+            for key, value in basic_config.items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    def test_oauth_precedence_over_basic_auth(self, env_scenarios, caplog):
+        """Test that OAuth takes precedence over Basic Auth."""
+        with MockEnvironment.clean_env():
+            # Set both OAuth and Basic Auth variables
+            combined_config = {
+                **env_scenarios["oauth_cloud"],
+                **env_scenarios["basic_auth_cloud"],
+            }
+
+            for key, value in combined_config.items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+
+            # Should use OAuth, not Basic Auth
+            _assert_authentication_logs(caplog, "oauth", ["confluence", "jira"])
+            assert "Basic Authentication" not in caplog.text
+
+    def test_mixed_service_configuration(self, caplog):
+        """Test mixed configurations where only one service is configured."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["CONFLUENCE_URL"] = "https://company.atlassian.net"
+            os.environ["CONFLUENCE_USERNAME"] = "user@company.com"
+            os.environ["CONFLUENCE_API_TOKEN"] = "api_token"
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=False
+            )
+
+            _assert_authentication_logs(caplog, "cloud_basic", ["confluence"])
+            _assert_authentication_logs(caplog, "not_configured", ["jira"])
+
+    def test_return_value_structure(self):
+        """Test that the return value has the correct structure."""
+        with MockEnvironment.clean_env():
+            result = get_available_services()
+
+            assert isinstance(result, dict)
+            assert set(result.keys()) == {"confluence", "jira"}
+            assert all(isinstance(v, bool) for v in result.values())
+
+    @pytest.mark.parametrize(
+        "invalid_vars",
+        [
+            {"CONFLUENCE_URL": "", "JIRA_URL": ""},  # Empty strings
+            {"confluence_url": "https://test.com"},  # Wrong case
+        ],
+    )
+    def test_invalid_environment_variables(self, invalid_vars, caplog):
+        """Test behavior with invalid environment variables."""
+        with MockEnvironment.clean_env():
+            for key, value in invalid_vars.items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+            _assert_authentication_logs(
+                caplog, "not_configured", ["confluence", "jira"]
+            )
+
+
+class TestGetAvailableServicesWithHeaders:
+    """Test cases for get_available_services function with header-based authentication."""
+
+    def test_header_based_jira_authentication(self, caplog):
+        """Test that Jira is available when header-based auth is provided."""
+        headers = {
+            "X-Atlassian-Jira-Url": "https://test.atlassian.net",
+            "X-Atlassian-Jira-Personal-Token": "test-pat-token",
+        }
+
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=True
+            )
+            assert_log_contains(
+                caplog, "INFO", "Using Jira authentication from header personal token"
+            )
+
+    def test_header_based_confluence_authentication(self, caplog):
+        """Test that Confluence is available when header-based auth is provided."""
+        headers = {
+            "X-Atlassian-Confluence-Url": "https://test.atlassian.net",
+            "X-Atlassian-Confluence-Personal-Token": "test-confluence-pat-token",
+        }
+
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=False
+            )
+            assert_log_contains(
+                caplog,
+                "INFO",
+                "Using Confluence authentication from header personal token",
+            )
+
+    def test_header_based_both_services_authentication(self, caplog):
+        """Test that both services are available when both header-based auths are provided."""
+        headers = {
+            "X-Atlassian-Jira-Url": "https://test.atlassian.net",
+            "X-Atlassian-Jira-Personal-Token": "test-jira-pat-token",
+            "X-Atlassian-Confluence-Url": "https://test.atlassian.net",
+            "X-Atlassian-Confluence-Personal-Token": "test-confluence-pat-token",
+        }
+
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+            assert_log_contains(
+                caplog, "INFO", "Using Jira authentication from header personal token"
+            )
+            assert_log_contains(
+                caplog,
+                "INFO",
+                "Using Confluence authentication from header personal token",
+            )
+
+    def test_header_auth_missing_url(self, caplog):
+        """Test that header-based auth fails when URL is missing."""
+        headers = {"X-Atlassian-Jira-Personal-Token": "test-pat-token"}
+
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    def test_header_auth_missing_token(self, caplog):
+        """Test that header-based auth fails when token is missing."""
+        headers = {"X-Atlassian-Jira-Url": "https://test.atlassian.net"}
+
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    def test_environment_variables_take_precedence_over_headers(
+        self, env_scenarios, caplog
+    ):
+        """Test that environment variables take precedence over header-based auth."""
+        headers = {
+            "X-Atlassian-Jira-Url": "https://header.atlassian.net",
+            "X-Atlassian-Jira-Personal-Token": "header-pat-token",
+        }
+
+        with MockEnvironment.clean_env():
+            for key, value in env_scenarios["basic_auth_cloud"].items():
+                import os
+
+                os.environ[key] = value
+
+            result = get_available_services(headers=headers)
+
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+            _assert_authentication_logs(caplog, "cloud_basic", ["confluence", "jira"])
+
+            assert (
+                "Using Jira authentication from header personal token"
+                not in caplog.text
+            )
+
+    def test_empty_headers_parameter(self, caplog):
+        """Test that empty headers parameter doesn't affect normal operation."""
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers={})
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    def test_none_headers_parameter(self, caplog):
+        """Test that None headers parameter doesn't affect normal operation."""
+        with MockEnvironment.clean_env():
+            result = get_available_services(headers=None)
+
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+    def test_dc_oauth_detected(self, caplog):
+        """Test DC OAuth detection with non-cloud URL + client credentials."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["JIRA_URL"] = "https://jira.corp.example.com"
+            os.environ["ATLASSIAN_OAUTH_CLIENT_ID"] = "dc-client"
+            os.environ["ATLASSIAN_OAUTH_CLIENT_SECRET"] = "dc-secret"
+            os.environ["CONFLUENCE_URL"] = "https://confluence.corp.example.com"
+
+            result = get_available_services()
+            assert result["jira"] is True
+            assert result["confluence"] is True
+            assert "Data Center" in caplog.text
+
+    def test_dc_oauth_service_specific_env_vars(self, caplog):
+        """Test DC OAuth with service-specific env vars."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["JIRA_URL"] = "https://jira.corp.example.com"
+            os.environ["JIRA_OAUTH_CLIENT_ID"] = "jira-dc-client"
+            os.environ["JIRA_OAUTH_CLIENT_SECRET"] = "jira-dc-secret"
+
+            result = get_available_services()
+            assert result["jira"] is True
+
+    def test_dc_byo_access_token_detected(self, caplog):
+        """Test DC BYO access token detection."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["JIRA_URL"] = "https://jira.corp.example.com"
+            os.environ["ATLASSIAN_OAUTH_ACCESS_TOKEN"] = "my-dc-token"
+
+            result = get_available_services()
+            assert result["jira"] is True
+            assert "Data Center" in caplog.text
+
+    def test_oauth_enable_without_urls(self, caplog):
+        """Test BYOT OAuth mode — ATLASSIAN_OAUTH_ENABLE=true without service URLs."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["ATLASSIAN_OAUTH_ENABLE"] = "true"
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+            assert_log_contains(
+                caplog,
+                "INFO",
+                "Using Confluence minimal OAuth configuration",
+            )
+            assert_log_contains(
+                caplog,
+                "INFO",
+                "Using Jira minimal OAuth configuration",
+            )
+
+    def test_oauth_enable_with_cloud_url_no_creds(self, caplog):
+        """Test BYOT OAuth mode — URL present but no credentials, ATLASSIAN_OAUTH_ENABLE=true."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["ATLASSIAN_OAUTH_ENABLE"] = "true"
+            os.environ["JIRA_URL"] = "https://test.atlassian.net"
+            os.environ["CONFLUENCE_URL"] = "https://test.atlassian.net/wiki"
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+
+    @pytest.mark.parametrize(
+        "enable_value",
+        ["true", "True", "TRUE", "1", "yes", "YES"],
+    )
+    def test_oauth_enable_value_variations(self, enable_value, caplog):
+        """Test various ATLASSIAN_OAUTH_ENABLE value formats."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["ATLASSIAN_OAUTH_ENABLE"] = enable_value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=True, jira_expected=True
+            )
+
+    @pytest.mark.parametrize(
+        "disable_value",
+        ["false", "False", "0", "no", ""],
+    )
+    def test_oauth_enable_disabled_values(self, disable_value, caplog):
+        """Test values that should NOT enable BYOT OAuth mode."""
+        with MockEnvironment.clean_env():
+            import os
+
+            os.environ["ATLASSIAN_OAUTH_ENABLE"] = disable_value
+
+            result = get_available_services()
+            _assert_service_availability(
+                result, confluence_expected=False, jira_expected=False
+            )
+
+
+class TestMockEnvironmentCleanEnv:
+    """Regression tests for MockEnvironment.clean_env().
+
+    clean_env() previously only cleared JIRA_URL/USERNAME/API_TOKEN and the
+    Confluence/OAuth equivalents, silently leaving PERSONAL_TOKEN and
+    CLIENT_CERT/CLIENT_KEY* vars untouched. Any developer with real PAT or
+    mTLS credentials already exported in their shell (e.g. for manual
+    testing against a live instance) would have those values leak into
+    parametrized auth-scenario tests that assume a clean environment,
+    causing spurious failures unrelated to the code under test.
+    """
+
+    @pytest.mark.parametrize(
+        "var_name",
+        [
+            "JIRA_PERSONAL_TOKEN",
+            "JIRA_CLIENT_CERT",
+            "JIRA_CLIENT_KEY",
+            "JIRA_CLIENT_KEY_PASSWORD",
+            "CONFLUENCE_PERSONAL_TOKEN",
+            "CONFLUENCE_CLIENT_CERT",
+            "CONFLUENCE_CLIENT_KEY",
+            "CONFLUENCE_CLIENT_KEY_PASSWORD",
+        ],
+    )
+    def test_clean_env_clears_pat_and_mtls_vars(self, var_name, monkeypatch):
+        """clean_env() must clear PAT and mTLS-related env vars too."""
+        monkeypatch.setenv(var_name, "leaked-from-developer-shell")
+        with MockEnvironment.clean_env():
+            assert os.environ.get(var_name) is None

@@ -5,6 +5,9 @@
  * @module
  */
 
+import { existsSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import z from '@cortex/schemastery'
 import { settingsNamespace } from '@cortex/settings'
 import type { AtlassianSettings } from './types.ts'
@@ -19,17 +22,58 @@ export const DEFAULT_TOKEN_REFS = {
   bitbucket: 'ATLASSIAN_BITBUCKET_TOKEN',
 } as const
 
-/** Default launch line of the Jira/Confluence MCP server (sooperset/mcp-atlassian). */
-export const DEFAULT_ATLASSIAN_LAUNCH = 'uvx mcp-atlassian'
+/**
+ * Nearest ancestor of `from` (this module's directory by default) that holds
+ * `relative`. Both MCP servers ship embedded under the repository's
+ * `third_party/`; walking up finds them from the source tree and from the
+ * built `lib/` bundle alike, and answers `undefined` for a deployment that
+ * runs this package outside the repository.
+ * @param relative - repo-root-relative path of the asset.
+ * @param from - directory the walk starts in.
+ * @returns the asset's absolute path, or `undefined` when no ancestor holds it.
+ */
+export function findRepoAsset(relative: string, from: string = dirname(fileURLToPath(import.meta.url))): string | undefined {
+  let current = from
+  for (let depth = 0; depth < 10; depth += 1) {
+    const candidate = join(current, relative)
+    if (existsSync(candidate)) return candidate
+    const parent = dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+  return undefined
+}
 
 /**
- * Default launch line of the Bitbucket MCP server (n11techhub/mcp-bitbucket).
- * The project publishes a container image but no npm package; `docker run -i`
- * with `-e NAME` forwards each variable from the child environment the host
- * builds, so no secret appears on the command line.
+ * Default launch line of the Jira/Confluence MCP server: the embedded pinned
+ * source when the repository carries it, otherwise the published package.
+ * @param vendored - absolute path of the embedded project, when present.
+ * @returns the launch line.
  */
-export const DEFAULT_BITBUCKET_LAUNCH
-  = 'docker run -i --rm -e BITBUCKET_URL -e BITBUCKET_TOKEN -e BITBUCKET_DEFAULT_PROJECT ghcr.io/n11techhub/mcp-bitbucket:latest'
+export function atlassianLaunchDefault(vendored: string | undefined): string {
+  return vendored === undefined ? 'uvx mcp-atlassian' : `uv run --frozen --project "${vendored}" mcp-atlassian`
+}
+
+/**
+ * Default launch line of the Bitbucket MCP server: the embedded prebuilt
+ * bundle when the repository carries it, otherwise the container image (the
+ * project publishes no npm package; `docker run -i` with `-e NAME` forwards
+ * each variable from the child environment, so no secret appears on the
+ * command line).
+ * @param vendored - absolute path of the embedded bundle, when present.
+ * @returns the launch line.
+ */
+export function bitbucketLaunchDefault(vendored: string | undefined): string {
+  return vendored === undefined
+    ? 'docker run -i --rm -e BITBUCKET_URL -e BITBUCKET_TOKEN -e BITBUCKET_DEFAULT_PROJECT ghcr.io/n11techhub/mcp-bitbucket:latest'
+    : `node "${vendored}"`
+}
+
+/** Default launch line of the Jira/Confluence MCP server. */
+export const DEFAULT_ATLASSIAN_LAUNCH = atlassianLaunchDefault(findRepoAsset('third_party/mcp-atlassian/pyproject.toml')?.slice(0, -'/pyproject.toml'.length))
+
+/** Default launch line of the Bitbucket MCP server. */
+export const DEFAULT_BITBUCKET_LAUNCH = bitbucketLaunchDefault(findRepoAsset('third_party/mcp-bitbucket/server.mjs'))
 
 const REF_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/
 

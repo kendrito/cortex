@@ -74,8 +74,8 @@ describe('SectionTitle', () => {
 
 describe('Person', () => {
   it('names the person or the fallback', () => {
-    render(<Person person={{ name: 'Kendrito' }} fallback="Unassigned" />)
-    expect(screen.getByText('Kendrito')).toBeTruthy()
+    render(<Person person={{ name: 'Avery Quinn' }} fallback="Unassigned" />)
+    expect(screen.getByText('Avery Quinn')).toBeTruthy()
     cleanup()
     render(<Person person={undefined} fallback="Unassigned" />)
     expect(screen.getByText('Unassigned')).toBeTruthy()

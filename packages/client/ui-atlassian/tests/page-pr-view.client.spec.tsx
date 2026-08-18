@@ -19,7 +19,7 @@ describe('PageView', () => {
     expect(screen.getByText('Runbooks')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Auth service runbook' })).toBeTruthy()
     expect(screen.getByText('v12')).toBeTruthy()
-    expect(screen.getByText('by Kendrito')).toBeTruthy()
+    expect(screen.getByText('by Avery Quinn')).toBeTruthy()
     expect(screen.getByText('3h ago')).toBeTruthy()
     expect(screen.getByText('runbook')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Open in Confluence' }).getAttribute('href')).toBe(page().url)

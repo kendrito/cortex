@@ -56,7 +56,7 @@ function props(overrides: Partial<{ value: AtlassianSettings | undefined; writab
     })),
     setToken: vi.fn(() => Promise.resolve({ ok: true as const })),
     status: vi.fn(() => Promise.resolve(status())),
-    probe: vi.fn((service: 'jira' | 'confluence' | 'bitbucket') => Promise.resolve<ProbeResult>({ service, ok: true, user: 'Kendrito' })),
+    probe: vi.fn((service: 'jira' | 'confluence' | 'bitbucket') => Promise.resolve<ProbeResult>({ service, ok: true, user: 'Avery Quinn' })),
     reconnect: vi.fn(() => Promise.resolve(status({ atlassian: { phase: 'error', toolCount: 0, error: 'spawn uvx ENOENT' } }))),
     ...overrides.face,
   }
@@ -91,7 +91,7 @@ describe('AtlassianSettingsTab', () => {
     expect(passwords[0]?.hasAttribute('disabled')).toBe(false)
     const tests = screen.getAllByRole('button', { name: 'Test connection' })
     fireEvent.click(tests[0]!)
-    await screen.findByText('Connected as Kendrito')
+    await screen.findByText('Connected as Avery Quinn')
     expect(face.probe).toHaveBeenCalledWith('jira')
     face.probe.mockResolvedValueOnce({ service: 'confluence', ok: false, error: 'no url' })
     fireEvent.click(tests[1]!)

@@ -99,7 +99,7 @@ describe('AtlassianCard entities', () => {
     const value = projection({ issues: { 'PROJ-123': unassigned } })
     render(<AtlassianCard {...cardProps(GET_ISSUE, settled(GET_ISSUE, { issue_key: 'PROJ-123' }, ISSUE_JSON), { projection: value })} />)
     fireEvent.click(row())
-    expect(screen.queryByTitle('Kendrito')).toBeNull()
+    expect(screen.queryByTitle('Avery Quinn')).toBeNull()
   })
 
   it('summarizes and strips a tracked page, opening it in the panel', () => {
@@ -154,7 +154,7 @@ describe('AtlassianCard searches', () => {
     const value = projection({ searches: [{
       service: 'jira', callId: 'call-1', query: 'project = PROJ', total: 40,
       rows: [
-        { key: 'PROJ-123', summary: 'First', status: { name: 'In Progress', category: 'indeterminate' }, assignee: 'Kendrito' },
+        { key: 'PROJ-123', summary: 'First', status: { name: 'In Progress', category: 'indeterminate' }, assignee: 'Avery Quinn' },
         { key: 'PROJ-124', summary: 'Second' },
       ],
     }] })
@@ -163,7 +163,7 @@ describe('AtlassianCard searches', () => {
     fireEvent.click(row())
     const table = screen.getByRole('table')
     expect(within(table).getAllByRole('row')).toHaveLength(2)
-    expect(within(table).getByText('Kendrito')).toBeTruthy()
+    expect(within(table).getByText('Avery Quinn')).toBeTruthy()
     expect(screen.getByText('2 of 40 results')).toBeTruthy()
     await act(async () => { fireEvent.click(within(table).getByRole('button', { name: 'PROJ-124' })) })
     expect(open).toHaveBeenCalledWith({ kind: 'issue', key: 'PROJ-124' })

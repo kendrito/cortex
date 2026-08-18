@@ -1,6 +1,8 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "extends": ["./.oxlintrc.json"],
+  "extends": [
+    "./.oxlintrc.json"
+  ],
   "options": {
     "typeAware": false
   },
@@ -17,6 +19,7 @@
     "**/*.js",
     "**/*.mjs",
     "**/*.config.ts",
-    "packages/client/tsdown.client.ts"
+    "packages/client/tsdown.client.ts",
+    "third_party/**"
   ]
 }

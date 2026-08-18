@@ -7,3 +7,4 @@
 * text=auto eol=lf
 
 *.pdf binary
+third_party/** -text whitespace=-trailing-space,-space-before-tab,-tab-in-indent,-blank-at-eol,-blank-at-eof,-cr-at-eol

@@ -47,7 +47,7 @@ describe('tones', () => {
 describe('initials', () => {
   it('takes first and last initials, single-name second letter, and ? for empty', () => {
     expect(initials('Jordan Alvarez')).toBe('JA')
-    expect(initials('kendrito')).toBe('KE')
+    expect(initials('aquinn')).toBe('AQ')
     expect(initials('mei.chen')).toBe('MC')
     expect(initials('   ')).toBe('?')
     expect(initials('X')).toBe('X')

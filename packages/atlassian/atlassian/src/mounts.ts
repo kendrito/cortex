@@ -9,6 +9,7 @@
 import { existsSync } from 'node:fs'
 import { delimiter, isAbsolute, join } from 'node:path'
 import type { Context } from '@cortex/cordis'
+import { cortexHomePath } from '@cortex/home-paths'
 import type { Config as McpClientConfig } from '@cortex/mcp-client'
 import * as McpClient from '@cortex/mcp-client'
 import { parseLaunchLine } from './settings.ts'
@@ -66,6 +67,9 @@ export function planMounts(settings: AtlassianSettings, urls: ResolvedUrls, toke
     const env: Record<string, string> = {
       TOOLSETS: settings.toolsets.trim() === '' ? 'default' : settings.toolsets.trim(),
       MCP_VERBOSE: 'false',
+      // `uv run --project` would otherwise create the virtualenv inside the
+      // embedded third_party tree; keep it under the harness home instead.
+      UV_PROJECT_ENVIRONMENT: cortexHomePath('mcp-atlassian-venv'),
     }
     if (settings.enabledTools.trim() !== '') env.ENABLED_TOOLS = settings.enabledTools.trim()
     if (haveJira) {
@@ -113,6 +117,9 @@ export function planMounts(settings: AtlassianSettings, urls: ResolvedUrls, toke
     const env: Record<string, string> = {
       BITBUCKET_URL: urls.bitbucket,
       BITBUCKET_TOKEN: tokens.bitbucket,
+      // The server derives its log directory from PROJECT_ROOT; without it the
+      // embedded bundle would walk up to the repository root and write there.
+      PROJECT_ROOT: cortexHomePath('mcp-bitbucket'),
     }
     if (settings.bitbucketDefaultProject.trim() !== '') env.BITBUCKET_DEFAULT_PROJECT = settings.bitbucketDefaultProject.trim()
     return {

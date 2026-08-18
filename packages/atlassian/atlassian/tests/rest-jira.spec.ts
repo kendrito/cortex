@@ -14,7 +14,7 @@ describe('issueRecordFromRest', () => {
       status: { name: 'In Progress', category: 'indeterminate' },
       type: 'Story',
       priority: 'High',
-      assignee: { name: 'Kendrito', id: 'kendrito', avatar: 'http://j/a48.png' },
+      assignee: { name: 'Avery Quinn', id: 'aquinn', avatar: 'http://j/a48.png' },
       reporter: { name: 'Jordan Alvarez', id: 'jalvarez', avatar: 'http://j/a32.png' },
       labels: ['auth', 'frontend'],
       components: ['web'],
@@ -126,10 +126,10 @@ describe('JiraRest', () => {
   })
 
   it('probes the authenticated user', async () => {
-    const named = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { body: { displayName: 'Kendrito' } } }).fetchImpl, { baseUrl: BASE, token: 't' })
-    await expect(named.myself()).resolves.toBe('Kendrito')
-    const login = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { body: { name: 'kendrito' } } }).fetchImpl, { baseUrl: BASE, token: 't' })
-    await expect(login.myself()).resolves.toBe('kendrito')
+    const named = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { body: { displayName: 'Avery Quinn' } } }).fetchImpl, { baseUrl: BASE, token: 't' })
+    await expect(named.myself()).resolves.toBe('Avery Quinn')
+    const login = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { body: { name: 'aquinn' } } }).fetchImpl, { baseUrl: BASE, token: 't' })
+    await expect(login.myself()).resolves.toBe('aquinn')
     const anonymous = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { body: {} } }).fetchImpl, { baseUrl: BASE, token: 't' })
     await expect(anonymous.myself()).resolves.toBe('authenticated')
     const denied = new JiraRest(fakeFetch({ 'GET /rest/api/2/myself': { status: 401, body: {} } }).fetchImpl, { baseUrl: BASE, token: 't' })
