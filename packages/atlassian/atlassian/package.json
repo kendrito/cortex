@@ -1,0 +1,91 @@
+{
+  "name": "@cortex/atlassian",
+  "description": "Jira, Confluence, and Bitbucket Data Center integration: MCP mounts, write gate, live entity snapshots, PR review mode, and the panel Remote API",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/atlassian/atlassian"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/credentials": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/mcp-client": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/typert-protocol": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:^",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:^",
+    "@cortex/commands": "workspace:^",
+    "@cortex/cordis": "workspace:^",
+    "@cortex/cordis-plugin-include": "workspace:^",
+    "@cortex/cordis-plugin-loader": "workspace:^",
+    "@cortex/credentials": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/llm": "workspace:^",
+    "@cortex/mcp-client": "workspace:^",
+    "@cortex/session": "workspace:^",
+    "@cortex/session-projection": "workspace:^",
+    "@cortex/settings": "workspace:^",
+    "@cortex/system-prompt": "workspace:^",
+    "@cortex/tools": "workspace:^",
+    "@cortex/typert-protocol": "workspace:^"
+  }
+}

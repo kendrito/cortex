@@ -73,7 +73,8 @@
     "@cortex/session": "workspace:^",
     "@cortex/session-persistence": "workspace:^",
     "@cortex/settings": "workspace:^",
-    "@cortex/typert-registry": "workspace:^"
+    "@cortex/typert-registry": "workspace:^",
+    "@cortex/atlassian": "workspace:^"
   },
   "devDependencies": {
     "@cortex/agent": "workspace:^",
@@ -91,6 +92,7 @@
     "@cortex/session-persistence": "workspace:^",
     "@cortex/settings": "workspace:^",
     "@cortex/typert-registry": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:^",
+    "@cortex/atlassian": "workspace:^"
   }
 }

@@ -84,6 +84,12 @@
     - id: session-stats
       name: '@cortex/session-stats'
 
+    # Atlassian Data Center integration: Jira/Confluence/Bitbucket MCP mounts from
+    # the `atlassian` settings namespace, the write gate, the `atlassian`
+    # projection feeding the work panel, /ticket + /pr-review, and the review tools.
+    - id: atlassian
+      name: '@cortex/atlassian'
+
     # Resolve bind host, SSH launch, and display once at boot, then mount the
     # matching dual-face directory picker. Mount -native or -browse directly in
     # an overlay to pin the interaction.
@@ -269,6 +275,11 @@
 
     - id: ui-user-questions
       name: '@cortex/client-ui-user-questions'
+
+    # Atlassian work panel (session header drawer over the `atlassian` projection),
+    # the keyed Jira/Confluence/Bitbucket tool cards, and the settings tab.
+    - id: ui-atlassian
+      name: '@cortex/client-ui-atlassian'
 
     - id: ui-trajectory
       name: '@cortex/client-ui-trajectory'

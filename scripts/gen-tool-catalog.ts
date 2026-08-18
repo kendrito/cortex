@@ -52,6 +52,7 @@ import TerminalSessionService from '@cortex/terminal'
 import * as ToolPty from '@cortex/tool-terminal'
 import * as ToolGoal from '@cortex/tool-goal'
 import * as ToolSchedule from '@cortex/schedule'
+import { registerReviewTools } from '@cortex/atlassian'
 import Lsp from '@cortex/lsp'
 import * as ToolLsp from '@cortex/tool-lsp'
 import * as ToolSkill from '@cortex/tool-skill'
@@ -375,6 +376,27 @@ const TOOL_PACKAGES: ToolPackage[] = [
       + 'Version 1 accepts after_seconds, explicit absolute at, and bounded fixed-rate every_seconds, '
       + 'and discloses session-local delivery; '
       + 'management reads and mutations require the shared Session persistence barrier.',
+  },
+  {
+    pkg: '@cortex/atlassian',
+    dir: 'atlassian',
+    source: 'packages/atlassian/atlassian/src/review.ts',
+    requires: ['ctx.tools', 'a running /pr-review review in the caller\'s session'],
+    writes: ['tool/call', 'atlassian/review finding or complete', 'tool/result'],
+    async mount(ctx) {
+      registerReviewTools(ctx, {
+        active: () => undefined,
+        finding: () => {},
+        complete: () => {},
+        now: () => 0,
+        nextId: () => 'finding',
+      })
+      await Promise.resolve()
+    },
+    note:
+      'Registered globally by the Atlassian integration; both tools refuse unless a review started by /pr-review '
+      + '(or the panel\'s Review button) is running in the caller\'s session. The MCP tools the same package mounts '
+      + '(`mcp__atlassian__*`, `mcp__bitbucket__*`) are external-server schemas and are not part of this catalog.',
   },
   {
     pkg: '@cortex/tool-lsp',

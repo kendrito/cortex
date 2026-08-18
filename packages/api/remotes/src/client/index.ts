@@ -3,6 +3,7 @@
 import type { Context } from '@cortex/cordis'
 import commandsRemote from '@cortex/commands/remote'
 import goalsRemote from '@cortex/goal/remote'
+import atlassianRemote from '@cortex/atlassian/remote'
 import dynamicRemote from '@cortex/cordis-host-runner/remote'
 import pluginInventoryRemote from '@cortex/host-plugin-inventory/remote'
 import messageFeedbackRemote from '@cortex/message-feedback/remote'
@@ -12,6 +13,7 @@ export type { TypertClientRemote as ClientRemote } from '@cortex/typert-protocol
 export type { PluginInventorySnapshot } from '@cortex/host-plugin-inventory/types'
 export type {} from '@cortex/commands/remote'
 export type {} from '@cortex/goal/remote'
+export type {} from '@cortex/atlassian/remote'
 export type {} from '@cortex/host-plugin-inventory/remote'
 export type {} from '@cortex/message-feedback/remote'
 // The forwarded-event allowlist's selection seat: without it in the consumer's
@@ -25,6 +27,7 @@ export type {} from '@cortex/cordis-host-runner/types'
 export type {} from '@cortex/credentials/types'
 export type {} from '@cortex/llm/types'
 export type {} from '@cortex/agent-presets/types'
+export type {} from '@cortex/atlassian/types'
 export type {} from '@cortex/settings/types'
 
 /**
@@ -106,7 +109,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
   const disposers: Array<() => Promise<void>> = []
   try {
     for (const contribution of [
-      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, messageFeedbackRemote,
+      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, messageFeedbackRemote, atlassianRemote,
     ]) {
       disposers.push(await ctx.remote.$mount(contribution))
     }

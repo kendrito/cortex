@@ -840,6 +840,9 @@ importers:
       '@cortex/api-gateway':
         specifier: workspace:^
         version: link:../gateway
+      '@cortex/atlassian':
+        specifier: workspace:^
+        version: link:../../atlassian/atlassian
       '@cortex/commands':
         specifier: workspace:^
         version: link:../../interaction/commands
@@ -879,6 +882,61 @@ importers:
       '@cortex/typert-registry':
         specifier: workspace:^
         version: link:../../typert/registry
+
+  packages/atlassian/atlassian:
+    dependencies:
+      '@cortex/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@cortex/agent':
+        specifier: workspace:^
+        version: link:../../core/agent
+      '@cortex/commands':
+        specifier: workspace:^
+        version: link:../../interaction/commands
+      '@cortex/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@cortex/cordis-plugin-include':
+        specifier: workspace:^
+        version: link:../../../vendor/include
+      '@cortex/cordis-plugin-loader':
+        specifier: workspace:^
+        version: link:../../../vendor/loader
+      '@cortex/credentials':
+        specifier: workspace:^
+        version: link:../../credentials/credentials
+      '@cortex/invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@cortex/llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@cortex/mcp-client':
+        specifier: workspace:^
+        version: link:../../mcp/mcp-client
+      '@cortex/session':
+        specifier: workspace:^
+        version: link:../../core/session
+      '@cortex/session-projection':
+        specifier: workspace:^
+        version: link:../../session/session-projection
+      '@cortex/settings':
+        specifier: workspace:^
+        version: link:../../settings/settings
+      '@cortex/system-prompt':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@cortex/tools':
+        specifier: workspace:^
+        version: link:../../core/tools
+      '@cortex/typert-protocol':
+        specifier: workspace:^
+        version: link:../../typert/protocol
 
   packages/attachment/attachment:
     devDependencies:
@@ -1252,6 +1310,9 @@ importers:
       '@cortex/app-boot':
         specifier: workspace:^
         version: link:../../boot/app-boot
+      '@cortex/atlassian':
+        specifier: workspace:^
+        version: link:../../atlassian/atlassian
       '@cortex/client-connection':
         specifier: workspace:^
         version: link:../../client/connection
@@ -1270,6 +1331,9 @@ importers:
       '@cortex/client-ui-agent-preset':
         specifier: workspace:^
         version: link:../../client/ui-agent-preset
+      '@cortex/client-ui-atlassian':
+        specifier: workspace:^
+        version: link:../../client/ui-atlassian
       '@cortex/client-ui-commands':
         specifier: workspace:^
         version: link:../../client/ui-commands
@@ -1681,6 +1745,64 @@ importers:
       react:
         specifier: ^18.2.0
         version: 18.3.1
+
+  packages/client/ui-atlassian:
+    dependencies:
+      clsx:
+        specifier: ^2.0.0
+        version: 2.1.1
+      react:
+        specifier: ^18.2.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.2.0
+        version: 18.3.1(react@18.3.1)
+    devDependencies:
+      '@cortex/api-remotes':
+        specifier: workspace:^
+        version: link:../../api/remotes
+      '@cortex/atlassian':
+        specifier: workspace:^
+        version: link:../../atlassian/atlassian
+      '@cortex/client-connection':
+        specifier: workspace:^
+        version: link:../connection
+      '@cortex/client-locale':
+        specifier: workspace:^
+        version: link:../locale
+      '@cortex/client-runtime':
+        specifier: workspace:^
+        version: link:../runtime
+      '@cortex/client-test-runtime':
+        specifier: workspace:^
+        version: link:../../test-support/client-runtime
+      '@cortex/client-ui-conversation':
+        specifier: workspace:^
+        version: link:../ui-conversation
+      '@cortex/client-ui-primitives':
+        specifier: workspace:^
+        version: link:../ui-primitives
+      '@cortex/client-ui-settings':
+        specifier: workspace:^
+        version: link:../ui-settings
+      '@cortex/client-ui-slots':
+        specifier: workspace:^
+        version: link:../ui-slots
+      '@cortex/client-ui-tool':
+        specifier: workspace:^
+        version: link:../ui-tool
+      '@cortex/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@cortex/invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@types/react':
+        specifier: ~18.3.1
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ~18.3.0
+        version: 18.3.7(@types/react@18.3.31)
 
   packages/client/ui-attachment:
     dependencies:

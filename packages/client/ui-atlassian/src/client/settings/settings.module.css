@@ -1,0 +1,214 @@
+/* Settings → Atlassian tab. */
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 72px;
+}
+
+.pending {
+  padding: 24px;
+  font-size: 13px;
+  color: var(--cortex-alias-label-tertiary);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--cortex-alias-label-primary);
+}
+
+.intro {
+  margin: 0;
+  max-width: 560px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--cortex-alias-label-tertiary);
+}
+
+.notice {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--cortex-alias-state-warn-primary);
+  background: color-mix(in srgb, var(--cortex-alias-state-warn-primary) 10%, transparent);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid var(--cortex-alias-border-l2);
+  background: var(--cortex-alias-bg-base);
+}
+
+.cardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cortex-alias-label-primary);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cortex-alias-label-secondary);
+}
+
+.input,
+.inputMono {
+  width: 100%;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--cortex-alias-border-l2);
+  background: var(--cortex-alias-bg-layer-1);
+  color: var(--cortex-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+}
+
+.inputMono {
+  font-family: var(--cortex-font-family-code);
+  font-size: 12px;
+}
+
+.input:focus-visible,
+.inputMono:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cortex-alias-brand-primary) 40%, transparent);
+  outline-offset: 1px;
+  border-color: var(--cortex-alias-brand-primary);
+}
+
+.input:disabled,
+.inputMono:disabled {
+  color: var(--cortex-alias-label-tertiary);
+  background: var(--cortex-alias-bg-layer-2);
+}
+
+.hint {
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--cortex-alias-label-tertiary);
+}
+
+.code {
+  font-family: var(--cortex-font-family-code);
+  color: var(--cortex-alias-label-secondary);
+}
+
+.cardFoot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ok {
+  font-size: 12px;
+  color: var(--cortex-alias-state-success-primary);
+}
+
+.fail,
+.errorText {
+  font-size: 12px;
+  color: var(--cortex-alias-state-error-primary);
+}
+
+.errorText {
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--cortex-alias-state-error-primary) 8%, transparent);
+  font-family: var(--cortex-font-family-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--cortex-alias-border-l2);
+  font-size: 13px;
+  color: var(--cortex-alias-label-primary);
+  cursor: pointer;
+}
+
+.radio[data-active] {
+  border-color: var(--cortex-alias-brand-primary);
+  background: color-mix(in srgb, var(--cortex-alias-brand-primary) 7%, transparent);
+}
+
+.radio input {
+  margin: 0;
+  accent-color: var(--cortex-alias-brand-primary);
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.saveBar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--cortex-alias-border-l2);
+  background: var(--cortex-alias-bg-layer-1);
+  box-shadow: var(--cortex-shadow-lv2);
+}
+
+.saveBar[data-dirty] {
+  border-color: color-mix(in srgb, var(--cortex-alias-brand-primary) 40%, transparent);
+}
+
+.spacer {
+  flex: 1;
+}

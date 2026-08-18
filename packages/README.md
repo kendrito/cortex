@@ -39,6 +39,7 @@ Groups hold `packages/<group>/<pkg>/`; names stay `@cortex/<pkg>`. **Group READM
 | [`preset/`](preset/README.md) | Per-session agent composition from preset `cordis.yml` files | Product — stable API |
 | [`guard/`](guard/README.md) | Loop-hygiene guards: advisory repeat-call reminders + the `tools/execute` deadline enforcer | Product — stable API |
 | [`bundle/`](bundle/README.md) | Installable `cortex --profile` patch layers | Product — stable API |
+| [`atlassian/`](atlassian/README.md) | Atlassian Data Center integration: MCP mounts, write gate, live entity snapshots, PR review mode, and the panel Remote API | Product — stable API |
 | [`extensions/`](extensions/README.md) | Agent runtime self-modification: live plugin/service inspection and model-written plugin mount/unmount ([design](../.agents/notes/implemented/feature/2026-07-08-self-referential-cordis-toolset.md)) | Product — stable API |
 | [`hooks/`](hooks/README.md) | Hook bridges + the shared Claude Code / Codex wire-protocol library | Product — stable API |
 | [`session/`](session/README.md) | Durable session data plane: persistence seam + JSONL/SQLite backends, projection seam, log-backed titles, session reporting | Product — stable API |

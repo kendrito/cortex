@@ -235,6 +235,63 @@ Types: [TokenUsage](subsystems/llm-streaming.md)
 
 Source: [`packages/core/session/src/types.ts:273`](../packages/core/session/src/types.ts)
 
+### `atlassian/*`
+
+<a id="atlassianactivity--log-only"></a>
+
+#### `atlassian/activity` — log-only
+
+```ts persistence-catalog
+/** One Atlassian activity feed entry (log-only, non-surface). */
+'atlassian/activity': AtlassianActivityEvent
+```
+
+Source: [`packages/atlassian/atlassian/src/types.ts:332`](../packages/atlassian/atlassian/src/types.ts)
+
+<a id="atlassianpin--log-only"></a>
+
+#### `atlassian/pin` — log-only
+
+```ts persistence-catalog
+/** Pinned ticket change (log-only, non-surface). */
+'atlassian/pin': AtlassianPinEvent
+```
+
+Source: [`packages/atlassian/atlassian/src/types.ts:336`](../packages/atlassian/atlassian/src/types.ts)
+
+<a id="atlassianreview--log-only"></a>
+
+#### `atlassian/review` — log-only
+
+```ts persistence-catalog
+/** Review lifecycle transition (log-only, non-surface). */
+'atlassian/review': AtlassianReviewEvent
+```
+
+Source: [`packages/atlassian/atlassian/src/types.ts:338`](../packages/atlassian/atlassian/src/types.ts)
+
+<a id="atlassiansearch--log-only"></a>
+
+#### `atlassian/search` — log-only
+
+```ts persistence-catalog
+/** One captured search result set (log-only, non-surface). */
+'atlassian/search': AtlassianSearchEvent
+```
+
+Source: [`packages/atlassian/atlassian/src/types.ts:334`](../packages/atlassian/atlassian/src/types.ts)
+
+<a id="atlassiansnapshot--log-only"></a>
+
+#### `atlassian/snapshot` — log-only
+
+```ts persistence-catalog
+/** Host-fetched entity snapshot for the Atlassian panel (log-only, non-surface). */
+'atlassian/snapshot': AtlassianSnapshotEvent
+```
+
+Source: [`packages/atlassian/atlassian/src/types.ts:330`](../packages/atlassian/atlassian/src/types.ts)
+
 ### `command/*`
 
 <a id="commanddone--log-only"></a>

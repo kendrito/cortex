@@ -318,6 +318,19 @@ Depends on: [`ToolPresentationMode`](subsystems/tools.md)
 
 Source: [`packages/core/agent-tool-presentation/src/index.ts:38`](../packages/core/agent-tool-presentation/src/index.ts)
 
+<a id="cortexatlassian"></a>
+
+## `@cortex/atlassian`
+
+Requires: `tools`
+
+```ts config-catalog
+/** Plugin configuration: intentionally empty — every runtime choice lives in settings. */
+export interface Config {}
+```
+
+Source: [`packages/atlassian/atlassian/src/index.ts:84`](../packages/atlassian/atlassian/src/index.ts)
+
 <a id="cortexattachment-local"></a>
 
 ## `@cortex/attachment-local`
@@ -2898,6 +2911,7 @@ These load from a `cordis.yml` entry with no `config:` block; they declare no co
 - `@cortex/client-modules` — requires `webServer` · `loader` ([`packages/client/modules/src/index.ts`](../packages/client/modules/src/index.ts))
 - `@cortex/client-runtime` ([`packages/client/runtime/src/index.ts`](../packages/client/runtime/src/index.ts))
 - `@cortex/client-ui-agent-preset` ([`packages/client/ui-agent-preset/src/index.ts`](../packages/client/ui-agent-preset/src/index.ts))
+- `@cortex/client-ui-atlassian` ([`packages/client/ui-atlassian/src/index.ts`](../packages/client/ui-atlassian/src/index.ts))
 - `@cortex/client-ui-commands` ([`packages/client/ui-commands/src/index.ts`](../packages/client/ui-commands/src/index.ts))
 - `@cortex/client-ui-conversation` ([`packages/client/ui-conversation/src/index.ts`](../packages/client/ui-conversation/src/index.ts))
 - `@cortex/client-ui-cordis` ([`packages/extensions/ui-cordis/src/index.ts`](../packages/extensions/ui-cordis/src/index.ts))

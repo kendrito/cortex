@@ -1,0 +1,94 @@
+{
+  "name": "@cortex/client-ui-atlassian",
+  "description": "Atlassian browser half: the live Jira/Confluence/Bitbucket work panel with PR review mode, the keyed Atlassian tool cards, and the connection settings tab",
+  "version": "0.1.0-rc.5",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-atlassian"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/client-connection",
+        "@cortex/client-locale",
+        "@cortex/client-runtime",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-primitives",
+        "@cortex/client-ui-settings",
+        "@cortex/client-ui-tool"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "clsx": "^2.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/atlassian": "workspace:^",
+    "@cortex/client-connection": "workspace:^",
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-settings": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/client-ui-tool": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/cordis": "workspace:^"
+  },
+  "devDependencies": {
+    "@cortex/api-remotes": "workspace:^",
+    "@cortex/atlassian": "workspace:^",
+    "@cortex/client-connection": "workspace:^",
+    "@cortex/client-locale": "workspace:^",
+    "@cortex/client-runtime": "workspace:^",
+    "@cortex/client-test-runtime": "workspace:^",
+    "@cortex/client-ui-conversation": "workspace:^",
+    "@cortex/client-ui-primitives": "workspace:^",
+    "@cortex/client-ui-settings": "workspace:^",
+    "@cortex/client-ui-slots": "workspace:^",
+    "@cortex/client-ui-tool": "workspace:^",
+    "@cortex/invariants": "workspace:^",
+    "@cortex/cordis": "workspace:^",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

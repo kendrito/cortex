@@ -1,0 +1,256 @@
+/* Shared Atlassian atoms: chips, avatars, glyphs, meta rows, composer, empty state. */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--cortex-alias-label-secondary);
+  background: var(--cortex-alias-bg-layer-3);
+  --atl-chip-ink: var(--cortex-alias-label-secondary);
+}
+
+.chip[data-tone='info'] {
+  --atl-chip-ink: var(--cortex-alias-brand-primary);
+  color: var(--atl-chip-ink);
+  background: color-mix(in srgb, var(--cortex-alias-brand-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cortex-alias-brand-primary) 22%, transparent);
+}
+
+.chip[data-tone='success'] {
+  --atl-chip-ink: var(--cortex-alias-state-success-primary);
+  color: var(--atl-chip-ink);
+  background: color-mix(in srgb, var(--cortex-alias-state-success-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cortex-alias-state-success-primary) 24%, transparent);
+}
+
+.chip[data-tone='warn'] {
+  --atl-chip-ink: var(--cortex-alias-state-warn-primary);
+  color: var(--atl-chip-ink);
+  background: color-mix(in srgb, var(--cortex-alias-state-warn-primary) 14%, transparent);
+  border-color: color-mix(in srgb, var(--cortex-alias-state-warn-primary) 26%, transparent);
+}
+
+.chip[data-tone='error'] {
+  --atl-chip-ink: var(--cortex-alias-state-error-primary);
+  color: var(--atl-chip-ink);
+  background: color-mix(in srgb, var(--cortex-alias-state-error-primary) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cortex-alias-state-error-primary) 24%, transparent);
+}
+
+.chip[data-tone='accent'] {
+  --atl-chip-ink: var(--cortex-alias-label-primary-bluish);
+  color: var(--atl-chip-ink);
+  background: color-mix(in srgb, var(--cortex-alias-label-primary-bluish) 12%, transparent);
+  border-color: color-mix(in srgb, var(--cortex-alias-label-primary-bluish) 24%, transparent);
+}
+
+.chipDot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--atl-chip-ink);
+}
+
+.mono {
+  font-family: var(--cortex-font-family-code);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--cortex-alias-label-primary-inverted);
+  background: linear-gradient(135deg, var(--cortex-alias-brand-primary), color-mix(in srgb, var(--cortex-alias-brand-primary) 55%, var(--cortex-alias-label-primary-bluish)));
+}
+
+.avatar[data-empty] {
+  color: var(--cortex-alias-label-tertiary);
+  background: var(--cortex-alias-bg-layer-3);
+  border: 1px dashed var(--cortex-alias-border-l3);
+}
+
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.glyph {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-weight: 700;
+  color: var(--cortex-alias-label-primary-inverted);
+  background: var(--cortex-alias-label-tertiary);
+}
+
+.glyph[data-service='jira'] {
+  background: var(--cortex-alias-brand-primary);
+}
+
+.glyph[data-service='confluence'] {
+  background: var(--cortex-alias-label-primary-bluish);
+}
+
+.glyph[data-service='bitbucket'] {
+  background: color-mix(in srgb, var(--cortex-alias-brand-primary) 70%, var(--cortex-alias-label-primary));
+}
+
+.glyph[data-service='review'] {
+  background: var(--cortex-alias-state-warn-primary);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.metaLabel {
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cortex-alias-label-tertiary);
+}
+
+.metaValue {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--cortex-alias-label-primary);
+  overflow-wrap: anywhere;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 18px 0 8px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--cortex-alias-label-tertiary);
+}
+
+.sectionCount {
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--cortex-alias-label-secondary);
+  background: var(--cortex-alias-bg-layer-3);
+}
+
+.sectionSpacer {
+  flex: 1;
+}
+
+.person {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.personName {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.composerInput {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--cortex-alias-border-l2);
+  background: var(--cortex-alias-bg-base);
+  color: var(--cortex-alias-label-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  resize: vertical;
+}
+
+.composerInput:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cortex-alias-brand-primary) 40%, transparent);
+  outline-offset: 1px;
+  border-color: var(--cortex-alias-brand-primary);
+}
+
+.composerActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: var(--cortex-alias-brand-primary);
+  background: color-mix(in srgb, var(--cortex-alias-brand-primary) 10%, transparent);
+}
+
+.emptyTitle {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--cortex-alias-label-primary);
+}
+
+.emptyBody {
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--cortex-alias-label-tertiary);
+}

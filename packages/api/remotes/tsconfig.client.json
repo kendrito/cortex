@@ -22,7 +22,9 @@
     },
     {
       "path": "../../credentials/credentials"
-
+    },
+    {
+      "path": "../../atlassian/atlassian"
     },
     {
       "path": "../../extensions/cordis-host-runner"
