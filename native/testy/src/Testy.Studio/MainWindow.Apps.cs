@@ -10,10 +10,11 @@ using Testy.Windows;
 namespace Testy.Studio;
 
 /// <summary>
-/// The app a test is about, named in words: "New test from a description" resolves an app named in a leading clause ("In Customer Desk: …")
-/// and connects to it (starting it when needed) before planning, and stores it on the new test; Run connects to (or starts) the app a test
-/// stores. An ambiguous name is answered with an inline choice (AppChoiceBar), never a dialog. A manual Change app choice made for the
-/// selected test stays an override for its runs.
+/// The app a test is about, named in words: "New test from a description" resolves an app named in a leading clause ("In Customer Desk: …"),
+/// or with no app connected an app named anywhere in it, and connects to it (starting it when needed) before planning, and stores it on the
+/// new test; Run connects to (or starts) the app a test stores or names. The person never has to pick the app. An ambiguous name is answered
+/// with an inline choice (AppChoiceBar), never a dialog. A manual Change app choice (a technical-details override) made for the selected test
+/// stays an override for its runs.
 /// </summary>
 public partial class MainWindow
 {
@@ -88,7 +89,7 @@ public partial class MainWindow
     /// </summary>
     private async Task<int> StartAppAsync(AppCandidate app, string name, CancellationToken token)
     {
-        const string Alternative = " Start it yourself and connect with Change app.";
+        const string Alternative = " Start it yourself, then try again: Testy connects to the running app.";
         if (app.Packaged && app.AppId.Length > 0)
         {
             var program = await Task.Run(() => PackagedApps.ProgramFor(app.AppId, app.PackageInstallPath.Length > 0 ? app.PackageInstallPath : null), token);
@@ -126,10 +127,10 @@ public partial class MainWindow
         while (timeout.Elapsed < TimeSpan.FromSeconds(20))
         {
             await Task.Delay(200, token); started.Refresh();
-            if (started.HasExited) throw new InvalidOperationException($"{name} closed before it opened a window. If it started another program, choose that window under Change app.");
+            if (started.HasExited) throw new InvalidOperationException($"{name} closed before it opened a window." + Alternative);
             if (started.MainWindowHandle != IntPtr.Zero && IsShown(started.MainWindowHandle)) return started.Id;
         }
-        throw new TimeoutException($"{name} started but didn't open a window within 20 seconds. Choose it under Change app when it's ready.");
+        throw new TimeoutException($"{name} started but didn't open a window within 20 seconds. Try again once its window is open: Testy connects to the running app.");
     }
     private string? TryFindLab()
     {

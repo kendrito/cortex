@@ -90,7 +90,7 @@ public partial class MainWindow : Window
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         await Guard(() => PerformOperation(RefreshTargets));
-        SetStatus("Connect an app to test, or try the sample app.");
+        SetStatus("Describe a test, or run one: Testy finds the app it is for and opens it when needed.");
         await RunScreenshotModeAsync();
     }
 
@@ -108,7 +108,9 @@ public partial class MainWindow : Window
         return true;
     }
 
-    private static IEnumerable<TestCase> SeedTests()
+    /// <summary>The sample tests. They name the sample app (TargetName) without a path, so Run finds Customer Desk wherever Testy is installed.</summary>
+    private static IEnumerable<TestCase> SeedTests() => SampleTests().Select(test => { test.TargetName = "Customer Desk"; return test; });
+    private static IEnumerable<TestCase> SampleTests()
     {
         yield return new TestCase
         {
@@ -395,8 +397,8 @@ public partial class MainWindow : Window
     {
         if (_driver.Target is not { } target)
         {
-            AppName.Text = "No app connected"; AppInitials.Text = ""; AppGlyph.Visibility = Visibility.Visible; StatusDot.Visibility = Visibility.Collapsed;
-            TargetStatus.Text = "Not connected"; TargetPid.Text = ""; AppCard.ToolTip = "No app is connected. Use Change app, or Sample app to try the included Customer Desk.";
+            AppName.Text = "No app yet"; AppInitials.Text = ""; AppGlyph.Visibility = Visibility.Visible; StatusDot.Visibility = Visibility.Collapsed;
+            TargetStatus.Text = "Not connected"; TargetPid.Text = ""; AppCard.ToolTip = "No app yet. Testy finds the app a test is for, and opens it when needed.";
             return;
         }
         var name = FriendlyAppName(target.Title);
@@ -422,7 +424,7 @@ public partial class MainWindow : Window
     }
     /// <summary>
     /// "Runs in Customer Desk": the app the test stores (Run connects to it or starts it), unless the person connected another app by hand for
-    /// this test; for a test that stores no app, the connected app, else "the connected app".
+    /// this test; for a test that only names its app (the sample tests), that name; else the connected app, or the app Run will find.
     /// </summary>
     private void UpdateRunsIn()
     {
@@ -440,13 +442,18 @@ public partial class MainWindow : Window
             else
             {
                 app = stored;
-                tip = $"This test runs in {where}. Run connects to it, or starts it when it isn't running. Connect another app with Change app to run it there instead.";
+                tip = $"This test runs in {where}. Run connects to it, or starts it when it isn't running.";
             }
+        }
+        else if (_selected is { } named && !string.IsNullOrWhiteSpace(named.TargetName) && !ManualOverrideFor(named))
+        {
+            app = named.TargetName;
+            tip = $"This test runs in {named.TargetName}. Run finds it, and starts it when it isn't running.";
         }
         else
         {
-            app = _driver.Target is { } target ? FriendlyAppName(target.Title) : "the connected app";
-            tip = "The app this test acts on";
+            app = _driver.Target is { } target ? FriendlyAppName(target.Title) : "the app Testy finds from the test";
+            tip = _driver.Target is null ? "Run finds the app this test names, and starts it when it isn't running." : "The app this test acts on";
         }
         RunsInText.Text = "Runs in " + app;
         RunsInText.ToolTip = tip;
@@ -554,11 +561,27 @@ public partial class MainWindow : Window
         if (_busy) return;
         if (_selected == null) throw new InvalidOperationException("Create or select a test first.");
         var stored = HasStoredApp(_selected) && !ManualOverrideFor(_selected);
-        if (_driver.Target == null && !stored) throw new InvalidOperationException("Connect the app to test first (Change app, or Sample app).");
         CommitEditor(); TestValidator.Validate(_selected); var test = TestyJson.Clone(_selected);
         HideAppChoice();
-        // The app the test stores: already connected, one running instance, a choice between several, or the program to start.
         AppCandidate? connectTo = chosen;
+        if (chosen is null && !stored && !ManualOverrideFor(test) && (!ConnectionAlive() || !string.IsNullOrWhiteSpace(test.TargetName)))
+        {
+            // A test that stores no program runs in the app it names: its app name (the sample tests name Customer Desk), else, with no app
+            // connected, the app its category, name or description names. Testy finds that app and opens it when it isn't running.
+            var words = !string.IsNullOrWhiteSpace(test.TargetName) ? test.TargetName : string.Join("\n", test.Category, test.Name, test.Intent);
+            var named = AppResolver.NamedIn(words, await DiscoverAppsAsync());
+            var connectedPid = ConnectionAlive() ? _driver.Target!.ProcessId : (int?)null;
+            if (connectedPid is not null && named.Any(c => c.ProcessId == connectedPid)) { /* already connected to the app it names */ }
+            else if (named.Count > 1)
+            {
+                ShowAppChoice($"“{test.Name}” names more than one app. Choose the one to run it in.", named, candidate => RunSelectedAsync(candidate));
+                return;
+            }
+            else if (named.Count == 1) connectTo = named[0];
+            else if (connectedPid is null)
+                throw new InvalidOperationException($"“{test.Name}” doesn't say which app it runs in. Name the app in its description (for example “Customer Desk”), or create the test from a description that names the app.");
+        }
+        // The app the test stores: already connected, one running instance, a choice between several, or the program to start.
         if (chosen is null && stored && !ConnectedToStoredApp(test))
         {
             var instances = AppDiscovery.RunningInstances(test.TargetPath, test.TargetAppId, [Environment.ProcessId]);
@@ -569,8 +592,8 @@ public partial class MainWindow : Window
             }
             connectTo = instances.Count == 1 ? instances[0] : StoredAppCandidate(test)
                 ?? throw new InvalidOperationException(string.IsNullOrWhiteSpace(test.TargetAppId) && !ExecutableRules.IsLocalDrivePath(test.TargetPath)
-                    ? $"“{test.Name}” names its app by a path that is not on a local drive ({test.TargetPath}), so Testy does not open it. Connect the app with Change app, or open it from a local drive with Open an app…."
-                    : $"“{test.Name}” runs in {StoredAppName(test)} ({test.TargetPath}), which is not running and is not installed at that path. Connect the app with Change app to run the test there.");
+                    ? $"“{test.Name}” names its app by a path that is not on a local drive ({test.TargetPath}), so Testy does not open it. Install the app on this PC and create the test again from a description that names it."
+                    : $"“{test.Name}” runs in {StoredAppName(test)} ({test.TargetPath}), which is not running and is not installed at that path. Start or install it there, or create the test again from a description that names the app.");
         }
         // The same desktop lease the background agent's local jobs hold: two workers never send input to this desktop at once.
         using var desktopLease = OperationsDesktopLease.TryAcquire()
@@ -699,12 +722,25 @@ public partial class MainWindow : Window
                 return;
             }
             else if (resolution.Status == AppResolutionStatus.Unique) app = resolution.Best!.Candidate;
-            else if (_driver.Target == null)
-                throw new InvalidOperationException($"Testy found no app called “{mention.App}”. Name it as its window title or Start menu entry shows it, or connect it with Change app (or Sample app) and create the test again.");
+            else if (!ConnectionAlive())
+                throw new InvalidOperationException($"Testy found no app called “{mention.App}”. Name it as its window title or Start menu entry shows it, and create the test again.");
             else Log(ActivityLevel.Info, "Assistant", $"No app called “{mention.App}” was found, so the test is written for the connected app.");
         }
+        if (!refine && app is null && mention is null && !ConnectionAlive())
+        {
+            // No leading clause and no app connected: the app the description names anywhere ("Check that Customer Desk shows …").
+            var named = AppResolver.NamedIn(request, await DiscoverAppsAsync());
+            if (named.Count > 1)
+            {
+                ShowAppChoice("The description names more than one app. Choose the one this test is for.", named, candidate => Plan(false, candidate));
+                return;
+            }
+            app = named.FirstOrDefault();
+        }
         if (app is not null && mention is not null && mention.Remainder.Length > 0) planned = mention.Remainder;
-        if (_driver.Target == null && app is null) throw new InvalidOperationException("Connect an app so the assistant can use its real controls (Change app, or Sample app).");
+        if (app is null && !ConnectionAlive())
+            throw new InvalidOperationException(refine ? "Run the test once so Testy connects to its app, then ask for the improvement again."
+                : "Testy couldn't tell which app this test is for. Name the app in the description, for example “In Customer Desk: add a customer named Ada”.");
         CommitEditor();
         var original = refine && _selected != null ? TestyJson.Clone(_selected) : null;
         if (refine && original == null) throw new InvalidOperationException("Select the test to improve first.");

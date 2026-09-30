@@ -304,6 +304,44 @@ public static partial class AppResolver
         }
         return null;
     }
+    /// <summary>
+    /// The apps a description names anywhere in its words ("Check that Customer Desk shows …"), for text with no leading clause. A candidate
+    /// is named when one of its program names (display name, other names, product name, Start menu names or exe name; never a window title,
+    /// which often names a document) appears as whole words. A one-word name needs four letters or more, and a one-word name of a running or
+    /// installed program must be written with a capital ("Paint", not "paint the cell"): such words are often plain words or something inside
+    /// the app. When a running instance, an earlier test's app or a sample is named, installed programs are left out, and a running instance
+    /// stands for a program of the same name that is not running (a copy elsewhere, the sample next to Testy).
+    /// </summary>
+    public static List<AppCandidate> NamedIn(string? text, IEnumerable<AppCandidate> candidates)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return [];
+        var words = Tokens(text, splitCase: false);
+        var capitalized = WordPattern().Matches(text).Select(m => m.Value).Where(w => char.IsUpper(w[0]))
+            .SelectMany(w => Tokens(w, splitCase: false)).ToHashSet(StringComparer.Ordinal);
+        var named = candidates.Where(c => ProgramNames(c).Any(name =>
+        {
+            var target = Tokens(name, splitCase: false);
+            if (target.Count == 0 || target.Count == 1 && target[0].Length < 4) return false;
+            if (target.Count == 1 && c.Kind is AppCandidateKind.Running or AppCandidateKind.Installed && !capitalized.Contains(target[0])) return false;
+            for (var start = 0; start + target.Count <= words.Count; start++)
+                if (words.Skip(start).Take(target.Count).SequenceEqual(target)) return true;
+            return false;
+        })).ToList();
+        var running = named.Where(c => c.IsRunning).Select(c => c.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        named = named.Where(c => c.IsRunning || !running.Contains(c.Name)).ToList();
+        var known = named.Where(c => c.Kind != AppCandidateKind.Installed).ToList();
+        return known.Count > 0 ? known : named;
+    }
+    private static IEnumerable<string> ProgramNames(AppCandidate c)
+    {
+        if (!TitleDerived(c)) yield return c.Name;
+        foreach (var name in c.OtherNames) yield return name;
+        yield return c.ProductName;
+        foreach (var name in c.ShortcutNames) yield return name;
+        if (c.ExePath.Length > 0) yield return Path.GetFileNameWithoutExtension(c.ExePath);
+    }
+    [GeneratedRegex(@"[\p{L}\p{N}]+")]
+    private static partial Regex WordPattern();
     private static string? CleanAppPhrase(string phrase)
     {
         var app = phrase.Trim().Trim('"', '“', '”', '\'', '‘', '’').Trim();

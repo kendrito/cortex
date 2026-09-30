@@ -15,6 +15,7 @@ internal static partial class McpChecks
         ("App names: one clear winner above the threshold, a margin makes ties ambiguous, a single running instance wins a tie", AppAmbiguity),
         ("App names: discovery entries merge per program and a running instance takes the names of its program", AppMerging),
         ("App names: a description names its app only in a leading clause", AppMentions),
+        ("App names: an app named anywhere in a description is found, known apps first, without reading plain words as apps", AppNamedIn),
         ("MCP find_app and the app argument: candidates, ambiguity as isError, stored apps, and the pid rules", AppArguments),
         ("MCP every earlier tool argument, range, required field and resource is still accepted and declared", BackwardCompatibility),
         ("MCP run_test hands a long run over after waitSeconds and get_run waitSeconds waits for its end", TimeLimits)
@@ -134,6 +135,33 @@ internal static partial class McpChecks
         Check(AppResolver.FindMention("add a customer in Customer Desk") is null, "Only a leading clause names the app.");
         Check(AppResolver.FindMention("In " + new string('x', 100) + ": click id:A") is null && AppResolver.FindMention("In one two three four five six seven eight nine: click") is null, "A long phrase is not an app name.");
         Check(AppResolver.FindMention("") is null && AppResolver.FindMention(null) is null, "Nothing names nothing.");
+        return Task.CompletedTask;
+    }
+
+    private static Task AppNamedIn()
+    {
+        var desk = Program("Customer Desk", @"C:\Apps\Desk\Testy.TestLab.exe", AppCandidateKind.Sample, product: "Testy Windows test studio", description: "Customer Desk");
+        var orders = Program("Order Desk", @"C:\Apps\Orders\Testy.OrderLab.exe", AppCandidateKind.Sample);
+        var paint = Program("Paint", @"C:\Apps\Paint\mspaint.exe");
+        var settings = Program("Settings", @"C:\Apps\Settings\settings.exe");
+        var notepad = Instance(31, "Notepad", @"C:\Windows\notepad.exe", "*notes - Notepad"); notepad.FileDescription = "Notepad";
+        List<AppCandidate> all = [desk, orders, paint, settings, notepad];
+        Check(AppResolver.NamedIn("Open the Customer Desk sample app and check that its status says Ready.", all) is [var only] && only == desk, "A sample named mid-sentence is found.");
+        Check(AppResolver.NamedIn("check the customer desk status", all) is [var lower] && lower == desk, "A two-word name is found in any letter case.");
+        Check(AppResolver.NamedIn("Copy the order from Order Desk into Customer Desk", all).Count == 2, "Two named apps are both returned, for the caller to ask about.");
+        Check(AppResolver.NamedIn("Draw a square in Paint", all) is [var drawn] && drawn == paint, "A capitalized one-word installed name is found.");
+        Check(AppResolver.NamedIn("paint the first cell red and save the settings", all).Count == 0, "Plain lower-case words are not one-word app names.");
+        Check(AppResolver.NamedIn("In Customer Desk, open Settings and check the theme", all) is [var known] && known == desk, "A known app outranks an installed one the text also names.");
+        Check(AppResolver.NamedIn("Type a line in Notepad", all) is [var typed] && typed == notepad && AppResolver.NamedIn("write notes in the notepad field", all).Count == 0,
+            "A running app's one-word name counts only when capitalized; its window title (\"notes\") never names it.");
+        Check(AppResolver.NamedIn("Check Testy.TestLab starts", all) is [var byExe] && byExe == desk, "The exe name names its program.");
+        var elsewhere = Instance(4260, "Customer Desk", @"D:\Other\Desk.exe", "Customer Desk"); elsewhere.FileDescription = "Customer Desk";
+        Check(AppResolver.NamedIn("Check Customer Desk", [desk, elsewhere]) is [var open] && open == elsewhere, "A running instance stands for a program of the same name that is not running.");
+        var second = Instance(4261, "Customer Desk", @"D:\Other\Desk.exe", "Customer Desk"); second.FileDescription = "Customer Desk";
+        Check(AppResolver.NamedIn("Check Customer Desk", [desk, elsewhere, second]).Count == 2, "Two running instances are both returned, for the caller to ask which window.");
+        Check(AppResolver.NamedIn("Check the Desk", [Program("Desk", @"C:\Apps\d.exe", AppCandidateKind.Sample)]) is [_] && AppResolver.NamedIn("Use the Map", [Program("Map", @"C:\Apps\m.exe", AppCandidateKind.Sample)]).Count == 0,
+            "A one-word name needs four letters or more.");
+        Check(AppResolver.NamedIn("", all).Count == 0 && AppResolver.NamedIn(null, all).Count == 0 && AppResolver.NamedIn("click id:ResetButton", all).Count == 0, "Text that names no app finds none.");
         return Task.CompletedTask;
     }
 

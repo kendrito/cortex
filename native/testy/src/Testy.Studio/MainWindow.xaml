@@ -49,7 +49,7 @@
         <Border BorderBrush="{DynamicResource DividerStrokeColorDefaultBrush}" BorderThickness="0,0,0,1">
           <Grid Margin="16,0,12,0">
             <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-            <StackPanel x:Name="AppCard" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent" ToolTip="No app is connected. Use Change app or Sample app.">
+            <StackPanel x:Name="AppCard" Orientation="Horizontal" VerticalAlignment="Center" Background="Transparent" ToolTip="No app yet. Testy finds the app a test is for, and opens it when needed.">
               <Border Width="32" Height="32" CornerRadius="4" Background="{DynamicResource TextFillColorSecondaryBrush}" VerticalAlignment="Center">
                 <Grid>
                   <TextBlock x:Name="AppInitials" FontFamily="{StaticResource SmallFont}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorInverseBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -57,7 +57,7 @@
                 </Grid>
               </Border>
               <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                <TextBlock x:Name="AppName" Text="No app connected" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="260" HorizontalAlignment="Left"/>
+                <TextBlock x:Name="AppName" Text="No app yet" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" MaxWidth="260" HorizontalAlignment="Left"/>
                 <StackPanel Orientation="Horizontal">
                   <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{DynamicResource SystemFillColorSuccessBrush}" Margin="0,1,6,0" VerticalAlignment="Center" Visibility="Collapsed"/>
                   <TextBlock x:Name="TargetStatus" Text="Not connected" Style="{StaticResource Caption}" AutomationProperties.AutomationId="TargetStatus"/>
@@ -402,7 +402,7 @@
                     <Grid.ColumnDefinitions><ColumnDefinition Width="188"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                     <TextBlock x:Name="StepEditorHint" Grid.Row="2" Grid.ColumnSpan="5" Style="{StaticResource HelpText}" Margin="0,6,0,0" Visibility="Collapsed"
-                               Text="Connect your app (Change app, or Sample app) to choose from its controls."/>
+                               Text="Run the test once so Testy connects to its app, then choose from its controls."/>
                     <TextBlock Text="Action" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBlock x:Name="StepControlLabel" Grid.Column="2" Text="Control" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
                     <TextBlock x:Name="StepValueLabel" Grid.Column="4" Text="Value" Style="{StaticResource Caption}" Margin="0,0,0,4"/>
@@ -766,7 +766,7 @@
                     <Control Style="{StaticResource SettingIcon}" Tag="&#xEC7A;" VerticalAlignment="Top" Margin="4,2,20,0"/>
                     <StackPanel Grid.Column="1">
                       <TextBlock Text="WPF helper" Style="{StaticResource SettingTitle}"/>
-                      <TextBlock Style="{StaticResource SettingDescription}">Testy works with any app through Windows UI Automation, with no changes to the app. For WPF apps you own, the optional helper shows Testy more of the app over a private local connection. Call <Run Text="Testy.WpfProbe.ProbeServer.Start()" FontFamily="{StaticResource MonoFont}"/> when your app starts, then turn on "Use the WPF helper" under Change app before you connect.</TextBlock>
+                      <TextBlock Style="{StaticResource SettingDescription}">Testy works with any app through Windows UI Automation, with no changes to the app. For WPF apps you own, the optional helper shows Testy more of the app over a private local connection. Call <Run Text="Testy.WpfProbe.ProbeServer.Start()" FontFamily="{StaticResource MonoFont}"/> when your app starts, then turn on "Use the WPF helper" under Change app (shown with technical details) before you connect.</TextBlock>
                     </StackPanel>
                   </Grid>
                 </Border>

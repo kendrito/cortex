@@ -201,30 +201,24 @@ internal static class StudioVerifier
             foreach (var seed in seeds) TestValidator.Validate(seed);
             Pass(report, "Sample tests are persisted and valid", $"All {seeds.Count} seed tests validated.");
 
-            stage = "Launch lab from Studio";
-            await Toggle(driver, "ShowTechnicalDetails", true, cancellationToken);
-            await Click(driver, "LaunchLab", cancellationToken);
-            await Toggle(driver, "ShowTechnicalDetails", false, cancellationToken);
-            await WaitForAsync(() =>
-            {
-                var candidates = Process.GetProcessesByName("Testy.TestLab");
-                foreach (var candidate in candidates)
-                {
-                    if (lab is null && candidate.StartTime.ToUniversalTime() >= studio.StartTime.ToUniversalTime() &&
-                        string.Equals(candidate.MainModule?.FileName, labExecutable, StringComparison.OrdinalIgnoreCase)) lab = candidate;
-                    else candidate.Dispose();
-                }
-                return lab is not null && File.Exists(Path.Combine(workspace, "inspection", "latest.png"));
-            }, cancellationToken);
-            await WaitForName(driver, "TargetStatus", "Connected", cancellationToken);
-            Pass(report, "Open test lab launches and attaches the fixture", $"Attached the owned fixture process {lab!.Id}; target screenshot was saved and the app card reads Connected.");
-
-            stage = "Run sample through Studio";
+            stage = "Run finds the app a sample test names";
+            // Nothing is connected or picked by hand: the sample test names Customer Desk, so Run finds the sample app itself, starts it and
+            // connects to it (the Sample app button is only a technical-details override).
             await Select(driver, "TestLibrary", "Create a customer", cancellationToken);
+            await WaitForValue(driver, "TestName", "Create a customer", cancellationToken);
+            await WaitForName(driver, "TargetStatus", "Not connected", cancellationToken);
             await Click(driver, "RunTest", cancellationToken);
-            await WaitForAsync(() => store.LoadRuns().Any(r => r.TestName == "Create a customer" && r.FinishedAt is not null), cancellationToken, 30000);
+            await WaitForAsync(() => store.LoadRuns().Any(r => r.TestName == "Create a customer" && r.FinishedAt is not null), cancellationToken, 60000);
             var sample = store.LoadRuns().First(r => r.TestName == "Create a customer");
             Check(sample.Status == RunStatus.Passed && sample.Steps.Count == 5, sample.Summary);
+            lab = Process.GetProcessById(sample.Target.ProcessId);
+            Check(string.Equals(lab.MainModule?.FileName, labExecutable, StringComparison.OrdinalIgnoreCase) && lab.StartTime.ToUniversalTime() >= studio.StartTime.ToUniversalTime(),
+                $"The sample test must run in the Customer Desk that Studio started; it ran in process {lab.Id} ({lab.MainModule?.FileName}).");
+            await WaitForName(driver, "TargetStatus", "Connected", cancellationToken);
+            Check(File.Exists(Path.Combine(workspace, "inspection", "latest.png")), "Connecting the app did not save its screenshot.");
+            Pass(report, "Run finds the app a sample test names, starts it and connects to it", $"With nothing connected or chosen, Run started Customer Desk (process {lab.Id}) and connected to it; the app card reads Connected.");
+
+            stage = "Run sample through Studio";
             Check(sample.Steps.All(s => File.Exists(s.ScreenshotPath) && s.Snapshot is not null), "Saved GUI run lacks evidence.");
             Check(!File.Exists(Path.Combine(sample.ArtifactDirectory, "computer-agent.json")), "Explicit replay unexpectedly invoked an AI agent.");
             Pass(report, "Run a sample through explicit replay", sample.Summary, sample.ArtifactDirectory);

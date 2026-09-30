@@ -238,7 +238,7 @@ internal sealed class AutomatePage : UserControl
         if (result.Json.ValueKind == JsonValueKind.Object && result.Json.TryGetProperty("artifactDirectory", out var directory) && Directory.Exists(directory.GetString())) lastOutput = directory.GetString()!;
         return result;
     }
-    private void RequireTarget() { if (pid is not > 0) throw new InvalidOperationException("Connect an app first (Change app, at the top of the window) before running test sets or recording."); }
+    private void RequireTarget() { if (pid is not > 0) throw new InvalidOperationException("Testy isn't connected to an app yet. Run a test first (Testy finds and opens its app), then run test sets or record."); }
     /// <summary>Test sets and recordings drive this desktop; the background agent's local jobs hold the same lease.</summary>
     private static OperationsDesktopLease DesktopLease() => OperationsDesktopLease.TryAcquire()
         ?? throw new InvalidOperationException("The Testy background agent or another worker is using this PC. Wait for it to finish, or pause background runs.");

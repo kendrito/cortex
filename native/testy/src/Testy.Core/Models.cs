@@ -71,7 +71,10 @@ public sealed class TestCase
     public string Intent { get; set; } = "";
     public string Category { get; set; } = "Functional";
     public string TargetPath { get; set; } = "";
-    /// <summary>The app's friendly name ("Customer Desk"), stored with TargetPath when the app was named rather than picked. Display only.</summary>
+    /// <summary>
+    /// The app's friendly name ("Customer Desk"), stored with TargetPath when the app was named rather than picked. Without a TargetPath (the
+    /// sample tests), Studio's Run finds the app by this name.
+    /// </summary>
     public string TargetName { get; set; } = "";
     /// <summary>The AppUserModelID of a packaged (Store/MSIX) app the test runs in; empty for a desktop program.</summary>
     public string TargetAppId { get; set; } = "";
