@@ -49,7 +49,7 @@ internal sealed partial class TestyMcpService
             else if (exe is not null) { selected = CaptureExecutable(exe,"override"); reason = "You selected this executable."; }
             else
             {
-                var candidates = await CaptureAiTargetsAsync(workspace,existing?.TargetPath,ct);
+                var candidates = await CaptureAiTargetsAsync(workspace,existing?.TargetPath,instructions,ct);
                 if (candidates.Count == 0) return new { kind = "needsTarget", question = "Open the application you want to test, or choose its executable, then try again.", candidates = Array.Empty<object>() };
                 var evidence = candidates.Select(c => c.Candidate).ToArray();
                 WorkspaceStore.WriteAtomic(Path.Combine(directory,"target-inventory.json"),new { instructions, workspace, savedTargetPath=existing?.TargetPath, candidates=evidence });
@@ -151,12 +151,25 @@ internal sealed partial class TestyMcpService
         return new(new("pid-"+pid,target.Title,target.ProcessName,pid,ExePath(pid)),process.StartTime.ToUniversalTime().Ticks,target.WindowHandle,null);
     }
     private static string ExecutableHash(string path) { using var input=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(input)); }
-    private CapturedTarget CaptureExecutable(string path,string id)
+    private CapturedTarget CaptureExecutable(string path,string id,string? title=null)
     {
         var allowed=Policy.RequireLaunchable(path);
-        return new(new(id,Path.GetFileNameWithoutExtension(allowed),Path.GetFileNameWithoutExtension(allowed),null,allowed),null,null,ExecutableHash(allowed));
+        var name=Path.GetFileNameWithoutExtension(allowed);
+        return new(new(id,string.IsNullOrWhiteSpace(title) ? name : title.Trim(),name,null,allowed),null,null,ExecutableHash(allowed));
     }
-    private async Task<List<CapturedTarget>> CaptureAiTargetsAsync(string? workspace,string? savedTarget,CancellationToken ct)
+    /// <summary>Whether a request mentions one of the app's names as whole words ("check Customer Desk…" names "Customer Desk").</summary>
+    private static bool Mentions(List<string> request,AppCandidate app)
+    {
+        foreach (var name in new[] { app.Name, app.ProductName }.Concat(app.OtherNames).Concat(app.ShortcutNames))
+        {
+            var words=AppResolver.Tokens(name);
+            if (words.Count==0 || (words.Count==1 && words[0].Length<4)) continue;
+            for (var start=0; start+words.Count<=request.Count; start++)
+                if (request.Skip(start).Take(words.Count).SequenceEqual(words)) return true;
+        }
+        return false;
+    }
+    private async Task<List<CapturedTarget>> CaptureAiTargetsAsync(string? workspace,string? savedTarget,string instructions,CancellationToken ct)
     {
         using var driver=new UiAutomationDriver(); var windows=await driver.GetTargetsAsync(ct); var result=new List<CapturedTarget>();
         foreach (var group in windows.GroupBy(t=>t.ProcessId).Take(80))
@@ -171,13 +184,26 @@ internal sealed partial class TestyMcpService
             catch (Exception ex) when (ex is McpToolException or ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception) { /* The window closed or is outside this server's target policy. */ }
         }
         var known=result.Where(c=>c.Candidate.Exe is not null).Select(c=>c.Candidate.Exe!).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        void AddExecutable(string path)
+        void AddExecutable(string path,string? title=null)
         {
             if (result.Count>=100 || known.Contains(path)) return;
-            try { var candidate=CaptureExecutable(path,"exe-"+result.Count); result.Add(candidate); known.Add(candidate.Candidate.Exe!); }
+            try { var candidate=CaptureExecutable(path,"exe-"+result.Count,title); result.Add(candidate); known.Add(candidate.Candidate.Exe!); }
             catch (Exception ex) when (ex is McpToolException or IOException or UnauthorizedAccessException) { /* Only existing GUI apps permitted by the launch policy are candidates. */ }
         }
         if (!string.IsNullOrWhiteSpace(savedTarget)) AddExecutable(savedTarget);
+        // The user never picks the app: the bundled samples, programs earlier tests used, and installed apps the request names are
+        // candidates even when they are not open, so the model can choose one and Testy opens it (through the same launch policy).
+        try
+        {
+            var request=AppResolver.Tokens(instructions);
+            foreach (var app in await Task.Run(() => AppCandidates(includeInstalled: true),ct))
+            {
+                if (result.Count>=100) break;
+                if (app.IsRunning || app.Packaged || app.ExePath.Length==0) continue;
+                if (app.Kind is AppCandidateKind.Sample or AppCandidateKind.Recent || Mentions(request,app)) AddExecutable(app.ExePath,app.Name);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception) { /* Discovery is best effort; open apps remain candidates. */ }
         if (workspace is not null)
         {
             var pending=new Queue<(string Path,int Depth)>(); pending.Enqueue((workspace,0)); int examined=0;
