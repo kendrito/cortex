@@ -1,7 +1,7 @@
 {
   "name": "@cortex/hooks-claude-code",
   "description": "Bridge plugin: run a Claude Code hooks.json / settings hook config on the Cortex interception seams",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

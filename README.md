@@ -1,6 +1,6 @@
 # Cortex
 
-Cortex is a security-focused, plugin-based agent harness built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and [Cordis](https://github.com/cordiverse/cordis). This source tree incorporates upstream **0.2.0-rc.2**, commit `639ed015397290b3745d163aafe02ffee4aa3f84` (2026-09-29), while retaining Cortex's local model settings.
+Cortex is a security-focused, plugin-based agent harness built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and [Cordis](https://github.com/cordiverse/cordis). The exact imported version, tag, and commit are pinned in [upstream.json](upstream.json); [the synchronization record](docs/cortex-upstream-sync.md) documents the imported scope and Cortex's security exclusions.
 
 ## Privacy policy
 
@@ -36,7 +36,7 @@ Configuration lives in `$CORTEX_HOME` (default `~/.cortex`). The active profile'
 
 Start with [development](docs/development.md) and [architecture](docs/architecture.md). `pnpm run typecheck`, `pnpm run lint`, and `pnpm run test` cover separate validation surfaces. Real model fixture recording requires an explicitly configured local test gateway; it is not part of a keyless test run.
 
-Cortex repository versions use annotated `cortex-v<version>` tags. See [preparing and tagging a version](docs/cortex-releases.md) for the version update and GitHub tagging procedure.
+Cortex versions combine the imported DeepSeek version with a Cortex release counter, such as `0.2.0-rc.2.cortex.1`. Annotated `cortex-v<version>` tags include the upstream baseline. See [preparing and tagging a version](docs/cortex-releases.md) for the version update and GitHub tagging procedure.
 
 ## Licence
 

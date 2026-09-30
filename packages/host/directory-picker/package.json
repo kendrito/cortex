@@ -1,7 +1,7 @@
 {
   "name": "@cortex/host-directory-picker",
   "description": "Abstract workspace-directory picking seam (ctx.directoryPicker) for the Cortex web GUI host",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

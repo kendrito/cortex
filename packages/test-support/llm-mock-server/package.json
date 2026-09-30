@@ -1,7 +1,7 @@
 {
   "name": "@cortex/llm-mock-server",
   "description": "Scriptable Messages HTTP/SSE fault server for LLM recovery tests",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

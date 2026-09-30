@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sandbox",
   "description": "Abstract process-sandbox seam (ctx.sandbox) for the Cortex: same-world confinement vocabulary and the SandboxProvider contract",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

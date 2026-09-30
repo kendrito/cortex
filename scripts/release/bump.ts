@@ -413,6 +413,9 @@ function main(): void {
     return
   }
   console.log('release bump: prepared unstaged changes. Review, validate, and commit them; after the tested commit merges to main, create and push its annotated tag:')
+  if (family.id === 'cortex') {
+    console.log('  Include upstream.json in the Cortex tag annotation; see docs/cortex-releases.md.')
+  }
   for (const tag of [...new Set(planned.map(entry => entry.tag).filter(tag => tag !== undefined))]) {
     console.log(`  git tag -a ${tag} <tested-main-commit> -m "Release ${tag}"`)
     console.log(`  git push origin ${tag}`)

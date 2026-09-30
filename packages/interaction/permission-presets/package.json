@@ -1,7 +1,7 @@
 {
   "name": "@cortex/permission-presets",
   "description": "User-facing permission presets (ctx.permissionPresets) for the Cortex: one product-level Permissions select bundling the sandbox-mode and approval-policy knobs, written through to their own session events",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

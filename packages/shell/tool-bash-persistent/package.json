@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-bash-persistent",
   "description": "Model-facing owner-scoped persistent Bash tool backed by the Harness PTY service",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

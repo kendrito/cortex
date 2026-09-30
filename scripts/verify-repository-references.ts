@@ -1,9 +1,10 @@
-/** Reject maintained references to repository commits and the disallowed organization URL. */
+/** Reject prohibited maintained commit references and the disallowed organization URL. */
 
 import { execFileSync } from 'node:child_process'
 import { lstatSync, readFileSync, readlinkSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import ts from 'typescript'
 import { canonicalReferenceText } from './verify-public-repository-links.ts'
 
 const root = resolve(import.meta.dirname, '..')
@@ -29,8 +30,30 @@ function isMaintained(file: string): boolean {
   return !excludedPrefixes.some(prefix => file.startsWith(prefix))
 }
 
+/** The standalone root commit field in upstream.json pins the imported source snapshot. */
+function upstreamCommitLine(file: string, source: string): number | undefined {
+  if (file !== 'upstream.json') return undefined
+  try { JSON.parse(source) }
+  catch (error) {
+    // Invalid JSON receives no baseline exception; release verification reports its syntax error.
+    if (error instanceof SyntaxError) return undefined
+    throw error
+  }
+  const document = ts.parseJsonText(file, source)
+  const statement = document.statements[0]
+  if (statement === undefined || !ts.isExpressionStatement(statement)
+    || !ts.isObjectLiteralExpression(statement.expression)) return undefined
+  const commits = statement.expression.properties.filter(property =>
+    ts.isPropertyAssignment(property) && ts.isStringLiteral(property.name) && property.name.text === 'commit')
+  const [commit] = commits
+  if (commits.length !== 1 || commit === undefined) return undefined
+  const { line } = document.getLineAndCharacterOfPosition(commit.getStart(document))
+  return /^\s*"commit"\s*:\s*"[a-f0-9]{40}"\s*,?\s*$/.test(source.split('\n')[line] ?? '') ? line : undefined
+}
+
 /**
  * Inspect a maintained source file against known commit identifiers.
+ * Only upstream.json's standalone, full lowercase root commit field is exempt.
  * @param file - Repository-relative path used in diagnostics and exclusions.
  * @param source - File text or a symlink's stored target.
  * @param commits - Lowercase, unambiguous full or abbreviated commit identifiers.
@@ -43,11 +66,12 @@ export function findRepositoryReferences(
 ): RepositoryReference[] {
   if (!isMaintained(file)) return []
   const references: RepositoryReference[] = []
+  const baselineLine = upstreamCommitLine(file, source)
   for (const [index, line] of source.split('\n').entries()) {
     if (organizationUrl.test(canonicalReferenceText(line).replace(kitRepositoryUrl, ''))) {
       references.push({ file, line: index + 1, kind: 'organization-url' })
     }
-    if ([...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
+    if (index !== baselineLine && [...line.matchAll(commitCandidate)].some(match => commits.has(match[0].toLowerCase()))) {
       references.push({ file, line: index + 1, kind: 'commit-hash' })
     }
   }
@@ -93,7 +117,8 @@ function repositoryCommits(repoRoot: string, sources: Iterable<string>): Set<str
 /**
  * Scan tracked and nonignored new files using only the local Git object database.
  * @param repoRoot - Working tree whose files and Git objects are inspected.
- * @returns Prohibited references outside vendor and frozen Agent Notes; absent shallow-history objects cannot match.
+ * @returns Prohibited references outside vendor, frozen Agent Notes, and the baseline commit field;
+ * absent shallow-history objects cannot match.
  */
 export function scanRepositoryReferences(repoRoot: string): RepositoryReference[] {
   const sources = readMaintainedFiles(repoRoot)
@@ -105,7 +130,7 @@ const invokedPath = process.argv[1]
 if (invokedPath !== undefined && import.meta.url === pathToFileURL(resolve(invokedPath)).href) {
   const references = scanRepositoryReferences(root)
   if (references.length === 0) {
-    console.log('verify-repository-references: maintained files contain no repository commit identifiers or disallowed organization URLs.')
+    console.log('verify-repository-references: maintained files contain no prohibited commit references or disallowed organization URLs; upstream.json may pin its imported commit.')
   } else {
     console.error('verify-repository-references: use release tags or maintained repository links:')
     for (const { file, line, kind } of references) console.error(`  ${file}:${String(line)} ${kind}`)

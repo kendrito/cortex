@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sandbox-local",
   "description": "Local process-sandbox backends for the Cortex sandbox seam: bwrap, the npm-distributed landlock-run launcher, macOS Seatbelt, or the Windows ACL restricted-token runner — functionally probed, fail-closed",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

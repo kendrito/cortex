@@ -44,6 +44,37 @@ function repository(test: TestContext) {
 }
 
 describe('maintained repository reference policy', () => {
+  it('allows the upstream baseline commit after its object becomes available locally', (test) => {
+    const fixture = repository(test)
+    fixture.write('upstream.json', JSON.stringify({ commit: fixture.commit }, null, 2))
+    expect(scanRepositoryReferences(fixture.root)).toEqual([])
+  })
+
+  it('checks other baseline fields and organization URLs beside an allowed commit', () => {
+    const commit = 'a'.repeat(40)
+    const source = JSON.stringify({ commit, previousCommit: commit, repository: organizationUrl }, null, 2)
+    expect(findRepositoryReferences('upstream.json', source, new Set([commit]))).toEqual([
+      { file: 'upstream.json', line: 3, kind: 'commit-hash' },
+      { file: 'upstream.json', line: 4, kind: 'organization-url' },
+    ])
+    expect(findRepositoryReferences('other.json', JSON.stringify({ commit }, null, 2), new Set([commit])))
+      .toEqual([{ file: 'other.json', line: 2, kind: 'commit-hash' }])
+  })
+
+  it.each([
+    ['abbreviated', `  "commit": "${'a'.repeat(12)}"`],
+    ['uppercase', `  "commit": "${'A'.repeat(40)}"`],
+    ['escaped key', `  "com\\u006dit": "${'a'.repeat(40)}"`],
+    ['inline extra field', `  "commit": "${'a'.repeat(40)}", "extra": "value"`],
+    ['nested', `  "nested": {\n    "commit": "${'a'.repeat(40)}"\n  }`],
+    ['duplicate', `  "commit": "${'a'.repeat(40)}",\n  "commit": "${'a'.repeat(40)}"`],
+    ['invalid JSON', `  "commit": "${'a'.repeat(40)}",`],
+  ])('does not exempt %s commit fields', (_label, fields) => {
+    const references = findRepositoryReferences('upstream.json', `{\n${fields}\n}`, new Set(['a'.repeat(40), 'a'.repeat(12)]))
+    expect(references.length).toBeGreaterThan(0)
+    expect(references.every(reference => reference.kind === 'commit-hash')).toBe(true)
+  })
+
   it('permits only the independent kit repository and its source URLs', () => {
     for (const suffix of ['', '.git', '/tree/main/packages/entry']) {
       expect(findRepositoryReferences('package.json', `${organizationUrl}/libreoffice-kit${suffix}`, new Set())).toEqual([])

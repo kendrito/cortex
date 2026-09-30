@@ -2,7 +2,7 @@
 
 ## Imported scope
 
-This tree integrates DeepSeek Harness 0.2.0-rc.2 at `639ed015397290b3745d163aafe02ffee4aa3f84` (2026-09-29), compared with the earlier fork's upstream baseline `47f9438` (0.1.0-rc.5). The import covers the current agent and session architecture, V4 session storage and migrations, profiles and bundles, settings/configuration services, PTC, SDKs, native integrations, browser and computer-use providers, office tooling, desktop application, and UI. Both Codex and Claude Code participate in the current subagent orchestration interfaces.
+The exact DeepSeek Harness baseline is pinned in [upstream.json](../upstream.json), including its version, official tag, full commit, and import date. The commit identifies the imported snapshot even if an upstream tag later moves. Each [Cortex version tag](cortex-releases.md) preserves its own copy of this file. The import covers the current agent and session architecture, V4 session storage and migrations, profiles and bundles, settings/configuration services, PTC, SDKs, native integrations, browser and computer-use providers, office tooling, desktop application, and UI. Both Codex and Claude Code participate in the current subagent orchestration interfaces.
 
 The embedded editor, its Code tab, pinned pane, sidecar launcher, and theme synchronization are removed. Conversation and trajectory views remain available. Cortex no longer starts or configures VS Code or code-server.
 

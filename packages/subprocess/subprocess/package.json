@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subprocess",
   "description": "Subprocess seam (ctx.subprocess) for the Cortex \u2014 managed process groups, bounded spill-backed output, and escalated kills behind one abstract service",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

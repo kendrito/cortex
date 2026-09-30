@@ -10,6 +10,7 @@
 import { parseArgs } from 'node:util'
 import { isEntry } from './process.ts'
 import { releaseFamily, type PublishPlan, type ReleaseFamily, type ReleaseMember } from './families.ts'
+import { verifyCortexBaseline } from './upstream.ts'
 
 /**
  * Print the publish order the release will follow, and the peer declarations it
@@ -79,6 +80,10 @@ function main(): void {
   if (values.family === undefined) throw new Error('usage: verify.ts --family <cortex|vendor>')
 
   const family = releaseFamily(values.family)
+  if (family.id === 'cortex') {
+    const baseline = verifyCortexBaseline(process.cwd())
+    console.log(`release verify: upstream ${baseline.tag} (${baseline.version}), commit ${baseline.commit}, imported ${baseline.importedAt}, ${baseline.repository}`)
+  }
   const members = family.members(process.cwd())
   family.verifyVersions(members)
   // Resolve the publish order here, before the build: an install-edge cycle

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/fs",
   "description": "Abstract filesystem capability seam (ctx.fs) for the Cortex — vocabulary types, the FileSystem service (text IO + optional version-guarded atomic mutations), and the fs/* policy event vocabulary",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

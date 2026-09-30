@@ -1,7 +1,7 @@
 {
   "name": "@cortex/desktop",
   "description": "Electron desktop shell for a bundled cortex runtime and external plugins",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "private": true,
   "license": "MIT",
   "type": "module",

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-sidebar-documentpreview",
   "description": "Extensible Sidebar previews for Office documents, spreadsheets, Markdown, code, images, PDF, HTML, and plain text",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

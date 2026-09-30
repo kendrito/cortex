@@ -1,7 +1,7 @@
 {
   "name": "@cortex/time-context",
   "description": "Durable per-step context with the current time and elapsed time",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

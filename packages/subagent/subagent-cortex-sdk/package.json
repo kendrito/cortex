@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subagent-cortex-sdk",
   "description": "Out-of-process SDK subagent backend: drives a child Cortex runtime subprocess over stdio JSON-RPC through the TypeScript SDK client",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/experimental-auto-review",
   "description": "Per-tool LLM authorization review for the Cortex Auto permission preset",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "icon": "./icon.svg",
   "repository": {
     "type": "git",

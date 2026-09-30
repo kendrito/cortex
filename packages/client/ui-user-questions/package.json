@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-user-questions",
   "description": "Web ask_user_question composer takeover and plan-review presentation UI",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

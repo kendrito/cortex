@@ -1,7 +1,7 @@
 {
   "name": "@cortex/terminal",
   "description": "Persistent PTY session seam for the Cortex — owner-scoped ids, backend registry, interactive sends, reads, signals, and awaited cleanup",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

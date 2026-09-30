@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-brand-official",
   "description": "Official Cortex brand occupants for the Web client's sidebar slots",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

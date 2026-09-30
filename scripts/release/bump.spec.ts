@@ -34,7 +34,7 @@ function fixture() {
   git('-c', 'user.name=Cortex fixture', '-c', 'user.email=fixture@example.test', '-c', 'commit.gpgsign=false', 'commit', '--quiet', '-m', 'Fixture baseline')
   const head = git('rev-parse', 'HEAD')
   const environment: NodeJS.ProcessEnv = { ...gitEnvironment, npm_execpath: pnpm }
-  const invoke = (...args: string[]) => spawnSync(process.execPath, ['--import', loader, bump, '--family', 'cortex', '0.3.0-beta.1', ...args], {
+  const invoke = (...args: string[]) => spawnSync(process.execPath, ['--import', loader, bump, '--family', 'cortex', '0.2.0-rc.2.cortex.1', ...args], {
     cwd: root, encoding: 'utf8', env: environment,
   })
   const versions = () => manifests.map(path => readFileSync(join(root, path), 'utf8'))
@@ -46,7 +46,7 @@ it('prepares every Cortex manifest and lockfile without staging, committing, tag
   const result = invoke()
   expect(result.error).toBeUndefined()
   expect(result.status, result.stderr).toBe(0)
-  expect(versions().every(manifest => manifest.includes('"version": "0.3.0-beta.1"'))).toBe(true)
+  expect(versions().every(manifest => manifest.includes('"version": "0.2.0-rc.2.cortex.1"'))).toBe(true)
   expect(readFileSync(join(root, 'vendor/probe/package.json'), 'utf8')).toContain('4.0.0')
   expect(readFileSync(join(root, 'pnpm-lock.yaml'), 'utf8')).toContain('["install","--lockfile-only","--ignore-scripts"]')
   expect(git('rev-parse', 'HEAD')).toBe(head)
@@ -55,7 +55,7 @@ it('prepares every Cortex manifest and lockfile without staging, committing, tag
   expect(git('diff', '--name-only').split('\n').sort()).toEqual([...manifests, 'pnpm-lock.yaml'].sort())
   expect(result.stdout).toContain('prepared unstaged changes')
   expect(result.stdout).toContain('merges to main')
-  expect(result.stdout).toContain('git tag -a cortex-v0.3.0-beta.1 <tested-main-commit>')
+  expect(result.stdout).toContain('git tag -a cortex-v0.2.0-rc.2.cortex.1 <tested-main-commit>')
 })
 
 it.each(['tracked', 'staged', 'untracked'] as const)('rejects %s changes before writing manifests or invoking pnpm', (kind) => {
@@ -84,7 +84,7 @@ it('allows a dry run over existing work without changing files, the index, or hi
   expect(result.error).toBeUndefined()
   expect(result.status, result.stderr).toBe(0)
   expect(result.stdout).toContain('dry run, nothing written')
-  expect(result.stdout).toContain('0.2.0-rc.2 -> 0.3.0-beta.1')
+  expect(result.stdout).toContain('0.2.0-rc.2 -> 0.2.0-rc.2.cortex.1')
   expect(versions()).toEqual(before.versions)
   expect(git('status', '--porcelain=v1')).toBe(before.status)
   expect(git('diff', '--cached')).toBe(before.index)

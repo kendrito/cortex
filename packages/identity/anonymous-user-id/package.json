@@ -1,7 +1,7 @@
 {
   "name": "@cortex/anonymous-user-id",
   "description": "Shared anonymous user identity for Cortex telemetry and feedback correlation",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-open-in-app",
   "description": "Web \"Open In...\" controls: the Session-header split button opening the workspace directory in an installed application, and the document preview's default-application controls for one file",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

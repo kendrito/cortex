@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subagent-spawn-in-process",
   "description": "In-process spawn subagent backend: runs a fresh child agent on ctx.agents",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

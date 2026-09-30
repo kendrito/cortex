@@ -1,7 +1,7 @@
 {
   "name": "@cortex/experimental-ptc-runtime-python",
   "description": "CPython subprocess implementation of the Cortex PTC execution seam",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/local/cortex.git",

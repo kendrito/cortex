@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sandbox-windows-acl",
   "description": "Windows ACL write-restriction sandbox backend (restricted-token spawn with capability-SID write allowlist) for the Cortex sandbox seam",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

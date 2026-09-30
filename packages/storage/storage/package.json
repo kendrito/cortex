@@ -1,7 +1,7 @@
 {
   "name": "@cortex/storage",
   "description": "Storage hub (ctx.storage): named backend registry plus mounted data-form facilities for the Cortex",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

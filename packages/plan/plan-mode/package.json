@@ -1,7 +1,7 @@
 {
   "name": "@cortex/plan-mode",
   "description": "Logged per-agent plan mode with deployment guidance, a direct slash command, and a user-reviewed exit",
-  "version": "0.3.0-beta.1",
+  "version": "0.2.0-rc.2.cortex.1",
   "publishConfig": {
     "access": "public"
   },

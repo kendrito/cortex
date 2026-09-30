@@ -358,6 +358,14 @@ describe('vendored version baseline', () => {
 })
 
 describe('version precedence', () => {
+  it('orders Cortex revisions within their upstream prerelease and below the next upstream prerelease', () => {
+    expect(compareVersions('0.2.0-rc.2.cortex.1', '0.2.0-rc.2.cortex.2')).toBeLessThan(0)
+    expect(compareVersions('0.2.0-rc.2.cortex.2', '0.2.0-rc.2.cortex.10')).toBeLessThan(0)
+    expect(compareVersions('0.2.0-rc.2.cortex.10', '0.2.0-rc.3.cortex.1')).toBeLessThan(0)
+    expect(compareVersions('0.2.0-rc.3.cortex.1', '0.2.0-stable.cortex.1')).toBeLessThan(0)
+    expect(compareVersions('0.2.0-stable.cortex.1', '0.2.0-stable.cortex.2')).toBeLessThan(0)
+  })
+
   it('orders alpha, canary, and release-candidate versions by semver precedence', () => {
     expect(compareVersions('4.0.1-alpha.1', '4.0.1-canary.1')).toBeLessThan(0)
     expect(compareVersions('4.0.1-canary.1', '4.0.1-rc.1')).toBeLessThan(0)
