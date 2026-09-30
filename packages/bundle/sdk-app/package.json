@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sdk-app",
   "description": "The cortex SDK profile bundle: stdio JSON-RPC serving and process lifecycle over cortex-base",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

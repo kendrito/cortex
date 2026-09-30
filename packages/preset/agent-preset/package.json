@@ -1,7 +1,7 @@
 {
   "name": "@cortex/agent-preset",
   "description": "Declare an Agent capability composition in Cordis YAML",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

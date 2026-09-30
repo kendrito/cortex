@@ -1,7 +1,7 @@
 {
   "name": "@cortex/acp",
   "description": "Automation-only Agent Client Protocol server for driving Cortex agents over JSON-RPC stdio",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

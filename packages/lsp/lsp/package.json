@@ -1,7 +1,7 @@
 {
   "name": "@cortex/lsp",
   "description": "Abstract LSP capability seam (ctx.lsp) for the Cortex — language-server provider registry keyed by branded id and extension mapping, order-independent per-query selection, normalized definition/references/implementation/hover requests and results, and the LspError taxonomy",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

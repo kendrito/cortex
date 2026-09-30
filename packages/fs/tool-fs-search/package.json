@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-fs-search",
   "description": "Model-facing filesystem discovery tools (glob, grep) backed by the packaged ripgrep binary (@vscode/ripgrep)",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

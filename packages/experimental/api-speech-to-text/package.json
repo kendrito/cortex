@@ -1,7 +1,7 @@
 {
   "name": "@cortex/experimental-api-speech-to-text",
   "description": "Authenticated experimental speech transcription for browser clients",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

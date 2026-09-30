@@ -1,7 +1,7 @@
 {
   "name": "@cortex/util-code-language",
   "description": "Single file-extension to syntax-highlighting language table shared by Client code surfaces and the Host read card",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

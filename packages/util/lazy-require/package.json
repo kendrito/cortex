@@ -1,7 +1,7 @@
 {
   "name": "@cortex/lazy-require",
   "description": "Caller-relative, success-cached lazy loading for CommonJS-compatible Host dependencies",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-settings-agent-loop",
   "description": "Settings page of the agent loop on the cortex web client's Plugins page: the parallel tool-call cap of the agent-loop namespace",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

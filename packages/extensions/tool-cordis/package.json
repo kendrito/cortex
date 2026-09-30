@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-cordis",
   "description": "Read-only runtime API inspection for Harness plugin development",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

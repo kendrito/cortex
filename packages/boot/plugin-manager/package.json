@@ -1,7 +1,7 @@
 {
   "name": "@cortex/plugin-manager",
   "description": "Current-profile plugin and bundle management shared by cortex CLI, Web and agent tools",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

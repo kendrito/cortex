@@ -1,7 +1,7 @@
 {
   "name": "@cortex/web-frontend",
   "description": "Web application entry: vite build over the @cortex/client-web shell library; dist/ served by apps/cli's cortex web",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

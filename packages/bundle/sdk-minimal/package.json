@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sdk-minimal",
   "description": "The standalone minimal SDK profile bundle: JSON-RPC, configurable model routes, persistent shell, and JSONL sessions",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

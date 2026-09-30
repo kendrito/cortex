@@ -1,7 +1,7 @@
 {
   "name": "@cortex/storage-sqlite",
   "description": "SQLite storage backend (kv facet) for the Cortex storage hub",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

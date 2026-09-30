@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-commands",
   "description": "Client command surface: global directory cache, '/' source, three command UI kinds, popupSelect registry",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

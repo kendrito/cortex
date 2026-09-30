@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sdk-client",
   "description": "TypeScript client SDK for driving a Cortex runtime subprocess over stdio JSON-RPC: the DeepSeekHarness high-level turns API and the lower-level HarnessClient",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/token-meter",
   "description": "Replay-aware token measurement service (ctx.tokenMeter) for the Cortex",
-  "version": "0.2.0-rc.2",
+  "version": "0.3.0-beta.1",
   "publishConfig": {
     "access": "public"
   },
