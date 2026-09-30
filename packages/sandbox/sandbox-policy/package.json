@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sandbox-policy",
   "description": "Per-call sandbox policy resolver and current model context: deployment fallbacks plus each session's mode and workspace root, shared by every enforcing capability family",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -32,22 +32,25 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session-projection": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session-projection": "workspace:*"
   }
 }

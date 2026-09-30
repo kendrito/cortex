@@ -3,12 +3,15 @@
  * gateway, a self-hosted server, or a provider newer than the installed
  * catalog.
  *
- * This is a create, not an edit, which is why it is its own card rather than
+ * This is a create, not an edit, which is why it is its own form rather than
  * the provider editor with extra fields: the route id is being *chosen* here,
- * and the settings address does not exist until it is. One `settings.mutate`
- * sets the whole profile at `providers.<route>`; the key travels separately
- * through `credentials.set` under the reference the profile records, exactly as
- * an existing provider's key does.
+ * and the settings address does not exist until it is. It renders as the
+ * custom-API panel of the section's add card; the card's mode switch names it
+ * when both modes are offered, and with the custom mode alone the card shows
+ * this form directly. One `settings.mutate` sets the whole profile at
+ * `providers.<route>`; the key travels separately through `credentials/set`
+ * under the reference the profile records, exactly as an existing provider's
+ * key does.
  *
  * The three fields a hand-declared route cannot default — endpoint, protocol,
  * and at least one model — are required here rather than at load, so the
@@ -21,16 +24,18 @@
  * levels instead.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { IApiClient } from '@cortex/api-remotes/client'
+import type { JsonValue } from '@cortex/util-values'
 import { apiKeyFailure } from './apiKey.ts'
-import { PROVIDER_UI_LOCKDOWN, isApprovedLocalEndpoint } from './lockdown.ts'
+import { PROVIDER_UI_LOCKDOWN, isApprovedLocalEndpoint, lockedProtocolChoices } from './lockdown.ts'
 import { EditorFooter } from './EditorFooter.tsx'
-import { validateCortexModels } from './model-drafts.ts'
+import { validateDeepSeekModels } from './DeepSeekModelsEditor.tsx'
 import { ModelListEditor } from './ModelListEditor.tsx'
 import type { ModelDraft } from './ModelListEditor.tsx'
-import { deriveKeyRef, messageOf } from './store.ts'
+import { deriveKeyRef } from './store.ts'
+import { protocolLabel } from './protocol-label.ts'
+import type { ModelsOperations } from './operations.ts'
 import type { en } from './locales.ts'
 import styles from './ModelsSection.module.css'
 
@@ -47,6 +52,15 @@ const NS = 'llm-pi-ai'
  */
 const ROUTE_PATTERN = /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/
 
+function isHttpUrl(value: string): boolean {
+  try {
+    const protocol = new URL(value).protocol
+    return protocol === 'http:' || protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 /** Props of {@link CustomProviderCard}. */
 export interface CustomProviderCardProps {
   /** Route ids already declared, so the card refuses to shadow one. */
@@ -59,14 +73,19 @@ export interface CustomProviderCardProps {
    * than a silent overwrite of its whole profile.
    */
   revision: number
-  /** Wire faces for the write and for interrogating the endpoint. */
-  api: Pick<IApiClient, 'settings' | 'credentials' | 'llm'>
+  /** The Host operations this card writes and interrogates through. */
+  operations: ModelsOperations
   /** Section copy. */
   t: (key: keyof typeof en) => string
   /** Disable writes (read-only settings provider). */
   readOnly: boolean
   /** Close the card; `changed` reports whether a provider was created. */
   onClose: (changed: boolean) => void
+  /**
+   * Called once per change with whether the create or the list's endpoint
+   * interrogation is in flight, so the owner can hold its surface still.
+   */
+  onBusyChange?: (busy: boolean) => void
 }
 
 /**
@@ -75,9 +94,9 @@ export interface CustomProviderCardProps {
  * @returns the creation card.
  */
 export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
-  const { taken, protocols, api, t } = props
-  // Captured at mount, like the editor's: the write must be judged against the
-  // section this card was drafted over, not whatever it grew into meanwhile.
+  const { taken, operations, t, onBusyChange } = props
+  const protocols = lockedProtocolChoices(props.protocols)
+  // The write is checked against the revision on which this draft was opened.
   const [openedAt] = useState(() => props.revision)
   const [route, setRoute] = useState('')
   const [displayName, setDisplayName] = useState('')
@@ -86,6 +105,8 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
   const [keyDraft, setKeyDraft] = useState('')
   const [models, setModels] = useState<readonly ModelDraft[]>([])
   const [busy, setBusy] = useState(false)
+  const [listBusy, setListBusy] = useState(false)
+  useEffect(() => { onBusyChange?.(busy || listBusy) }, [busy, listBusy, onBusyChange])
   const [failure, setFailure] = useState<string | undefined>(undefined)
   /**
    * The profile write landed. Only the key write can still be outstanding, so
@@ -99,25 +120,21 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
 
   const routeInvalid = route.length > 0 && !ROUTE_PATTERN.test(route)
   const routeTaken = taken.includes(route)
+  const normalizedBaseURL = baseURL.trim()
+  const baseUrlInvalid = baseURL.length > 0 && !isHttpUrl(normalizedBaseURL)
   // Rows are checked by the same per-row validator the editor cards use, so a
   // bad row is named by its position here too. Capacities have route-level
   // fallbacks; what a route cannot default is at least one model.
-  const modelFailure = validateCortexModels(models)
+  const endpointBlocked = PROVIDER_UI_LOCKDOWN && !isApprovedLocalEndpoint(normalizedBaseURL)
+  const modelFailure = validateDeepSeekModels(models)
   const keyFailure = apiKeyFailure(keyDraft)
-  // Deployment lockdown: a hand-declared route may only target the approved
-  // local LiteLLM gateway. The check is client-side by design — settings.yaml
-  // (the administrator path) is not subject to it.
-  const endpointBlocked = PROVIDER_UI_LOCKDOWN && baseURL.length > 0 && !isApprovedLocalEndpoint(baseURL)
   // The typed key with paste whitespace removed. A blank field yields an empty
   // string, which the create path reads as "no key supplied" — a route may
   // legitimately authenticate through the provider's own ambient discovery.
   const keyValue = keyDraft.trim()
   const ready = route.length > 0 && !routeInvalid && !routeTaken
-    // The lockdown gate: the endpoint the card always required must also be
-    // the approved local gateway (see lockdown.ts).
-    && !endpointBlocked
-    && baseURL.length > 0 && models.length > 0 && modelFailure === undefined
-    && keyFailure === undefined
+    && normalizedBaseURL.length > 0 && !baseUrlInvalid && models.length > 0 && modelFailure === undefined
+    && keyFailure === undefined && !endpointBlocked && protocols.includes(protocol)
   // The one blocked gate worth a line under the form. A satisfied card says
   // nothing at all rather than printing an empty paragraph.
   const hint = failure !== undefined || ready
@@ -128,9 +145,9 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
     // Same for the route id, and it must be tested rather than assumed: the
     // fallback arm below reads "no models yet", so an unmet route gate would
     // fall through to it and contradict the filled-in list right above.
-    || route.length === 0 || routeInvalid || routeTaken
+    || route.length === 0 || routeInvalid || routeTaken || baseUrlInvalid
     ? undefined
-    : baseURL.length === 0
+    : normalizedBaseURL.length === 0
       ? t('customNeedsBaseUrl')
       : modelFailure !== undefined
         ? `${t('model')} ${String(modelFailure.index + 1)}: ${t(modelFailure.key)}`
@@ -138,6 +155,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
 
   /** Perform the create, returning a failure message or undefined. */
   const createOnce = async (): Promise<string | undefined> => {
+    if (endpointBlocked || !protocols.includes(protocol)) return t('lockedEndpoint')
     const keyRef = deriveKeyRef(route)
     const storesKey = keyValue.length > 0
     if (!committed) {
@@ -149,18 +167,20 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         // chain, ADC) instead of resolving a reference nothing ever sets.
         ...storesKey ? { apiKeyEnv: keyRef } : {},
         api: protocol,
-        baseURL,
+        baseURL: normalizedBaseURL,
         models: models.map(model => ({ ...model })),
       }
-      const response = await api.settings.mutate({
-        ns: NS,
-        ops: [{ op: 'set', path: ['providers', route], value: profile }],
-        // `taken` is a snapshot too, so the id check alone cannot see a route
-        // declared after this card opened; the revision makes that race a
-        // `settings-conflict` instead of a write over the other profile.
-        expectedRevision: openedAt,
-      })
-      if (!response.result.ok) return response.result.error.message
+      // `taken` is a snapshot too, so the id check alone cannot see a route
+      // declared after this card opened; the revision makes that race a
+      // `settings-conflict` instead of a write over the other profile.
+      const written = await operations.writeSettings(
+        NS,
+        [{ op: 'set', path: ['providers', route], value: profile as JsonValue }],
+        openedAt,
+      )
+      if (written.kind !== 'written') {
+        return written.kind === 'conflict' ? t('conflict') : written.message
+      }
       // The provider now exists. A retry after the key write below fails must
       // not re-run this mutate: the revision it holds is the one this write
       // just superseded, so the Host would answer `settings-conflict` and the
@@ -168,10 +188,10 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
       setCommitted(true)
     }
     if (storesKey) {
-      const stored = await api.credentials.set({ ref: keyRef, value: keyValue })
+      const stored = await operations.storeCredential(keyRef, keyValue)
       // The profile landed; saying the key did not is the only honest report,
       // and the retry above now goes straight back to this write.
-      if (!stored.result.ok) return stored.result.error.message
+      if (stored !== undefined) return stored
     }
     return undefined
   }
@@ -186,10 +206,6 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         return
       }
       props.onClose(true)
-    } catch (error) {
-      // A transport failure rejects rather than answering; without this the
-      // card would stay busy with nothing shown.
-      setFailure(messageOf(error))
     } finally {
       setBusy(false)
     }
@@ -197,9 +213,6 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
 
   return (
     <div className={styles['editor']}>
-      <div className={styles['editorHeader']}>
-        <span className={styles['editorTitle']}>{t('customTitle')}</span>
-      </div>
       <div className={styles['field']}>
         <span className={styles['fieldLabel']}>{t('customRoute')}</span>
         <input
@@ -235,13 +248,17 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
           className={styles['input']}
           type="text"
           value={baseURL}
-          placeholder={PROVIDER_UI_LOCKDOWN ? 'http://127.0.0.1:4000/v1' : 'https://gateway.example/v1'}
+          placeholder={PROVIDER_UI_LOCKDOWN ? t('lockedEndpointPlaceholder') : t(protocol === 'anthropic-messages'
+            ? 'customAnthropicBaseUrlPlaceholder'
+            : 'customBaseUrlPlaceholder')}
           aria-label={t('baseUrl')}
+          aria-invalid={baseUrlInvalid}
           disabled={profileDisabled}
           onChange={(event) => { setBaseURL(event.target.value) }}
         />
       </div>
-      {endpointBlocked ? <p className={styles['error']}>{t('lockedEndpoint')}</p> : null}
+      {endpointBlocked && normalizedBaseURL.length > 0 ? <p className={styles['error']}>{t('lockedEndpoint')}</p> : null}
+      {baseUrlInvalid ? <p className={styles['error']}>{t('customBaseUrlInvalid')}</p> : null}
       <div className={styles['field']}>
         <span className={styles['fieldLabel']}>{t('customApi')}</span>
         <select
@@ -251,7 +268,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
           disabled={profileDisabled}
           onChange={(event) => { setProtocol(event.target.value) }}
         >
-          {protocols.map(choice => <option key={choice} value={choice}>{choice}</option>)}
+          {protocols.map(choice => <option key={choice} value={choice}>{protocolLabel(t, choice)}</option>)}
         </select>
       </div>
       <div className={styles['field']}>
@@ -259,7 +276,7 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         <input
           className={styles['input']}
           type="password"
-          autoComplete="off"
+          autoComplete="new-password"
           value={keyDraft}
           placeholder={t('keyPlaceholder')}
           aria-label={t('keyInput')}
@@ -278,14 +295,17 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         onChange={setModels}
         probe={{
           settingsNs: NS,
-          baseURL,
+          baseURL: normalizedBaseURL,
           api: protocol,
           ...keyValue.length === 0 ? {} : { apiKey: keyValue },
         }}
-        probeBlocked={keyFailure === 'keyBlank' ? 'keyBlankNew' : keyFailure}
-        api={api}
+        probeBlocked={endpointBlocked ? 'lockedEndpoint' : baseUrlInvalid
+          ? 'customBaseUrlInvalid'
+          : keyFailure === 'keyBlank' ? 'keyBlankNew' : keyFailure}
+        operations={operations}
         t={t}
         disabled={profileDisabled}
+        onBusyChange={setListBusy}
       />
       {failure !== undefined ? <p className={styles['error']}>{failure}</p> : null}
       {/* Only the gates with something to say render; the route-id gate has its
@@ -295,8 +315,8 @@ export function CustomProviderCard(props: CustomProviderCardProps): ReactNode {
         t={t}
         busy={busy}
         submitDisabled={disabled || !ready}
-        submitLabel="create"
-        submitBusyLabel="creating"
+        submitLabelKey="create"
+        submitBusyLabelKey="creating"
         onCancel={() => { props.onClose(committed) }}
         onSubmit={() => { void create() }}
       />

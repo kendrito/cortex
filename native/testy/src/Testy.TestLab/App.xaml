@@ -1,0 +1,7 @@
+<Application x:Class="Testy.TestLab.App" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" StartupUri="MainWindow.xaml">
+  <Application.Resources>
+    <SolidColorBrush x:Key="Ink" Color="#172D37"/>
+    <Style TargetType="TextBox"><Setter Property="FontSize" Value="15"/><Setter Property="Padding" Value="12,10"/><Setter Property="BorderBrush" Value="#CBD5D8"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Background" Value="White"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
+    <Style TargetType="Button"><Setter Property="FontSize" Value="14"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Padding" Value="18,11"/><Setter Property="Background" Value="#164E52"/><Setter Property="Foreground" Value="White"/><Setter Property="BorderThickness" Value="0"/><Setter Property="Cursor" Value="Hand"/></Style>
+  </Application.Resources>
+</Application>

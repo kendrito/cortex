@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sandbox-windows-acl",
   "description": "Windows ACL write-restriction sandbox backend (restricted-token spawn with capability-SID write allowlist) for the Cortex sandbox seam",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -22,32 +22,36 @@
       "types": "./lib/types/runner.d.ts",
       "default": "./lib/runner.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/runner.js",
     "lib/types-*.js",
+    "assets",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/skill": "workspace:*",
+    "@cortex/subprocess": "workspace:*"
   },
   "dependencies": {
-    "koffi": "^3.1.0"
+    "@cortex/lazy-require": "workspace:*",
+    "@cortex/win32-process": "workspace:*",
+    "koffi": "3.1.1",
+    "yaml": "^2.4.2"
   },
   "devDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/pwsh-local": "workspace:^",
-    "@cortex/sandbox-local": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/pwsh-local": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/skill": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*"
   }
 }

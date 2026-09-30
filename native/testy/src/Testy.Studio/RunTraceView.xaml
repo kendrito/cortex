@@ -1,0 +1,54 @@
+<UserControl x:Class="Testy.Studio.RunTraceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Testy.Studio"
+             AutomationProperties.AutomationId="RunTrace"
+             Focusable="False"
+             KeyboardNavigation.TabNavigation="Once"
+             KeyboardNavigation.DirectionalNavigation="None"
+             UseLayoutRounding="True">
+    <!--
+      Run trace (Testy Studio). Colours come only from the Fluent theme (Application.ThemeMode) through
+      DynamicResource, so the control follows light/dark and the user's accent colour.
+      Ticks, hatching, blocks, playhead and thumbnails are drawn by one element (RunTraceSurface);
+      the only per-item elements are one focusable, selectable RunTraceStepElement per step.
+    -->
+    <UserControl.Resources>
+        <Style x:Key="LegendItem" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="LineHeight" Value="20"/>
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}"/>
+            <Setter Property="Margin" Value="20,0,0,0"/>
+            <Setter Property="TextWrapping" Value="NoWrap"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Margin="0,0,0,8">
+            <TextBlock x:Name="TitleText" DockPanel.Dock="Left" FontSize="12" LineHeight="20"
+                       LineStackingStrategy="BlockLineHeight" TextWrapping="NoWrap" Margin="0,0,4,0"
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run
+                    Text="Run trace" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/><Run
+                    Text="  "/><Run x:Name="UnitRun" Text="seconds"/></TextBlock>
+
+            <WrapPanel x:Name="Legend" HorizontalAlignment="Right" VerticalAlignment="Top">
+                <TextBlock x:Name="StepsItem" Style="{StaticResource LegendItem}"><InlineUIContainer
+                        BaselineAlignment="Center"><local:RunTraceLegendSwatch Kind="Step" Margin="0,0,7,0"/></InlineUIContainer><Run
+                        Text="Steps "/><Run x:Name="StepsValue" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/></TextBlock>
+                <TextBlock x:Name="GapItem" Style="{StaticResource LegendItem}"><InlineUIContainer
+                        BaselineAlignment="Center"><local:RunTraceLegendSwatch Kind="Gap" Margin="0,0,7,0"/></InlineUIContainer><Run
+                        x:Name="GapLabelRun"/><Run Text=" "/><Run x:Name="GapValue" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/></TextBlock>
+                <TextBlock x:Name="TotalItem" Style="{StaticResource LegendItem}"><Run
+                        Text="Total "/><Run x:Name="TotalValue" Foreground="{DynamicResource TextFillColorPrimaryBrush}"/></TextBlock>
+            </WrapPanel>
+        </DockPanel>
+
+        <local:RunTraceSurface x:Name="Surface" Grid.Row="1"/>
+    </Grid>
+</UserControl>

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/token-meter",
   "description": "Replay-aware token measurement service (ctx.tokenMeter) for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,42 +18,44 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./client": {
       "types": "./lib/types/client.d.ts",
       "default": "./lib/types/client.js"
     },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./estimate": {
+      "types": "./lib/types/estimate.d.ts",
+      "default": "./lib/types/estimate.js"
+    }
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/compaction": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/llm-retry": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/compaction-image-offload": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/compaction": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/llm-retry": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/compaction-image-offload": "workspace:*"
   }
 }

@@ -1,0 +1,56 @@
+{
+  "name": "@cortex/compaction-image-offload",
+  "description": "Durable image offload for image-capable routes: replace over-budget request images with placeholders and retry",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/compaction/compaction-image-offload"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json",
+    "./projection": {
+      "types": "./lib/types/projection.d.ts",
+      "default": "./lib/types/projection.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/compaction-basic": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/token-meter": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/util-values": "workspace:*"
+  }
+}

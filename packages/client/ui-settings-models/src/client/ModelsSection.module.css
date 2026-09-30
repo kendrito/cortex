@@ -1,9 +1,4 @@
-/* Models settings section, in the settings-panel design language: 14/22 body,
- * 12/18 caption, capsule controls (h36 r18; h28 r14 where a row is dense),
- * 32px fields, and `border-l2` hairlines — the vocabulary GeneralSection and
- * the Button/Input primitives already use.
- *
- * Every color resolves through a `--cortex-alias-*` token. Bare `--border` /
+/* Every color resolves through a `--dsw-alias-*` token. Bare `--border` /
  * `--surface` / `--text-*` names, which nothing in this app defines, would
  * render the light-mode literals written as their fallbacks and stay light
  * under the dark theme. */
@@ -13,7 +8,7 @@
   flex-direction: column;
   gap: 12px;
   max-width: 720px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .title {
@@ -21,28 +16,28 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .intro {
   margin: 0;
   font-size: 14px;
   line-height: 22px;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 .notice {
   margin: 0;
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-state-warn-label);
+  color: var(--dsw-alias-state-warn-label);
 }
 
 .savedNotice {
   margin: 0;
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-state-success-primary);
+  color: var(--dsw-alias-state-success-primary);
 }
 
 .rows {
@@ -55,11 +50,11 @@
   gap: 8px;
 }
 
-/* A configured provider: outlined on the panel fill, so the filled editor
-   card it expands into reads as the nested object. */
+/* Provider cards share the settings material; editors use the inset module fill. */
 .rowCard {
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 12px;
+  border: 0.5px solid var(--dsw-alias-settings-card-stroke);
+  background: var(--dsw-alias-settings-card-fill);
+  border-radius: var(--dsw-radius-xl);
   padding: 12px 14px;
   display: flex;
   flex-direction: column;
@@ -83,7 +78,7 @@
   font-size: 14px;
   line-height: 22px;
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 /* Reads as an annotation on the name, not as a second name: caption size and
@@ -93,11 +88,11 @@
 .rowTag {
   flex: none;
   padding: 1px 6px;
-  border: 1px solid var(--cortex-alias-border-l3);
-  border-radius: 4px;
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  border-radius: var(--dsw-radius-xs);
   font-size: 11px;
   line-height: 16px;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .credentialDot {
@@ -107,14 +102,15 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  corner-shape: round;
 }
 
 .credentialDotConfigured {
-  background: var(--cortex-alias-state-success-primary);
+  background: var(--dsw-alias-state-success-primary);
 }
 
 .credentialDotMissing {
-  background: var(--cortex-alias-state-error-primary);
+  background: var(--dsw-alias-state-error-primary);
 }
 
 .rowActions {
@@ -138,7 +134,7 @@
   height: 36px;
   padding: 0 14px;
   border: none;
-  border-radius: 18px;
+  border-radius: var(--dsw-radius-md);
   font: inherit;
   font-size: 14px;
   line-height: 22px;
@@ -146,28 +142,28 @@
 }
 
 .primaryButton {
-  background: var(--cortex-alias-button-primary-fill);
-  color: var(--cortex-alias-label-primary-foreground);
+  background: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-alias-label-primary-foreground);
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--cortex-alias-button-primary-hover);
+  background: var(--dsw-alias-button-primary-hover);
 }
 
 .secondaryButton,
 .addButton {
-  border: 1px solid var(--cortex-alias-border-l2);
+  border: 0.5px solid var(--dsw-alias-border-l3);
   background: transparent;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .secondaryButton:hover:not(:disabled),
 .addButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .secondaryButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover-solid);
+  background: var(--dsw-alias-interactive-bg-hover-solid);
 }
 
 .dangerButton {
@@ -178,9 +174,9 @@
   height: 36px;
   padding: 0 14px;
   border: none;
-  border-radius: 18px;
+  border-radius: var(--dsw-radius-md);
   background: transparent;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
   font: inherit;
   font-size: 14px;
   line-height: 22px;
@@ -188,15 +184,15 @@
 }
 
 .dangerButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover-danger);
+  background: var(--dsw-alias-interactive-bg-hover-danger);
 }
 
-/* Provider-row controls take the dense capsule (Button `.sm`). */
+/* Provider-row controls use the compact Button size. */
 .rowActions .secondaryButton,
 .rowActions .dangerButton {
   height: 28px;
   padding: 0 10px;
-  border-radius: 14px;
+  border-radius: var(--dsw-radius-sm);
   font-size: 12px;
   line-height: 18px;
 }
@@ -220,14 +216,14 @@
 .iconButton:focus-visible,
 .customizedSummary:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px var(--cortex-alias-border-l3);
+  box-shadow: 0 0 0 2px var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
 }
 
 /* Editing surface: a filled module on the panel, matching the settings
    selector fill rather than adding another outline inside the row. */
 .editor {
-  border-radius: 12px;
-  background: var(--cortex-alias-bg-module-platform);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-module-platform);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -244,13 +240,13 @@
   font-size: 14px;
   line-height: 22px;
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .editorRoute {
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 .field {
@@ -266,7 +262,7 @@
   font-size: 12px;
   line-height: 18px;
   font-weight: 500;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .linkButton {
@@ -276,9 +272,9 @@
   height: 28px;
   padding: 0 10px;
   border: none;
-  border-radius: 14px;
+  border-radius: var(--dsw-radius-sm);
   background: transparent;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   font: inherit;
   font-size: 12px;
   line-height: 18px;
@@ -286,15 +282,15 @@
 }
 
 .linkButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover);
-  color: var(--cortex-alias-label-secondary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .advancedHint {
   margin: 0;
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 .editorActions {
@@ -309,31 +305,50 @@
   gap: 12px;
 }
 
-/* The two ways to gain a provider, as equal siblings spanning the same width
-   as the rows above. Wraps rather than shrinking below a legible label. */
+/* The one entry to the add card, spanning the same width as the rows above. */
 .addActions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
 .addButton {
-  /* Overrides the shared button base above: these two are not pills sitting in
-     a footer but the last slot of the provider list, so they split the row
-     evenly and repeat the row cards' corner. Dashed, like every other "nothing
-     here yet" affordance on this page, to read as a place rather than a
-     command. */
+  /* Overrides the shared button base above: this is not a pill sitting in a
+     footer but the last slot of the provider list, so it fills the row and
+     repeats the row cards' corner. Dashed, like every other "nothing here yet"
+     affordance on this page, to read as a place rather than a command. */
   flex: 1 1 0;
   min-width: 180px;
   gap: 6px;
   height: 44px;
-  border: 1px dashed var(--cortex-alias-border-l3);
-  border-radius: 12px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  border-radius: var(--dsw-radius-lg);
 }
 
-.addCard {
-  border-radius: 12px;
-  background: var(--cortex-alias-bg-module-platform);
+/* The add card's mode switch with the one-line purpose of the chosen mode
+   beneath it; the switch hugs its labels rather than spanning the card. */
+.addModes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* One panel per mode. Both stay mounted while the card is open; the hidden
+   attribute must win over the panel's own display, or the inactive draft
+   would show beneath the active one. */
+.addPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.addPanel[hidden] {
+  display: none;
+}
+
+.addCard,
+.setupCard {
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-module-platform);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -342,13 +357,14 @@
 }
 
 /* Nested in a card that already carries the module chrome. */
-.addCard .editor {
+.addCard .editor,
+.setupCard .editor {
   background: none;
   padding: 0;
 }
 
 .customized {
-  border-top: 1px solid var(--cortex-alias-border-l2);
+  border-top: 0.5px solid var(--dsw-alias-border-l2);
   padding-top: 10px;
 }
 
@@ -361,12 +377,12 @@
   width: fit-content;
   padding: 2px 4px;
   margin-left: -4px;
-  border-radius: 6px;
+  border-radius: var(--dsw-radius-sm);
   cursor: pointer;
   font-size: 12px;
   line-height: 18px;
   font-weight: 500;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
   list-style: none;
 }
 
@@ -389,7 +405,7 @@
 }
 
 .customizedSummary:hover {
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .customizedBody {
@@ -399,17 +415,12 @@
   padding-top: 12px;
 }
 
-/* Model catalog: a table, not a stack of cards. The column captions are
-   written once above the rows, so a row is one line of fields plus its
-   delete control; each field still carries the indexed `aria-label` that
-   names it, and the caption strip is hidden from assistive tech to keep
-   that name from being announced twice. */
 .modelCatalog {
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid var(--cortex-alias-border-l2);
+  border-top: 0.5px solid var(--dsw-alias-border-l2);
 }
 
 .modelCatalogHeading {
@@ -422,22 +433,23 @@
   font-size: 12px;
   line-height: 18px;
   font-weight: 500;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .modelCatalogMeta,
 .modelEmpty {
   margin: 0;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
   line-height: 18px;
 }
 
-/* Model list: one bordered entry per model, id and display name on the row,
-   capacities behind the row's own disclosure. The rules use this stylesheet's
-   token vocabulary — `--cortex-alias-border-subtle`,
-   `--cortex-alias-text-tertiary`, and `--cortex-alias-text-primary` are
-   undefined here and would resolve to their light-mode literals. */
+.modelList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .modelListHead {
   display: flex;
   align-items: flex-start;
@@ -446,8 +458,8 @@
 }
 
 .modelEntry {
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 8px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-lg);
   padding: 6px;
 }
 
@@ -468,15 +480,15 @@
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--dsw-radius-sm);
   background: transparent;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   cursor: pointer;
 }
 
 .iconButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover);
-  color: var(--cortex-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
 }
 
 .iconButton:disabled {
@@ -486,13 +498,13 @@
 
 /* The delete glyph keeps the danger tint the rest of the section uses. */
 .iconButtonDanger:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover-danger);
-  color: var(--cortex-alias-state-error-primary);
+  background: var(--dsw-alias-interactive-bg-hover-danger);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .modelAdvanced {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   padding: 8px 4px 2px;
 }
@@ -500,19 +512,41 @@
 .modelField {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   gap: 4px;
 }
 
+.modelInputTypes {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.modelInputTypes legend {
+  padding: 0;
+  margin-bottom: 4px;
+}
+
+.modelInputChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  min-height: 32px;
+  align-items: center;
+}
+
 .modelFieldLabel {
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   font-size: 12px;
   line-height: 18px;
 }
 
 .modelEmpty {
   padding: 12px;
-  border: 1px dashed var(--cortex-alias-border-l3);
-  border-radius: 8px;
+  border: 1px dashed var(--dsw-alias-border-l3);
+  border-radius: var(--dsw-radius-lg);
   text-align: center;
 }
 
@@ -524,10 +558,10 @@
   gap: 4px;
   height: 28px;
   padding: 0 10px;
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 14px;
+  border: 0.5px solid var(--dsw-alias-border-l3);
+  border-radius: var(--dsw-radius-sm);
   background: transparent;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
   font: inherit;
   font-size: 12px;
   line-height: 18px;
@@ -535,7 +569,7 @@
 }
 
 .addModelButton:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .input {
@@ -543,13 +577,13 @@
   width: 100%;
   height: 32px;
   padding: 0 10px;
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 8px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-md);
   font: inherit;
   font-size: 14px;
   line-height: 22px;
-  background: var(--cortex-alias-bg-layer-1);
-  color: var(--cortex-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
 }
 
 /* Enum pickers hold a handful of short options; a field-width dropdown reads
@@ -561,11 +595,11 @@ select.input {
 
 .input:focus {
   outline: none;
-  border-color: var(--cortex-alias-brand-primary);
+  border-color: var(--dsw-alias-state-business-primary);
 }
 
 .input::placeholder {
-  color: var(--cortex-alias-label-dimmed);
+  color: var(--dsw-alias-label-dimmed);
 }
 
 .input:disabled {
@@ -591,7 +625,7 @@ select.input {
   margin: 0;
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .deleteDialog {
@@ -599,12 +633,12 @@ select.input {
 }
 
 .deleteConfirm:not(:disabled) {
-  border-color: var(--cortex-alias-state-error-primary);
-  color: var(--cortex-alias-state-error-primary);
+  border-color: var(--dsw-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .deleteConfirm:hover:not(:disabled) {
-  background: var(--cortex-alias-interactive-bg-hover-danger);
+  background: var(--dsw-alias-interactive-bg-hover-danger);
 }
 
 /* Icon-button label seat: named for assistive tech and for the tests that
@@ -619,7 +653,8 @@ select.input {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .customizedSummary::before {
+  .customizedSummary::before,
+  .switchThumb {
     transition: none;
   }
 }
@@ -631,8 +666,20 @@ select.input {
      scrollbar indirection is rebound here rather than on the scrolling child:
      the elevation choice belongs with the surface and inherits down (see
      ui-theme styles/scrollbar.css for the contract). */
-  --cortex-scrollbar-thumb: var(--cortex-alias-scrollbar-bg-l2);
-  --cortex-scrollbar-thumb-hover: var(--cortex-alias-scrollbar-hover-l2);
+  --cortex-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --cortex-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+}
+
+.candidateToolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.candidateSearch {
+  min-width: 0;
+  flex: 1 1 240px;
 }
 
 .candidateList {
@@ -647,7 +694,7 @@ select.input {
 }
 
 .candidate {
-  border-radius: 6px;
+  border-radius: var(--dsw-radius-md);
 }
 
 .candidateLabel {
@@ -660,7 +707,18 @@ select.input {
 
 .candidateId {
   flex: 1 1 auto;
-  font-family: var(--cortex-font-family-code);
+  min-width: 0;
+  font-family: var(--ds-font-family-code);
   font-size: 13px;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidateEmpty {
+  margin: 24px 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  text-align: center;
 }

@@ -1,0 +1,31 @@
+# SDK snapshot-record composition without provider-specific upload metadata.
+
+- id: skill-filesystem
+  name: '@cortex/skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js "process.env.CORTEX_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: tool-subagent
+  name: '@cortex/tool-subagent'
+  config:
+    provider: spawn
+    toolName: subagent
+    backgroundMode: one-shot
+    enableRunInBackground: false
+    maxDepth: 1
+
+- id: session-log-deepseek
+  config:
+    enabled: false

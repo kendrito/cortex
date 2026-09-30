@@ -1,135 +1,109 @@
-/** Locale bundles for the agent-preset settings row, hero chip, header label, and management section. */
+/** Locale bundles for the agent-preset hero chip, header label, and management section. */
+
+import { guideEn, guideZh, type PresetGuideKey } from './guide-locales.ts'
 
 /** Locale keys these surfaces render. */
 export type AgentPresetSettingsKey =
-  | 'title' | 'description' | 'loading' | 'error' | 'userTrust' | 'seatHint' | 'headerHint'
-  | 'nav' | 'sectionIntro' | 'builtIn' | 'setDefault' | 'view'
-  | 'presetStandardName' | 'presetStandardDescription'
-  | 'presetCodeName' | 'presetCodeDescription'
-  | 'presetMinimalName' | 'presetMinimalDescription'
-  | 'presetCordisName' | 'presetCordisDescription'
-  | 'duplicate' | 'duplicateUnavailable' | 'delete' | 'presetId' | 'presetIdPlaceholder' | 'copyOf'
-  | 'displayName' | 'displayNamePlaceholder'
-  | 'inUse' | 'noDescription' | 'builtInGroup' | 'customGroup'
-  | 'brokenBadge' | 'brokenNoCopy'
-  | 'composition' | 'cancel' | 'close' | 'retry'
-  | 'copyTitle' | 'copyIntro' | 'create' | 'creating' | 'creatorDraft'
-  | 'openLocation' | 'showLocation' | 'revealedPathLabel'
-  | 'idRequired' | 'idInvalid' | 'idTaken'
-  | 'deleteTitle' | 'deleteDescription' | 'deleteConfirm' | 'deleting'
+  | PresetGuideKey
+  | 'builtInGroup'
+  | 'customGroup'
+  | 'seatHint'
+  | 'headerHint'
+  | 'nav'
+  | 'sectionIntro'
+  | 'setDefault'
+  | 'view'
+  | 'presetStandardName'
+  | 'presetStandardDescription'
+  | 'presetPtcName'
+  | 'presetPtcDescription'
+  | 'presetMinimalName'
+  | 'presetMinimalDescription'
+  | 'presetCordisName'
+  | 'presetCordisDescription'
+  | 'inUse'
+  | 'noDescription'
+  | 'brokenBadge'
+  | 'switchRefused'
+  | 'close'
+  | 'creatorDraft'
 
 /** English copy. */
-export const en = {
-  title: 'Agent preset',
-  description: 'Applies to sessions you start from now on. Running sessions keep the preset they began with.',
-  loading: 'Loading presets…',
-  error: 'Could not load agent presets.',
-  userTrust: 'Custom',
-  seatHint: 'Agent preset for the session you are about to start',
-  headerHint: 'The agent preset this session runs, fixed when it started',
+export const en: Record<AgentPresetSettingsKey, string> = {
+  ...guideEn,
+  builtInGroup: 'Built-in', customGroup: 'Custom',
+  sectionIntro: 'Choose the agent’s tools and how it works. Use Standard mode for everyday tasks, or Creator mode to add capabilities to CORTEX.',
+
+  seatHint: 'Choose the agent preset for your new task',
+  headerHint: 'The agent preset chosen when this task started',
   nav: 'Agent presets',
-  sectionIntro:
-    'A preset is the plugin composition one session\'s agent runs — its tools, prompt, and capabilities. '
-    + 'Duplicate an existing one and make it yours, or let the agent draft one for you in Creator mode.',
-  builtIn: 'Built-in',
-  setDefault: 'Set as default',
-  view: 'View',
+
+  setDefault: 'Set as new task default',
+  view: 'View configuration',
+
   presetStandardName: 'Standard mode',
   presetStandardDescription:
-    'Full coding agent with file editing, shell, file and web search, skills, planning, goals, subagents, and workflows.',
-  presetCodeName: 'Code mode',
-  presetCodeDescription:
-    'All Standard mode capabilities, with tools exposed through the Code Mode SDK so the model can combine multi-step operations in one TypeScript program.',
+    'Work with code, files, and information. Suitable for most tasks, with search, editing, terminal commands, and other tools available as needed.',
+  presetPtcName: 'PTC mode',
+  presetPtcDescription:
+    'Includes all Standard mode capabilities. Better suited to tasks that call tools in batches and then filter, organize, deduplicate, count, or summarize the results.',
   presetMinimalName: 'Minimal mode',
   presetMinimalDescription:
-    'Two-tool coding agent with persistent bash and str_replace_editor.',
+    'The agent works using only a terminal tool. Useful for testing and comparing its basic performance.',
   presetCordisName: 'Creator mode',
   presetCordisDescription:
-    'Built for creating custom agent presets, with all Standard mode capabilities plus runtime inspection, plugin experiments, and preset-authoring guidance.',
-  duplicate: 'Duplicate',
-  duplicateUnavailable: 'This deployment has no writable preset directory',
-  delete: 'Delete',
-  presetId: 'Identifier',
-  presetIdPlaceholder: 'my-agent',
-  displayName: 'Name',
-  displayNamePlaceholder: 'Shown in the picker; defaults to the identifier',
-  inUse: 'In use',
-  builtInGroup: 'Built-in',
-  customGroup: 'Custom',
+    'Customize CORTEX through conversation. Let the agent write plugins that add features or UI, or combine tools and prompts to create your own mode.',
+
+  inUse: 'New task default',
+
   noDescription: 'No description.',
   brokenBadge: 'Failed to load',
-  brokenNoCopy: 'A preset that failed to load cannot be duplicated',
-  copyOf: 'Copied from',
-  composition: 'Composition (agent.cordis.yml)',
-  cancel: 'Cancel',
+
+  switchRefused: 'Could not switch to {name}: {reason}',
+
   close: 'Close',
-  retry: 'Retry',
-  copyTitle: 'Duplicate preset',
-  copyIntro:
-    'The whole preset is copied on this machine. The identifier becomes its directory name and cannot '
-    + 'be changed later; everything else is edited in the preset\'s own files.',
-  create: 'Create',
-  creating: 'Creating…',
-  creatorDraft: 'Draft a custom preset with Creator mode',
-  openLocation: 'Open folder',
-  showLocation: 'Show location',
-  revealedPathLabel: 'Preset files:',
-  idRequired: 'Give the preset an identifier.',
-  idInvalid: 'Use lowercase letters, digits, and hyphens, starting with a letter or digit.',
-  idTaken: 'A preset with this identifier already exists.',
-  deleteTitle: 'Delete this preset?',
-  deleteDescription:
-    'The preset directory is deleted. Sessions already running on it keep working; new sessions cannot select it.',
-  deleteConfirm: 'Delete',
-  deleting: 'Deleting…',
+
+  creatorDraft: 'Let the agent help me create a preset',
+
 }
 
-/** Preset roster fields needed to resolve Web display copy. */
-export interface PresetDisplaySource {
-  /** Stable preset id. */
-  readonly id: string
-  /** Whether the deployment ships the preset or the user owns it. */
-  readonly trust: 'system' | 'user'
-  /** Unlocalized name published by the preset. */
-  readonly name?: string
-  /** Unlocalized description published by the preset. */
-  readonly description?: string
+/** Simplified Chinese copy. */
+export const zh: Record<AgentPresetSettingsKey, string> = {
+  ...guideZh,
+  builtInGroup: '内置', customGroup: '自定义',
+  sectionIntro: '选择 Agent 的工具和工作方式。日常任务用「标准模式」，扩展 CORTEX 的能力用「创造模式」。',
+
+  seatHint: '选择新任务使用的 Agent 预设',
+  headerHint: '本任务的 Agent 预设，在任务开始时确定',
+  nav: 'Agent 预设',
+
+  setDefault: '设为新任务默认',
+  view: '查看配置',
+
+  presetStandardName: '标准模式',
+  presetStandardDescription: '处理代码、文件和资料，适合大多数任务。Agent 会按需使用检索、编辑和终端等工具。',
+  presetPtcName: 'PTC 模式',
+  presetPtcDescription: '包含标准模式的所有能力，更适合批量调用工具，并对结果进行筛选、整理、去重、统计或汇总的任务。',
+  presetMinimalName: '极简模式',
+  presetMinimalDescription: 'Agent 仅使用终端工具完成任务，适合测试和对比其基础表现。',
+  presetCordisName: '创造模式',
+  presetCordisDescription: '用对话定制 CORTEX：让 Agent 编写插件，添加新功能或界面；也能组合工具和提示词，创建自己的模式。',
+
+  inUse: '新任务默认',
+
+  noDescription: '暂无描述。',
+  brokenBadge: '加载失败',
+
+  switchRefused: '无法切换到「{name}」：{reason}',
+
+  close: '关闭',
+
+  creatorDraft: '让 Agent 帮我创建预设模式',
+
 }
 
-/** Display copy resolved for the active Web locale. */
-export interface PresetDisplayText {
-  /** Localized built-in name or the preset's own fallback name. */
-  readonly name: string
-  /** Localized built-in description or the preset's own description. */
-  readonly description?: string
-}
-
-interface PresetLocaleKeys {
-  readonly name: AgentPresetSettingsKey
-  readonly description: AgentPresetSettingsKey
-}
-
-const BUILT_IN_PRESET_KEYS: Readonly<Partial<Record<string, PresetLocaleKeys>>> = {
-  standard: { name: 'presetStandardName', description: 'presetStandardDescription' },
-  code: { name: 'presetCodeName', description: 'presetCodeDescription' },
-  minimal: { name: 'presetMinimalName', description: 'presetMinimalDescription' },
-  cordis: { name: 'presetCordisName', description: 'presetCordisDescription' },
-}
-
-/**
- * Resolve preset display copy without making user-authored metadata translatable.
- * @param preset - roster row whose copy is being rendered.
- * @param t - active Web locale lookup.
- * @returns localized copy for a known shipped preset, otherwise file metadata.
- */
-export function presetDisplayText(
-  preset: PresetDisplaySource,
-  t: (key: AgentPresetSettingsKey) => string,
-): PresetDisplayText {
-  const keys = preset.trust === 'system' ? BUILT_IN_PRESET_KEYS[preset.id] : undefined
-  if (keys !== undefined) return { name: t(keys.name), description: t(keys.description) }
-  return {
-    name: preset.name ?? preset.id,
-    ...preset.description === undefined ? {} : { description: preset.description },
-  }
-}
+// The resolution itself is the shared fold in `cortex-agent-preset-registry/display`,
+// re-exported here so every surface in this plugin reads one path; the
+// Settings plugin list inlines the same fold over this plugin's dictionaries.
+export { isBuiltInPreset, presetDisplayText } from '@cortex/agent-preset-registry/display'
+export type { PresetDisplaySource, PresetDisplayText } from '@cortex/agent-preset-registry/display'

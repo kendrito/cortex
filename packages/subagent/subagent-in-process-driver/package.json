@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subagent-in-process-driver",
   "description": "Shared in-process subagent run driver: drives a child agent on ctx.agents (used by the spawn and fork backends)",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,46 +18,44 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-include": "workspace:^",
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/agent-loop": "workspace:^",
-    "@cortex/agent-loop-testkit": "workspace:^",
-    "@cortex/agent-presets": "workspace:^",
-    "@cortex/fs-sandbox": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tool-fs": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/agent-preset-registry": "workspace:*",
+    "@cortex/fs-sandbox": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tool-fs": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/user-approval": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/brand": "workspace:*"
   }
 }

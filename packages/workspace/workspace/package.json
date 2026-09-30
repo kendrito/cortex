@@ -1,7 +1,7 @@
 {
   "name": "@cortex/workspace",
   "description": "Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -37,24 +37,25 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/storage-domain": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/storage": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/storage": "workspace:*",
+    "@cortex/storage-domain": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*"
   },
   "dependencies": {
+    "@cortex/brand": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/storage-domain": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/storage": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/storage": "workspace:*",
+    "@cortex/storage-domain": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*"
   }
 }

@@ -1,0 +1,52 @@
+{
+  "name": "@cortex/host-open-in-app",
+  "description": "Host half of open-in-app: resolved application catalog, icons, and the launch endpoint as three webServer routes",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/host/open-in-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./shared": {
+      "types": "./lib/types/shared.d.ts",
+      "default": "./lib/types/shared.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/launch-environment": "workspace:*",
+    "@cortex/native-command": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/host-webserver": "workspace:*"
+  }
+}

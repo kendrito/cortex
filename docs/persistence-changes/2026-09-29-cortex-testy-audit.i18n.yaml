@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-09-29-cortex-testy-audit.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-09-29-cortex-testy-audit.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-09-29-cortex-testy-audit:
+  en: ac382376e827a4e5
+  zh: 17124bfcb7acc915
+/2026-09-29-cortex-testy-audit/summary:
+  en: d630a9a4790e4502
+  zh: ab137d4051551b9f
+/2026-09-29-cortex-testy-audit/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-09-29-cortex-testy-audit/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-09-29-cortex-testy-audit/compatibility:
+  en: d114210565c7ebdd
+  zh: 44578a2ff43e3e2f
+/2026-09-29-cortex-testy-audit/verification:
+  en: 43e8cc394b31b05c
+  zh: c27cb16cf6361586
+/2026-09-29-cortex-testy-audit/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

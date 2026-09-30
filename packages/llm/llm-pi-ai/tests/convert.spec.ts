@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { AttachmentId } from '@cortex/attachment'
-import type { AttachmentStore } from '@cortex/attachment'
-import { createUserMessage, CallId, CONTEXT_WINDOW_EXCEEDED_CODE, EMPTY_RESPONSE_CODE, LlmError, createMessage } from '@cortex/llm'
+import { AttachmentId, ImageVariantId } from '@cortex/attachment'
+import type { AttachmentStore, ImageAttachmentRef, ImageRequestTarget, RequestImageAttachment } from '@cortex/attachment'
+import { createToolResultMessage, createUserMessage, ToolCallId, CONTEXT_WINDOW_EXCEEDED_CODE, EMPTY_RESPONSE_CODE, createMessage } from '@cortex/llm'
 import type { ContentBlock, StreamChunk } from '@cortex/llm'
 import type { AssistantMessage, AssistantMessageEvent, Usage } from '@earendil-works/pi-ai'
+import { transformMessages } from '@earendil-works/pi-ai/api/transform-messages'
+import { getBuiltinModels } from '@earendil-works/pi-ai/providers/all'
 import { toPiContext } from '../src/context.ts'
 import { toPiReplayState } from '../src/replay.ts'
 import { mapStopReason, mapUsage, toStreamChunks } from '../src/stream.ts'
@@ -24,8 +26,8 @@ function assistant(overrides: Partial<AssistantMessage> = {}): AssistantMessage 
     role: 'assistant',
     content: [],
     api: 'openai-completions',
-    provider: 'cerebras',
-    model: 'gemma-4-31b',
+    provider: 'deepseek',
+    model: 'deepseek-v4-flash',
     usage: usage(),
     stopReason: 'stop',
     timestamp: 0,
@@ -43,15 +45,42 @@ async function collect(stream: AsyncIterable<StreamChunk>): Promise<StreamChunk[
   return out
 }
 
+function requestVersion(ref: ImageAttachmentRef): RequestImageAttachment {
+  return {
+    variantId: ImageVariantId(`sha256:${'e'.repeat(64)}`),
+    attachment: ref,
+    data: Uint8Array.of(1, 2, 3),
+    mediaType: ref.mediaType,
+    bytes: 3,
+    width: ref.width,
+    height: ref.height,
+    depth: 'uchar',
+    space: 'srgb',
+    hasAlpha: true,
+  }
+}
+
+function attachmentStore(readImageRequest: (
+  ref: ImageAttachmentRef,
+  policy: ImageRequestTarget,
+  signal?: AbortSignal,
+) => Promise<RequestImageAttachment>): AttachmentStore {
+  return { readImageRequest, imageHostPath: () => undefined } as unknown as AttachmentStore
+}
+
+function imageContext(attachments: AttachmentStore) {
+  return { attachments, resolveImageAccess: () => undefined }
+}
+
 describe('toPiContext', () => {
   it('maps system prompt, user text, and tools', () => {
     const context = toPiContext({
-      provider: 'cerebras',
-      model: 'gemma-4-31b',
+      provider: 'deepseek',
+      model: 'deepseek-v4-flash',
       system: 'be helpful',
       messages: [createUserMessage({
         content: [{ type: 'text', text: 'hi' }],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'test' },
       })],
       tools: [{ name: 'f', description: 'F', parameters: { type: 'object', properties: {} } }],
     })
@@ -63,7 +92,7 @@ describe('toPiContext', () => {
   })
 
   it('omits empty tools and absent system prompt', () => {
-    const context = toPiContext({ provider: 'cerebras', model: 'm', messages: [], tools: [] })
+    const context = toPiContext({ provider: 'deepseek', model: 'm', messages: [], tools: [] })
     expect(context.systemPrompt).toBeUndefined()
     expect(context.tools).toBeUndefined()
   })
@@ -76,28 +105,35 @@ describe('toPiContext', () => {
       width: 1,
       height: 1,
     }
-    const readImage = vi.fn().mockResolvedValue({ ref: attachment, data: Uint8Array.of(1, 2, 3) })
+    const readImageRequest = vi.fn((value: ImageAttachmentRef, _target: ImageRequestTarget) => (
+      Promise.resolve(requestVersion(value))
+    ))
     const context = await toPiContext({
       provider: 'openai',
       model: 'gpt-4.1',
       messages: [createUserMessage({
         content: [{ type: 'text', text: 'describe' }, { type: 'image', attachment }],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'test' },
       })],
-    }, { readImage } as unknown as AttachmentStore)
+    }, imageContext(attachmentStore(readImageRequest)))
 
-    expect(readImage).toHaveBeenCalledWith(attachment)
+    expect(readImageRequest).toHaveBeenCalledWith(
+      attachment,
+      { width: 1, height: 1, maxBytes: 1024 * 1024 },
+      undefined,
+    )
     expect(context.messages[0]).toEqual({
       role: 'user',
       content: [
         { type: 'text', text: 'describe' },
+        { type: 'text', text: expect.stringContaining(`Image ${attachment.attachmentId}`) as string },
         { type: 'image', data: 'AQID', mimeType: 'image/png' },
       ],
       timestamp: 0,
     })
   })
 
-  it('flattens nested tool-result images into the enclosing result', async () => {
+  it('converts a tool message with text and images on the image path', async () => {
     const attachment = {
       attachmentId: AttachmentId(`sha256:${'c'.repeat(64)}`),
       mediaType: 'image/png' as const,
@@ -105,31 +141,23 @@ describe('toPiContext', () => {
       width: 1,
       height: 1,
     }
-    const readImage = vi.fn().mockResolvedValue({ ref: attachment, data: Uint8Array.of(1, 2, 3) })
+    const readImageRequest = vi.fn((value: ImageAttachmentRef, _target: ImageRequestTarget) => (
+      Promise.resolve(requestVersion(value))
+    ))
     const context = await toPiContext({
       provider: 'openai',
       model: 'gpt-4.1',
-      messages: [createUserMessage({
-        content: [{
-          type: 'tool-result',
-          toolCallId: CallId('outer'),
-          content: [
-            { type: 'tool-result', toolCallId: CallId('empty'), content: [] },
-            { type: 'text', text: 'before' },
-            { type: 'tool-result', toolCallId: CallId('text'), content: [{ type: 'text', text: 'middle' }] },
-            {
-              type: 'tool-result',
-              toolCallId: CallId('inner'),
-              content: [
-                { type: 'image', attachment },
-                { type: 'text', text: 'after' },
-              ],
-            },
-          ],
-        }],
-        source: { kind: 'plugin', plugin: 'test' },
+      messages: [createToolResultMessage({
+        callId: ToolCallId('outer'),
+        content: [
+          { type: 'text', text: 'before' },
+          { type: 'text', text: 'middle' },
+          { type: 'image', attachment },
+          { type: 'text', text: 'after' },
+        ],
+        isError: false,
       })],
-    }, { readImage } as unknown as AttachmentStore)
+    }, imageContext(attachmentStore(readImageRequest)))
 
     expect(context.messages).toEqual([{
       role: 'toolResult',
@@ -138,6 +166,7 @@ describe('toPiContext', () => {
       content: [
         { type: 'text', text: 'before' },
         { type: 'text', text: 'middle' },
+        { type: 'text', text: expect.stringContaining(`Image ${attachment.attachmentId}`) as string },
         { type: 'image', data: 'AQID', mimeType: 'image/png' },
         { type: 'text', text: 'after' },
       ],
@@ -157,23 +186,23 @@ describe('toPiContext', () => {
             mediaType: 'image/png', bytes: 1, width: 1, height: 1,
           },
         }],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'test' },
       })],
     })).toThrow(expect.objectContaining({ code: 'UNSUPPORTED_CONTENT' }))
   })
 
   it('maps assistant text/reasoning/tool-call blocks', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant',
         content: [
           { type: 'reasoning', text: 'hmm' },
           { type: 'text', text: 'calling' },
-          { type: 'tool-call', id: CallId('c1'), name: 'f', arguments: '{"a":1}' },
+          { type: 'tool-call', id: ToolCallId('c1'), name: 'f', arguments: '{"a":1}' },
         ],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'model', provider: 'deepseek', model: 'm' },
       })],
     })
     const message = context.messages[0] as AssistantMessage
@@ -188,11 +217,11 @@ describe('toPiContext', () => {
 
   it('marks tool-call-free assistant messages with stopReason stop', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant', content: [{ type: 'text', text: 'done' }],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'model', provider: 'deepseek', model: 'm' },
       })],
     })
     expect((context.messages[0] as AssistantMessage).stopReason).toBe('stop')
@@ -205,25 +234,25 @@ describe('toPiContext', () => {
       messages: [createMessage({
         role: 'assistant',
         content: [{ type: 'text', text: 'done' }],
-        source: { kind: 'model', provider: 'cerebras', model: 'old-model' },
+        source: { kind: 'model', provider: 'deepseek', model: 'old-model' },
       })],
     })
     expect(context.messages[0]).toMatchObject({
       role: 'assistant',
       api: 'cortex-foreign',
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'old-model',
     })
   })
 
   it('parses malformed tool-call arguments to {}', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant',
-        content: [{ type: 'tool-call', id: CallId('c1'), name: 'f', arguments: '{broken' }],
-        source: { kind: 'plugin', plugin: 'test' },
+        content: [{ type: 'tool-call', id: ToolCallId('c1'), name: 'f', arguments: '{broken' }],
+        source: { kind: 'model', provider: 'deepseek', model: 'm' },
       })],
     })
     const message = context.messages[0] as AssistantMessage
@@ -232,12 +261,12 @@ describe('toPiContext', () => {
 
   it('parses non-object argument JSON (arrays, scalars) to {}', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant',
-        content: [{ type: 'tool-call', id: CallId('c1'), name: 'f', arguments: '[1,2]' }],
-        source: { kind: 'plugin', plugin: 'test' },
+        content: [{ type: 'tool-call', id: ToolCallId('c1'), name: 'f', arguments: '[1,2]' }],
+        source: { kind: 'model', provider: 'deepseek', model: 'm' },
       })],
     })
     expect((context.messages[0] as AssistantMessage).content[0]).toMatchObject({ arguments: {} })
@@ -245,25 +274,22 @@ describe('toPiContext', () => {
 
   it('recovers toolName for tool results from the preceding assistant call', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [
         createMessage({
           role: 'assistant',
-          content: [{ type: 'tool-call', id: CallId('c1'), name: 'get_weather', arguments: '{}' }],
-          source: { kind: 'plugin', plugin: 'test' },
+          content: [{ type: 'tool-call', id: ToolCallId('c1'), name: 'get_weather', arguments: '{}' }],
+          source: { kind: 'model', provider: 'deepseek', model: 'm' },
         }),
-        createUserMessage({
-          content: [{
-            type: 'tool-result',
-            toolCallId: CallId('c1'),
-            content: [
-              { type: 'text', text: 'Sunny' },
-              { type: 'tool-result', toolCallId: CallId('nested'), content: [{ type: 'text', text: '!' }] },
-              { type: 'chart', data: 'ignored' } as unknown as ContentBlock,
-            ],
-          }],
-          source: { kind: 'plugin', plugin: 'test' },
+        createToolResultMessage({
+          callId: ToolCallId('c1'),
+          content: [
+            { type: 'text', text: 'Sunny' },
+            { type: 'text', text: '!' },
+            { type: 'chart', data: 'ignored' } as unknown as ContentBlock,
+          ],
+          isError: false,
         }),
       ],
     })
@@ -279,12 +305,9 @@ describe('toPiContext', () => {
 
   it('labels unmatched tool results with toolName unknown and keeps isError', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
-      messages: [createUserMessage({
-        content: [{ type: 'tool-result', toolCallId: CallId('zz'), content: [], isError: true }],
-        source: { kind: 'plugin', plugin: 'test' },
-      })],
+      messages: [createToolResultMessage({ callId: ToolCallId('zz'), content: [], isError: true })],
     })
     expect(context.messages[0]).toMatchObject({
       role: 'toolResult',
@@ -294,30 +317,33 @@ describe('toPiContext', () => {
     })
   })
 
-  it('splits mixed user text + tool results and folds history system messages', () => {
+  it('splits mixed user text + tool results and lifts a leading system message into systemPrompt', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [
         createMessage({
           role: 'system', content: [{ type: 'text', text: 'rule' }],
-          source: { kind: 'plugin', plugin: 'test' },
+          source: { kind: 'system-prompt' },
         }),
         createUserMessage({
-          content: [
-            { type: 'text', text: 'note' },
-            { type: 'tool-result', toolCallId: CallId('c1'), content: [{ type: 'text', text: 'ok' }] },
-          ],
-          source: { kind: 'plugin', plugin: 'test' },
+          content: [{ type: 'text', text: 'note' }],
+          source: { kind: 'model', provider: 'deepseek', model: 'm' },
+        }),
+        createToolResultMessage({
+          callId: ToolCallId('c1'),
+          content: [{ type: 'text', text: 'ok' }],
+          isError: false,
         }),
       ],
     })
-    expect(context.messages.map(message => message.role)).toEqual(['user', 'user', 'toolResult'])
+    expect(context.systemPrompt).toBe('rule')
+    expect(context.messages.map(message => message.role)).toEqual(['user', 'toolResult'])
   })
 
   it('skips plugin-added (unknown) blocks in assistant content', () => {
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant',
@@ -325,7 +351,7 @@ describe('toPiContext', () => {
           { type: 'chart', data: 'x' } as unknown as ContentBlock,
           { type: 'text', text: 'visible' },
         ],
-        source: { kind: 'plugin', plugin: 'test' },
+        source: { kind: 'model', provider: 'deepseek', model: 'm' },
       })],
     })
     expect((context.messages[0] as AssistantMessage).content).toEqual([{ type: 'text', text: 'visible' }])
@@ -353,7 +379,7 @@ describe('toPiContext', () => {
         content: [
           { type: 'reasoning', text: 'private reasoning' },
           { type: 'text', text: 'calling' },
-          { type: 'tool-call', id: CallId('c1'), name: 'f', arguments: '{"a":1}' },
+          { type: 'tool-call', id: ToolCallId('c1'), name: 'f', arguments: '{"a":1}' },
         ],
         source: {
           kind: 'model',
@@ -378,6 +404,72 @@ describe('toPiContext', () => {
     })
   })
 
+  it.each(['high', ''])('preserves provider thinking level %j through durable projection and replay', (providerThinkingLevel) => {
+    const state = toPiReplayState(assistant({
+      api: 'anthropic-messages',
+      provider: 'anthropic',
+      model: 'claude-opus-5',
+      providerThinkingLevel,
+      content: [{ type: 'text', text: 'done' }],
+    }))
+    expect(state).toEqual({
+      response: {
+        kind: 'pi-ai',
+        version: 2,
+        api: 'anthropic-messages',
+        provider: 'anthropic',
+        model: 'claude-opus-5',
+        providerThinkingLevel,
+        stopReason: 'stop',
+      },
+      blocks: [{ type: 'text' }],
+    })
+    const replayState: unknown = JSON.parse(JSON.stringify(state))
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'anthropic',
+      model: 'claude-opus-5',
+      messages: [createMessage({
+        role: 'assistant',
+        content: [{ type: 'text', text: 'done' }],
+        source: { kind: 'model', provider: 'anthropic', model: 'claude-opus-5', replayState },
+      })],
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({
+      api: 'anthropic-messages',
+      providerThinkingLevel,
+      content: [{ type: 'text', text: 'done' }],
+    })
+    expect(onDegrade).not.toHaveBeenCalled()
+  })
+
+  it('replays saved v2 Anthropic alias metadata with the requested model and signed thinking', () => {
+    const requestedModel = 'claude-haiku-4-5'
+    const responseModel = 'claude-haiku-4-5-20251001'
+    const replayState = {
+      response: {
+        kind: 'pi-ai', version: 2, api: 'anthropic-messages', provider: 'anthropic',
+        model: requestedModel, responseModel, stopReason: 'stop',
+      },
+      blocks: [{ type: 'reasoning', thinkingSignature: 'saved-signature' }],
+    }
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'anthropic', model: requestedModel,
+      messages: [createMessage({
+        role: 'assistant', content: [{ type: 'reasoning', text: 'saved reasoning' }],
+        source: { kind: 'model', provider: 'anthropic', model: requestedModel, replayState },
+      })],
+    }, undefined, onDegrade)
+    const model = getBuiltinModels('anthropic').find(candidate => candidate.id === requestedModel)
+    if (model === undefined) throw new Error('missing Anthropic catalog model')
+    expect(onDegrade).not.toHaveBeenCalled()
+    expect(context.messages[0]).toMatchObject({ model: requestedModel, responseModel })
+    expect(transformMessages(context.messages, model)[0]).toMatchObject({
+      content: [{ type: 'thinking', thinking: 'saved reasoning', thinkingSignature: 'saved-signature' }],
+    })
+  })
+
   it('replays all native block kinds when optional metadata is absent', () => {
     const state = toPiReplayState(assistant({
       content: [
@@ -387,18 +479,18 @@ describe('toPiContext', () => {
       ],
     }))
     const context = toPiContext({
-      provider: 'cerebras',
+      provider: 'deepseek',
       model: 'new-model',
       messages: [createMessage({
         role: 'assistant',
         content: [
           { type: 'reasoning', text: 'private reasoning' },
           { type: 'text', text: 'calling' },
-          { type: 'tool-call', id: CallId('c1'), name: 'f', arguments: '{"a":1}' },
+          { type: 'tool-call', id: ToolCallId('c1'), name: 'f', arguments: '{"a":1}' },
         ],
         source: {
           kind: 'model',
-          ...{ provider: 'cerebras', model: 'gemma-4-31b', replayState: state },
+          ...{ provider: 'deepseek', model: 'deepseek-v4-flash', replayState: state },
         },
       })],
     })
@@ -413,112 +505,173 @@ describe('toPiContext', () => {
     })
     expect(context.messages[0]).not.toHaveProperty('responseModel')
     expect(context.messages[0]).not.toHaveProperty('responseId')
+    expect(state.response).not.toHaveProperty('providerThinkingLevel')
+    expect(context.messages[0]).not.toHaveProperty('providerThinkingLevel')
   })
 
-  it('rejects unsupported replay-state versions with a stable error code', () => {
-    try {
-      toPiContext({
-        provider: 'cerebras',
-        model: 'm',
-        messages: [createMessage({
-          role: 'assistant',
-          content: [{ type: 'text', text: 'done' }],
-          source: {
-            kind: 'model',
-            ...{
-              provider: 'cerebras',
-              model: 'old',
-              replayState: { kind: 'pi-ai', version: 2 },
-            },
-          },
-        })],
-      })
-      expect.fail('expected invalid replay state')
-    } catch (error: unknown) {
-      expect(error).toBeInstanceOf(LlmError)
-      expect((error as LlmError).code).toBe('INVALID_REPLAY_STATE')
-      expect((error as Error).message).toContain('unsupported version 2')
-    }
-  })
-
-  it('rejects replay metadata whose blocks do not match the durable content', () => {
-    const state = toPiReplayState(assistant({ content: [{ type: 'text', text: 'done' }] }))
-    expect(() => toPiContext({
-      provider: 'cerebras',
-      model: 'm',
-      messages: [createMessage({
-        role: 'assistant',
-        content: [{ type: 'reasoning', text: 'done' }],
-        source: {
-          kind: 'model',
-          ...{ provider: 'cerebras', model: 'gemma-4-31b', replayState: state },
-        },
-      })],
-    })).toThrow(/block 0 does not match assistant content/)
-  })
-
-  it('rejects replay metadata whose block count differs from durable content', () => {
-    const state = toPiReplayState(assistant())
-    expect(() => toPiContext({
-      provider: 'cerebras',
+  it('degrades unsupported replay-state versions to provider-neutral history', () => {
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'deepseek',
       model: 'm',
       messages: [createMessage({
         role: 'assistant',
         content: [{ type: 'text', text: 'done' }],
         source: {
           kind: 'model',
-          ...{ provider: 'cerebras', model: 'gemma-4-31b', replayState: state },
+          ...{
+            provider: 'deepseek',
+            model: 'old',
+            replayState: { response: { kind: 'pi-ai', version: 3 }, blocks: [] },
+          },
         },
       })],
-    })).toThrow(/block count does not match assistant content/)
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({
+      role: 'assistant',
+      api: 'cortex-foreign',
+      provider: 'deepseek',
+      model: 'old',
+      content: [{ type: 'text', text: 'done' }],
+    })
+    expect(onDegrade).toHaveBeenCalledWith(expect.stringContaining('unsupported version 3'))
   })
 
-  const validReplay = {
+  it('degrades the flat pre-envelope replay state a legacy session log carries', () => {
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'deepseek',
+      model: 'm',
+      messages: [createMessage({
+        role: 'assistant',
+        content: [{ type: 'text', text: 'done' }],
+        source: {
+          kind: 'model',
+          ...{
+            provider: 'deepseek',
+            model: 'deepseek-v4-flash',
+            replayState: {
+              kind: 'pi-ai',
+              version: 1,
+              api: 'openai-completions',
+              provider: 'deepseek',
+              model: 'deepseek-v4-flash',
+              stopReason: 'stop',
+              blocks: [{ type: 'text' }],
+            },
+          },
+        },
+      })],
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({ role: 'assistant', api: 'cortex-foreign' })
+    expect(onDegrade).toHaveBeenCalledWith(expect.stringContaining('expected a response object'))
+  })
+
+  it('degrades replay metadata whose blocks do not match the durable content', () => {
+    const onDegrade = vi.fn()
+    const state = toPiReplayState(assistant({ content: [{ type: 'text', text: 'done' }] }))
+    const context = toPiContext({
+      provider: 'deepseek',
+      model: 'm',
+      messages: [createMessage({
+        role: 'assistant',
+        content: [{ type: 'reasoning', text: 'done' }],
+        source: {
+          kind: 'model',
+          ...{ provider: 'deepseek', model: 'deepseek-v4-flash', replayState: state },
+        },
+      })],
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({
+      role: 'assistant',
+      api: 'cortex-foreign',
+      content: [{ type: 'thinking', thinking: 'done' }],
+    })
+    expect(onDegrade).toHaveBeenCalledWith(expect.stringContaining('block 0 does not match assistant content'))
+  })
+
+  it('degrades replay metadata whose block count differs from durable content', () => {
+    const onDegrade = vi.fn()
+    const state = toPiReplayState(assistant())
+    const context = toPiContext({
+      provider: 'deepseek',
+      model: 'm',
+      messages: [createMessage({
+        role: 'assistant',
+        content: [{ type: 'text', text: 'done' }],
+        source: {
+          kind: 'model',
+          ...{ provider: 'deepseek', model: 'deepseek-v4-flash', replayState: state },
+        },
+      })],
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({
+      role: 'assistant',
+      api: 'cortex-foreign',
+      provider: 'deepseek',
+      model: 'deepseek-v4-flash',
+      content: [{ type: 'text', text: 'done' }],
+      stopReason: 'stop',
+    })
+    expect(onDegrade).toHaveBeenCalledWith(expect.stringContaining('block count does not match assistant content'))
+  })
+
+  const validResponse = {
     kind: 'pi-ai',
-    version: 1,
+    version: 2,
     api: 'openai-completions',
-    provider: 'cerebras',
-    model: 'gemma-4-31b',
+    provider: 'deepseek',
+    model: 'deepseek-v4-flash',
     stopReason: 'stop',
-    blocks: [{ type: 'text' }],
+  }
+  const validReplay = { response: validResponse, blocks: [{ type: 'text' }] }
+
+  /** Convert with the given state and assert the message degraded to foreign with the given reason. */
+  function expectDegraded(replayState: unknown, message: string): void {
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'deepseek',
+      model: 'next-model',
+      messages: [createMessage({
+        role: 'assistant',
+        content: [{ type: 'text', text: 'done' }],
+        source: {
+          kind: 'model',
+          ...{ provider: 'deepseek', model: 'deepseek-v4-flash', replayState },
+        },
+      })],
+    }, undefined, onDegrade)
+    expect(context.messages[0]).toMatchObject({
+      role: 'assistant',
+      api: 'cortex-foreign',
+      content: [{ type: 'text', text: 'done' }],
+    })
+    expect(onDegrade).toHaveBeenCalledWith(expect.stringContaining(message))
   }
 
   it.each([
-    ['provider', { ...validReplay, provider: 'openai' }],
-    ['model', { ...validReplay, model: 'gpt-oss-120b' }],
-  ])('rejects replay metadata whose %s differs from assistant source', (field, replayState) => {
-    try {
-      toPiContext({
-        provider: 'cerebras',
-        model: 'next-model',
-        messages: [createMessage({
-          role: 'assistant',
-          content: [{ type: 'text', text: 'done' }],
-          source: {
-            kind: 'model',
-            ...{ provider: 'cerebras', model: 'gemma-4-31b', replayState },
-          },
-        })],
-      })
-      expect.fail('expected invalid replay state')
-    } catch (error: unknown) {
-      expect(error).toBeInstanceOf(LlmError)
-      expect((error as LlmError).code).toBe('INVALID_REPLAY_STATE')
-      expect((error as Error).message).toContain(`${field} does not match assistant source`)
-    }
+    ['provider', { ...validReplay, response: { ...validResponse, provider: 'openai' } }],
+    ['model', { ...validReplay, response: { ...validResponse, model: 'deepseek-v4-pro' } }],
+  ])('degrades replay metadata whose %s differs from assistant source', (field, replayState) => {
+    expectDegraded(replayState, `${field} does not match assistant source`)
   })
 
   it.each([
-    ['number state', 1, 'expected an object'],
-    ['null state', null, 'expected an object'],
-    ['array state', [], 'expected an object'],
-    ['unknown kind', { ...validReplay, kind: 'other' }, 'unknown state kind'],
-    ['non-string api', { ...validReplay, api: 1 }, 'api must be a non-empty string'],
-    ['empty provider', { ...validReplay, provider: '' }, 'provider must be a non-empty string'],
-    ['missing model', { ...validReplay, model: undefined }, 'model must be a non-empty string'],
-    ['unknown stop reason', { ...validReplay, stopReason: 'pause' }, 'unknown stopReason'],
-    ['non-string response model', { ...validReplay, responseModel: 1 }, 'responseModel must be a string'],
-    ['non-string response id', { ...validReplay, responseId: 1 }, 'responseId must be a string'],
+    ['number state', 1, 'expected a replay envelope'],
+    ['null state', null, 'expected a replay envelope'],
+    ['array state', [], 'expected a replay envelope'],
+    ['missing response', { blocks: [] }, 'expected a response object'],
+    ['array response', { ...validReplay, response: [] }, 'expected a response object'],
+    ['unknown kind', { ...validReplay, response: { ...validResponse, kind: 'other' } }, 'unknown state kind'],
+    ['non-string api', { ...validReplay, response: { ...validResponse, api: 1 } }, 'api must be a non-empty string'],
+    ['empty provider', { ...validReplay, response: { ...validResponse, provider: '' } }, 'provider must be a non-empty string'],
+    ['missing model', { ...validReplay, response: { ...validResponse, model: undefined } }, 'model must be a non-empty string'],
+    ['unknown stop reason', { ...validReplay, response: { ...validResponse, stopReason: 'pause' } }, 'unknown stopReason'],
+    ['non-string response model', { ...validReplay, response: { ...validResponse, responseModel: 1 } }, 'responseModel must be a string'],
+    ['non-string response id', { ...validReplay, response: { ...validResponse, responseId: 1 } }, 'responseId must be a string'],
+    ['non-string provider thinking level', { ...validReplay, response: { ...validResponse, providerThinkingLevel: 1 } }, 'providerThinkingLevel must be a string'],
+    ['null provider thinking level', { ...validReplay, response: { ...validResponse, providerThinkingLevel: null } }, 'providerThinkingLevel must be a string'],
+    ['missing blocks', { response: validResponse }, 'blocks must be an array'],
     ['non-array blocks', { ...validReplay, blocks: 'text' }, 'blocks must be an array'],
     ['number block', { ...validReplay, blocks: [1] }, 'block 0 must be an object'],
     ['null block', { ...validReplay, blocks: [null] }, 'block 0 must be an object'],
@@ -526,23 +679,55 @@ describe('toPiContext', () => {
     ['unknown block type', { ...validReplay, blocks: [{ type: 'audio' }] }, 'block 0 has an unknown type'],
     ['non-string signature', { ...validReplay, blocks: [{ type: 'text', textSignature: 1 }] }, 'textSignature must be a string'],
     ['non-boolean redaction', { ...validReplay, blocks: [{ type: 'reasoning', redacted: 'yes' }] }, 'redacted must be boolean'],
-  ])('rejects malformed replay state: %s', (_name, replayState, message) => {
-    expect(() => toPiContext({
-      provider: 'cerebras',
-      model: 'm',
-      messages: [createMessage({
-        role: 'assistant',
-        content: [{ type: 'text', text: 'done' }],
-        source: {
-          kind: 'model',
-          ...{ provider: 'cerebras', model: 'gemma-4-31b', replayState },
-        },
-      })],
-    })).toThrow(message)
+  ])('degrades malformed replay state: %s', (_name, replayState, message) => {
+    expectDegraded(replayState, message)
   })
 })
 
 describe('toStreamChunks', () => {
+  it.each([
+    ['claude-haiku-4-5', 'claude-haiku-4-5-20251001'],
+    ['claude-opus-5', 'kimi-for-coding'],
+    ['claude-opus-5', undefined],
+  ])('retains signed thinking for Anthropic request %s reported as %s', async (requestedModel, reportedModel) => {
+    const native = assistant({
+      api: 'anthropic-messages', provider: 'anthropic', model: requestedModel,
+      ...reportedModel === undefined ? {} : { responseModel: reportedModel },
+      providerThinkingLevel: 'high',
+      content: [{ type: 'thinking', thinking: 'reason', thinkingSignature: 'signed' }],
+    })
+    const chunks = await collect(toStreamChunks(feed(
+      { type: 'done', reason: 'stop', message: native },
+    ), undefined, undefined, requestedModel))
+    const finish = chunks.find(chunk => chunk.type === 'finish')
+    const replayState: unknown = JSON.parse(JSON.stringify(finish?.replayState))
+    expect(replayState).toMatchObject({ response: { model: requestedModel } })
+    if (reportedModel === undefined) {
+      expect(finish?.replayState?.response).not.toHaveProperty('responseModel')
+    } else {
+      expect(replayState).toMatchObject({ response: { responseModel: reportedModel } })
+    }
+    const onDegrade = vi.fn()
+    const context = toPiContext({
+      provider: 'anthropic', model: requestedModel,
+      messages: [createMessage({
+        role: 'assistant', content: [{ type: 'reasoning', text: 'reason' }],
+        source: { kind: 'model', provider: 'anthropic', model: requestedModel, replayState },
+      })],
+    }, undefined, onDegrade)
+    expect(onDegrade).not.toHaveBeenCalled()
+    expect(context.messages[0]).toMatchObject({
+      api: 'anthropic-messages', model: requestedModel, providerThinkingLevel: 'high',
+      content: native.content,
+    })
+    const requested = getBuiltinModels('anthropic').find(model => model.id === requestedModel)
+    if (requested === undefined) throw new Error('missing Anthropic catalog model')
+    expect(transformMessages(context.messages, requested)[0]).toMatchObject({ content: native.content })
+    expect(transformMessages(context.messages, { ...requested, id: 'other-model' })[0]).toMatchObject({
+      content: [{ type: 'text', text: 'reason' }],
+    })
+  })
+
   const partialWithToolCall = assistant({
     content: [{ type: 'toolCall', id: 'call-1', name: 'f', arguments: {} }],
   })
@@ -560,17 +745,19 @@ describe('toStreamChunks', () => {
       { type: 'block-start', index: 0, blockType: 'text' },
       { type: 'text-delta', index: 0, text: 'hi' },
       { type: 'block-end', index: 0, block: { type: 'text', text: 'hi' } },
-      { type: 'usage', usage: { inputTokens: 3, outputTokens: 2 } },
+      { type: 'usage', usage: { inputTokens: 3, outputTokens: 2, totalTokens: 5 } },
       {
         type: 'finish',
         reason: { kind: 'stop' },
         replayState: {
-          kind: 'pi-ai',
-          version: 1,
-          api: 'openai-completions',
-          provider: 'cerebras',
-          model: 'gemma-4-31b',
-          stopReason: 'stop',
+          response: {
+            kind: 'pi-ai',
+            version: 2,
+            api: 'openai-completions',
+            provider: 'deepseek',
+            model: 'deepseek-v4-flash',
+            stopReason: 'stop',
+          },
           blocks: [{ type: 'text' }],
         },
       },
@@ -609,17 +796,19 @@ describe('toStreamChunks', () => {
       { type: 'tool-call-delta', index: 0, id: 'call-1', name: 'f', argumentsDelta: '{"a"' },
       { type: 'tool-call-delta', index: 0, id: 'call-1', name: 'f', argumentsDelta: ':1}' },
       { type: 'block-end', index: 0, block: { type: 'tool-call', id: 'call-1', name: 'f', arguments: '{"a":1}' } },
-      { type: 'usage', usage: { inputTokens: 0, outputTokens: 0 } },
+      { type: 'usage', usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 } },
       {
         type: 'finish',
         reason: { kind: 'tool-calls' },
         replayState: {
-          kind: 'pi-ai',
-          version: 1,
-          api: 'openai-completions',
-          provider: 'cerebras',
-          model: 'gemma-4-31b',
-          stopReason: 'toolUse',
+          response: {
+            kind: 'pi-ai',
+            version: 2,
+            api: 'openai-completions',
+            provider: 'deepseek',
+            model: 'deepseek-v4-flash',
+            stopReason: 'toolUse',
+          },
           blocks: [{ type: 'tool-call' }],
         },
       },
@@ -641,7 +830,7 @@ describe('toStreamChunks', () => {
       { type: 'error', reason: 'error', error },
     )))
     expect(chunks).toEqual([
-      { type: 'usage', usage: { inputTokens: 1, outputTokens: 0 } },
+      { type: 'usage', usage: { inputTokens: 1, outputTokens: 0, totalTokens: 1 } },
       { type: 'finish', reason: { kind: 'error', failure: { message: 'boom', code: 'PI_AI_ERROR' } } },
     ])
   })
@@ -675,6 +864,14 @@ describe('mapStopReason / mapUsage', () => {
     ['stop', { kind: 'stop' }],
     ['length', { kind: 'max-tokens' }],
     ['toolUse', { kind: 'tool-calls' }],
+    ['pending', {
+      kind: 'error',
+      failure: { message: 'pi-ai stream for model "deepseek-v4-flash" ended pending', code: 'PI_AI_ERROR' },
+    }],
+    ['deferred', {
+      kind: 'error',
+      failure: { message: 'pi-ai deferred response for model "deepseek-v4-flash" is not supported', code: 'PI_AI_ERROR' },
+    }],
     ['aborted', { kind: 'aborted', failure: { message: 'pi-ai stream aborted', code: 'ABORTED' } }],
   ] as const)('maps %s', (stopReason, expected) => {
     expect(mapStopReason(assistant({ stopReason, content: [{ type: 'text', text: 'ok' }] }))).toEqual(expected)
@@ -684,7 +881,7 @@ describe('mapStopReason / mapUsage', () => {
     expect(mapStopReason(assistant({ stopReason: 'stop' }))).toEqual({
       kind: 'error',
       failure: {
-        message: 'model "gemma-4-31b" returned a completed response with no content',
+        message: 'model "deepseek-v4-flash" returned a completed response with no content',
         code: EMPTY_RESPONSE_CODE,
       },
     })
@@ -729,6 +926,16 @@ describe('mapStopReason / mapUsage', () => {
       stopReason: 'error',
       errorMessage: 'HTTP 400: invalid input: temperature exceeds maximum allowed value',
     }))).toMatchObject({ kind: 'error', failure: { code: 'INVALID_REQUEST' } })
+    expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'HTTP 413: Payload Too Large' })))
+      .toMatchObject({ kind: 'error', failure: { code: 'INVALID_REQUEST' } })
+    expect(mapStopReason(assistant({
+      stopReason: 'error',
+      errorMessage: 'Failed to buffer the request body: length limit exceeded',
+    }))).toMatchObject({ kind: 'error', failure: { code: 'INVALID_REQUEST' } })
+    expect(mapStopReason(assistant({
+      stopReason: 'error',
+      errorMessage: 'vector length limit exceeded',
+    }))).toMatchObject({ kind: 'error', failure: { code: 'PI_AI_ERROR' } })
   })
 
   it.each([
@@ -768,7 +975,7 @@ describe('mapStopReason / mapUsage', () => {
     expect(mapStopReason(silent, 100)).toEqual({
       kind: 'error',
       failure: {
-        message: 'pi-ai detected context overflow for model "gemma-4-31b"',
+        message: 'pi-ai detected context overflow for model "deepseek-v4-flash"',
         code: CONTEXT_WINDOW_EXCEEDED_CODE,
       },
     })
@@ -785,10 +992,11 @@ describe('mapStopReason / mapUsage', () => {
     expect(mapUsage(usage(10, 5, 8, 2))).toEqual({
       inputTokens: 10,
       outputTokens: 5,
+      totalTokens: 25,
       cacheReadTokens: 8,
       cacheWriteTokens: 2,
     })
-    expect(mapUsage(usage(10, 5))).toEqual({ inputTokens: 10, outputTokens: 5 })
+    expect(mapUsage(usage(10, 5))).toEqual({ inputTokens: 10, outputTokens: 5, totalTokens: 15 })
   })
 })
 

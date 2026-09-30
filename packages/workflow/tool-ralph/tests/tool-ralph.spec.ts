@@ -2,8 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
 import Loader from '@cortex/cordis-plugin-loader'
 import type { Agent } from '@cortex/agent'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import { SessionId } from '@cortex/session'
+import SessionProjectionRegistry from '@cortex/session-projection'
 import SubagentRuntime from '@cortex/subagent'
 import type { SubagentCapabilities, SubagentProvider, SubagentRun, SubagentStartRequest } from '@cortex/subagent'
 import SystemPrompt from '@cortex/system-prompt'
@@ -56,6 +57,7 @@ class StubProvider implements SubagentProvider {
 
   constructor(options?: { outputSchema?: boolean; inheritsParentContext?: boolean }) {
     this.capabilities = {
+      agentOptions: true,
       outputSchema: options?.outputSchema ?? true,
       depthLimit: true,
       toolFilter: true,
@@ -78,6 +80,7 @@ async function setup(options?: SetupOptions) {
   const ctx = new Context()
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
+  await ctx.plugin(SessionProjectionRegistry)
   await ctx.plugin(SubagentRuntime)
   const provider = options?.provider === false ? undefined : options?.provider ?? new StubProvider()
   if (provider !== undefined) ctx.subagents.registerProvider(provider)
@@ -99,7 +102,7 @@ function execute(
 ): Promise<ToolExecutionResult> {
   return ctx.tools.execute({
     signal: extra?.signal ?? testToolSignal,
-    callId: CallId('ralph-call'),
+    callId: ToolCallId('ralph-call'),
     name: 'ralph',
     arguments: args,
     ...extra?.agent === undefined ? {} : { agent: extra.agent },

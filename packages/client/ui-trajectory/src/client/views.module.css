@@ -9,8 +9,8 @@
   min-height: 0;
   width: 100%;
   box-sizing: border-box;
-  color: var(--cortex-alias-label-primary);
-  background: var(--cortex-alias-bg-layer-1);
+  color: var(--dsw-alias-label-primary);
+  background: var(--dsw-alias-bg-layer-1);
 }
 
 .ledger {

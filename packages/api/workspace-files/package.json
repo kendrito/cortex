@@ -1,0 +1,86 @@
+{
+  "name": "@cortex/api-workspace-files",
+  "description": "Workspace file service and Client resource provider: bounded reads, directory listing, and live metadata over the workspaceFiles Remote namespace",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/api/workspace-files"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-gateway",
+        "@cortex/client-resources"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/deque": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-resources": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/remote-mock": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/util-workspace-path": "workspace:*"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ]
+}

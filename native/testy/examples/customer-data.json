@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "Valid customer",
+      "values": {
+        "name": "Ada Lovelace",
+        "confirmation": "Customer added: Ada Lovelace",
+        "email": "ada@example.test",
+        "count": "1 customer"
+      },
+      "id": "valid-customer"
+    },
+    {
+      "name": "Invalid email rejected",
+      "values": {
+        "name": "Ada Lovelace",
+        "confirmation": "Enter a valid email address.",
+        "email": "not-an-email",
+        "count": "0 customers"
+      },
+      "id": "invalid-email"
+    },
+    {
+      "name": "Empty name rejected",
+      "values": {
+        "name": "",
+        "confirmation": "Enter a customer name.",
+        "email": "ada@example.test",
+        "count": "0 customers"
+      },
+      "id": "empty-name"
+    }
+  ]
+}

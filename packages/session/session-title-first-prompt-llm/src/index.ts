@@ -17,6 +17,7 @@ export type Config = SessionTitleLlmConfig
 /* jscpd:ignore-start -- Loader requires each plugin to export its own statically walkable schema; the field validators remain shared. */
 export const Config: z<Config> = z.object({
   targetWords: SessionTitleLlmConfigFields.targetWords,
+  targetCjkCharacters: SessionTitleLlmConfigFields.targetCjkCharacters,
   maxInputBytes: SessionTitleLlmConfigFields.maxInputBytes,
   maxOutputTokens: SessionTitleLlmConfigFields.maxOutputTokens,
   timeoutMs: SessionTitleLlmConfigFields.timeoutMs,

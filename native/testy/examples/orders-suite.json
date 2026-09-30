@@ -1,0 +1,5 @@
+{
+  "name": "OrderLab scoped shipping",
+  "repetitions": 1,
+  "testFiles": ["orders-scoped.json"]
+}

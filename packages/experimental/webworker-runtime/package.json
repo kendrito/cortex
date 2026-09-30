@@ -1,0 +1,75 @@
+{
+  "name": "@cortex/experimental-webworker-runtime",
+  "description": "Browser-only harness runtime: in-memory VFS, module transform and loader, postMessage tunnel, and the dedicated Web Worker assembly, with the Node-compatibility layer that lets the host tree run unchanged",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/webworker-runtime"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./worker": "./lib/worker.js",
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    }
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/util-crypto": "workspace:*",
+    "@noble/hashes": "^2.3.0",
+    "@yarnpkg/parsers": "^3.1.0",
+    "acorn": "^8.17.0",
+    "buffer": "^6.0.3",
+    "picomatch": "^4.0.4",
+    "readable-stream": "^4.7.0",
+    "@cortex/client-web": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-modules": "workspace:*",
+    "@cortex/host-webserver": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/bash-sandbox": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-file-upload": "workspace:*",
+    "@cortex/client-modules": "workspace:*",
+    "@cortex/host-webserver": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@deepseek-ai/node-addon-system": "workspace:~",
+    "@types/picomatch": "^3.0.2",
+    "@types/readable-stream": "^4.0.24",
+    "chokidar": "^5.0.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/worker.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "name": "@cortex/acp-app",
+  "description": "The cortex ACP profile bundle: automation-only JSON-RPC stdio and process lifecycle over cortex-base",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/bundle/acp-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@cortex/acp": "workspace:*",
+    "@cortex/cmdline": "workspace:*",
+    "commander": "^15.0.0"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis": "workspace:~"
+  }
+}

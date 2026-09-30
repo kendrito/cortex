@@ -1,0 +1,32 @@
+Usage: cortex [--profile] <name> [options] [app-args...]
+       cortex plugin --profile <name> <pnpm-args...>
+
+cortex: boot a Cortex profile — an ordered stack of plugin-bundle patch
+layers under your own overrides.
+
+Arguments:
+  args                           arguments for the booted profile's app (see:
+                                 cortex --profile <name> --help)
+
+Options:
+  -V, --version                  output the version number
+  --profile <name>               the profile under $CORTEX_HOME/profiles to boot
+  --from-default-profile <name>  initialize a new custom profile from a shipped
+                                 profile template
+  --patch <path>                 extra patch-list overlay applied after the
+                                 profile layer (repeatable)
+  --dump-config                  print the composed profile tree and exit
+  --dump-config-schema           print JSON Schema for profile entries and
+                                 patches without mounting
+  --dump-default-config          print the profile tree without its user layer
+                                 or --patch overlays and exit
+
+Examples:
+  cortex web                                   boot the web profile (same as: cortex --profile web)
+  cortex rescue --from-default-profile web
+                                            create rescue from the shipped web template, then boot it
+  cortex headless "run the tests"              answer one task, print the result, and exit
+  cortex tui --patch ./extra.yml               boot a custom profile with one extra overlay
+  cortex tui --resume <session>                arguments after the launcher flags reach the app
+  cortex web --help                            the web app's own flags and help
+  cortex plugin --profile tui add <package>    install a plugin into the tui profile

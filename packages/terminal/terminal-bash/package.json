@@ -1,7 +1,7 @@
 {
   "name": "@cortex/terminal-bash",
   "description": "Persistent shell PTY backend over the Cortex subprocess terminal primitive",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,41 +18,39 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/terminal": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session-projection": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/lazy-require": "workspace:*",
+    "@cortex/pwsh-local": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "@xterm/headless": "^6.0.0"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/terminal": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/subprocess-local": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

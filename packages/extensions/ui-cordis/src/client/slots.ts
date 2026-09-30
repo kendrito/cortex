@@ -1,6 +1,6 @@
 /** Injected faces and the Package-owned `tool.view.cordis` slot declaration. */
 
-import type { SessionId } from '@cortex/client-connection/client'
+import type { SessionId } from '@cortex/api-remotes/client'
 import type { HostObservable } from '@cortex/client-ui-slots'
 import type {
   CordisRunActivity, CordisRunFailure, CordisUserRunRequest, DynamicCordisLivePackage,

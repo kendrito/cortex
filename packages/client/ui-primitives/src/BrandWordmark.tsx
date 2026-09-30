@@ -1,41 +1,34 @@
-// Cortex brand wordmark: the mark plus the product name, laid out on the same
-// 24px height the sidebar reserves. The name is set in the interface font
-// rather than traced to paths, so it stays editable and inherits the app's
-// type stack. Ink rides currentColor.
-
 import type { IconProps } from './icons/props.ts'
+import { CortexMark } from './CortexMark.tsx'
 
-/** Native wordmark width at the default 24px height. */
 const WIDTH = 116
+const NAME_X = 29
+
+/** Cortex wordmark presentation, including independently slotted marks. */
+export interface BrandWordmarkProps extends IconProps {
+  /** Include the leading Cortex node mark; omit it when a separate slot supplies the mark. */
+  includeMark?: boolean | undefined
+}
 
 /**
- * Render the full brand wordmark.
- * @param props.size - height in px (default 24; width keeps the 116:24 ratio).
- * @param props.className - extra class for layout placement.
- * @returns the wordmark svg (aria-hidden decorative brand art).
+ * Render the Cortex name and optional node mark in the surrounding text color.
+ * @param props - Size, class, and leading-mark visibility.
+ * @returns the decorative Cortex wordmark.
  */
-export function BrandWordmark({ size = 24, className }: IconProps) {
+export function BrandWordmark({ size = 24, className, includeMark = true }: BrandWordmarkProps) {
+  const width = includeMark ? WIDTH : WIDTH - NAME_X
   return (
     <svg
-      width={(size * WIDTH) / 24}
+      width={(size * width) / 24}
       height={size}
       className={className}
-      viewBox={`0 0 ${WIDTH} 24`}
+      viewBox={`${includeMark ? 0 : NAME_X} 0 ${width} 24`}
       fill="none"
       aria-hidden="true"
     >
-      <path
-        d="M12 6.4V9.2M16.85 15.1L14.42 13.7M7.15 15.1L9.58 13.7"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <circle cx="12" cy="11.6" r="2.9" fill="currentColor" />
-      <circle cx="12" cy="4.3" r="2.1" fill="currentColor" />
-      <circle cx="18.3" cy="16.3" r="2.1" fill="currentColor" />
-      <circle cx="5.7" cy="16.3" r="2.1" fill="currentColor" />
+      {includeMark && <CortexMark />}
       <text
-        x="29"
+        x={NAME_X}
         y="17"
         fill="currentColor"
         fontSize="15.5"

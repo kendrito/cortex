@@ -2,8 +2,9 @@
 /**
  * PopupSelectView interaction spec: the search input takes
  * focus on open and plain typing filters locally, ↑↓ move the filtered
- * highlight while ←→ stay native to the input, Enter selects single-flight,
- * Escape dismisses back through focusComposer, outside pointerdown dismisses
+ * highlight while ←→ stay native to the input, Enter and Tab select
+ * single-flight, Escape and Shift+Tab dismiss back through focusComposer,
+ * outside pointerdown dismisses
  * plainly, the submitting/failed states render pending text and a working
  * retry button, the highlighted row scrolls into view, and the card height
  * clamps to the space above the composer.
@@ -15,11 +16,11 @@ import type { PopupSpec, TokenSegment } from '../src/client/popup.ts'
 import { PopupSelectController } from '../src/client/popup.ts'
 import { PopupSelectView } from '../src/client/PopupSelectView.tsx'
 import { makeTranslate } from '@cortex/client-test-runtime'
-import { en as commonEn } from '@cortex/client-locale/src/locales/index.ts'
-import { en } from '../src/client/locales.ts'
+import { zh as commonZh } from '@cortex/client-locale/src/locales/zh.ts'
+import { zh } from '../src/client/locales.ts'
 
-// The framework-injected t seat, stubbed over the en dictionaries (the default locale).
-const t: Parameters<typeof PopupSelectView>[0]['t'] = makeTranslate(en, commonEn)
+// The framework-injected t seat, stubbed over the zh dictionaries (the default locale).
+const t: Parameters<typeof PopupSelectView>[0]['t'] = makeTranslate(zh, commonZh)
 
 // jsdom has no scrollIntoView; the view calls it on the highlighted row.
 const scrollIntoView = vi.fn()
@@ -69,7 +70,7 @@ async function mountOpen(overrides: Partial<PopupSpec<string>> = {}, consumeResu
     popup.open('theme', spec(overrides), 'ctx-A', SEGMENT)
     await Promise.resolve()
   })
-  return { popup, view, consume, focusComposer, search: screen.getByRole('textbox', { name: 'Filter options' }) }
+  return { popup, view, consume, focusComposer, search: screen.getByRole('textbox', { name: '筛选选项' }) }
 }
 
 function rowLabels(): string[] {
@@ -77,6 +78,55 @@ function rowLabels(): string[] {
 }
 
 describe('PopupSelectView', () => {
+  it('renders provider groups and selects the same fuzzy-ranked row the user sees', async () => {
+    const alpha = { name: 'alpha', label: 'Alpha provider' }
+    const beta = { name: 'beta', label: 'Beta provider' }
+    const options: SelectOption[] = [
+      { id: 'a-deep', label: 'DeepSeek Flash', group: alpha },
+      { id: 'b-flash', label: 'Flash Beta', group: beta },
+      { id: 'a-prefix', label: 'Flash Lite', group: alpha, active: true },
+      { id: 'other', label: 'Unmatched', group: { name: 'other', label: 'Other provider' } },
+    ]
+    const onSelect = vi.fn()
+    const { search } = await mountOpen({ searchMode: 'fuzzy-label', options: () => Promise.resolve(options), onSelect })
+    expect(screen.getAllByRole('group').map(group => group.querySelector('[data-menu-group-heading]')?.textContent))
+      .toEqual(['Alpha provider', 'Beta provider', 'Other provider'])
+    expect(rowLabels()).toEqual(['DeepSeek Flash', 'Flash Lite', 'Flash Beta', 'Unmatched'])
+    fireEvent.change(search, { target: { value: 'flash' } })
+    expect(rowLabels()).toEqual(['Flash Lite', 'DeepSeek Flash', 'Flash Beta'])
+    expect(screen.queryByRole('group', { name: 'Other provider' })).toBeNull()
+    expect(document.activeElement).toBe(search)
+    fireEvent.keyDown(search, { key: 'ArrowUp' })
+    expect(screen.getByRole('option', { name: 'Flash Beta' }).getAttribute('aria-selected')).toBe('true')
+    await act(async () => { fireEvent.keyDown(search, { key: 'Enter' }); await Promise.resolve() })
+    expect(onSelect).toHaveBeenCalledWith(options[1], 'ctx-A')
+  })
+
+  it('uses command-owned search copy and resets to generic copy for the next popup', async () => {
+    const labels = { placeholder: '搜索模型…', empty: '没有可用的模型。', noResults: '没有匹配的模型。' }
+    const searchLabels = vi.fn(() => labels)
+    const { popup, search } = await mountOpen({ searchLabels })
+    expect(search.getAttribute('placeholder')).toBe(labels.placeholder)
+    fireEvent.change(search, { target: { value: 'no-match' } })
+    expect(screen.getByText(labels.noResults)).toBeTruthy()
+    expect(screen.queryByText(labels.empty)).toBeNull()
+    expect(searchLabels).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      popup.open('empty-models', spec({ searchLabels, options: () => Promise.resolve([]) }), 'ctx-A', SEGMENT)
+      await Promise.resolve()
+    })
+    expect(screen.getByText(labels.empty)).toBeTruthy()
+    expect(screen.queryByText(labels.noResults)).toBeNull()
+    await act(async () => {
+      popup.open('theme', spec(), 'ctx-A', SEGMENT)
+      await Promise.resolve()
+    })
+    expect(search.getAttribute('placeholder')).toBe(zh['search.placeholder'])
+    fireEvent.change(search, { target: { value: 'no-match' } })
+    expect(screen.getByText(zh['status.empty'])).toBeTruthy()
+    expect(popup.state.getSnapshot().searchLabels).toBeNull()
+  })
+
   it('renders null while closed, opens with focus in the search input', async () => {
     const popup = new PopupSelectController<string>({ consume: () => true, focusComposer: () => {} })
     const view = render(<PopupSelectView popup={popup} t={t} />)
@@ -85,9 +135,17 @@ describe('PopupSelectView', () => {
       popup.open('theme', spec(), 'ctx-A', SEGMENT)
       await Promise.resolve()
     })
-    const search = screen.getByRole('textbox', { name: 'Filter options' })
+    const search = screen.getByRole('textbox', { name: '筛选选项' })
     expect(document.activeElement).toBe(search)
     expect(rowLabels()).toEqual(['Dark', 'Light', 'Sepia'])
+  })
+
+  it('renders an optional option badge as a superscript marker', async () => {
+    await mountOpen({
+      options: () => Promise.resolve([{ id: 'auto', label: 'Auto review', badge: 'EXP' }]),
+    })
+    const row = screen.getByRole('option', { name: 'Auto review EXP' })
+    expect(row.querySelector('sup')?.textContent).toBe('EXP')
   })
 
   it('typing filters rows locally and rebases the highlight', async () => {
@@ -99,20 +157,65 @@ describe('PopupSelectView', () => {
     expect(options).toHaveBeenCalledTimes(1)
     act(() => { fireEvent.change(search, { target: { value: 'zzz' } }) })
     expect(screen.queryByRole('option')).toBeNull()
-    expect(screen.queryByText('No options')).not.toBeNull()
+    expect(screen.queryByText('无选项')).not.toBeNull()
   })
 
   it('ArrowUp/Down move the filtered highlight; ArrowLeft/Right are left to the native caret', async () => {
     const { search } = await mountOpen()
+    // Open parks the highlight on the current-value row (Light, index 1).
+    expect(screen.getAllByRole('option')[1]!.getAttribute('aria-selected')).toBe('true')
     act(() => { fireEvent.keyDown(search, { key: 'ArrowDown' }) })
     let options = screen.getAllByRole('option')
-    expect(options[1]!.getAttribute('aria-selected')).toBe('true')
+    expect(options[2]!.getAttribute('aria-selected')).toBe('true')
     act(() => { fireEvent.keyDown(search, { key: 'ArrowUp' }) })
     options = screen.getAllByRole('option')
-    expect(options[0]!.getAttribute('aria-selected')).toBe('true')
+    expect(options[1]!.getAttribute('aria-selected')).toBe('true')
     // fireEvent returns false when preventDefault was called: arrow left/right must NOT be intercepted.
     expect(fireEvent.keyDown(search, { key: 'ArrowLeft' })).toBe(true)
     expect(fireEvent.keyDown(search, { key: 'ArrowRight' })).toBe(true)
+  })
+
+  it('Tab accepts the highlighted row like Enter; Shift+Tab dismisses like Escape', async () => {
+    const onSelect = vi.fn()
+    const leaving = await mountOpen({ onSelect })
+    // false = preventDefault ran: the shell holds focus, so Tab may not fall through.
+    // Shift+Tab leaves without settling: no pick, focus back to the composer.
+    expect(fireEvent.keyDown(leaving.search, { key: 'Tab', shiftKey: true })).toBe(false)
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(leaving.focusComposer).toHaveBeenCalledTimes(1)
+    expect(leaving.view.container.childElementCount).toBe(0)
+    cleanup()
+
+    const settling = await mountOpen({ onSelect })
+    // Tab settles the parked highlight — the current value — exactly like Enter.
+    await act(async () => { fireEvent.keyDown(settling.search, { key: 'Tab' }) })
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith(OPTIONS[1], 'ctx-A')
+    expect(settling.consume).toHaveBeenCalledExactlyOnceWith(SEGMENT)
+    expect(settling.focusComposer).toHaveBeenCalledTimes(1)
+    expect(settling.view.container.childElementCount).toBe(0)
+  })
+
+  it('Tab stays the browser\'s while the rows are still loading: no pick, no escape', async () => {
+    const popup = new PopupSelectController<string>({ consume: () => true, focusComposer: () => {} })
+    render(<PopupSelectView popup={popup} t={t} />)
+    await act(async () => { popup.open('theme', spec({ options: () => new Promise(() => {}) }), 'ctx-A', SEGMENT) })
+    const search = screen.getByRole('textbox', { name: '筛选选项' })
+    // Nothing is settleable yet, so the keystroke is not swallowed.
+    expect(fireEvent.keyDown(search, { key: 'Tab' })).toBe(true)
+    expect(document.activeElement).toBe(search)
+    expect(screen.getByText('正在加载选项…')).toBeTruthy()
+  })
+
+  it('Tab stays the browser\'s on a failed load, so the retry stays reachable', async () => {
+    const popup = new PopupSelectController<string>({ consume: () => true, focusComposer: () => {} })
+    render(<PopupSelectView popup={popup} t={t} />)
+    await act(async () => {
+      popup.open('theme', spec({ options: () => Promise.reject(new Error('directory down')) }), 'ctx-A', SEGMENT)
+      await Promise.resolve()
+    })
+    const search = screen.getByRole('textbox', { name: '筛选选项' })
+    expect(fireEvent.keyDown(search, { key: 'Tab' })).toBe(true)
+    expect(screen.getByRole('button', { name: '重试' })).toBeTruthy()
   })
 
   it('scrolls the highlighted row into view when the highlight moves', async () => {
@@ -121,27 +224,26 @@ describe('PopupSelectView', () => {
     act(() => { fireEvent.keyDown(search, { key: 'ArrowDown' }) })
     const options = screen.getAllByRole('option')
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' })
-    expect(scrollIntoView.mock.instances.at(-1)).toBe(options[1])
+    expect(scrollIntoView.mock.instances.at(-1)).toBe(options[2])
   })
 
   it('caps the card height at the design maximum when the composer sits low enough', async () => {
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ bottom: 800 } as DOMRect)
     await mountOpen()
-    expect(screen.getByLabelText('/theme options').style.maxHeight).toBe('320px')
+    expect(screen.getByLabelText('/theme 选项').style.maxHeight).toBe('320px')
   })
 
   it('clamps the card height to the space above the composer minus the safe margin', async () => {
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ bottom: 200 } as DOMRect)
     await mountOpen()
-    expect(screen.getByLabelText('/theme options').style.maxHeight).toBe('188px')
+    expect(screen.getByLabelText('/theme 选项').style.maxHeight).toBe('188px')
   })
 
-  it('Enter selects the highlighted row: onSelect, consume, close, focusComposer', async () => {
+  it('Enter accepts the parked highlight — the current value on open — then consumes, closes, and refocuses', async () => {
     const seen: Array<{ option: SelectOption; context: string }> = []
     const { view, search, consume, focusComposer } = await mountOpen({
       onSelect: (option, context) => { seen.push({ option, context }) },
     })
-    act(() => { fireEvent.keyDown(search, { key: 'ArrowDown' }) })
     await act(async () => { fireEvent.keyDown(search, { key: 'Enter' }) })
     expect(seen).toEqual([{ option: OPTIONS[1], context: 'ctx-A' }])
     expect(consume).toHaveBeenCalledExactlyOnceWith(SEGMENT)
@@ -167,7 +269,7 @@ describe('PopupSelectView', () => {
       onSelect,
     })
     await act(async () => { fireEvent.click(screen.getByRole('option', { name: 'Full access' })) })
-    expect(screen.queryByLabelText('/theme options')).toBeNull()
+    expect(screen.queryByLabelText('/theme 选项')).toBeNull()
     expect(screen.getByRole('dialog', { name: 'Enable Full access?' })).toBeTruthy()
     const enable = screen.getByRole('button', { name: 'Enable Full access' }) as HTMLButtonElement
     expect(enable.disabled).toBe(true)
@@ -186,7 +288,7 @@ describe('PopupSelectView', () => {
     await act(async () => { fireEvent.click(screen.getByRole('option', { name: 'Full access' })) })
     fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
-    expect(screen.getByLabelText('/theme options')).toBeTruthy()
+    expect(screen.getByLabelText('/theme 选项')).toBeTruthy()
     await act(async () => { fireEvent.click(screen.getByRole('option', { name: 'Full access' })) })
     expect(screen.getByRole<HTMLInputElement>('checkbox').checked).toBe(false)
   })
@@ -196,7 +298,7 @@ describe('PopupSelectView', () => {
     const onSelect = vi.fn(() => new Promise<void>((resolve) => { release = resolve }))
     const { search, consume } = await mountOpen({ onSelect })
     await act(async () => { fireEvent.keyDown(search, { key: 'Enter' }) })
-    expect(screen.queryByText('Applying…')).not.toBeNull()
+    expect(screen.queryByText('正在应用…')).not.toBeNull()
     expect((search as HTMLInputElement).readOnly).toBe(true)
     await act(async () => {
       fireEvent.keyDown(search, { key: 'Enter' })
@@ -220,7 +322,7 @@ describe('PopupSelectView', () => {
     })
     expect(screen.getByRole('alert').textContent).toContain('directory down')
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+      fireEvent.click(screen.getByRole('button', { name: '重试' }))
       await Promise.resolve()
     })
     expect(attempts).toBe(2)
@@ -231,7 +333,7 @@ describe('PopupSelectView', () => {
     const { search, consume } = await mountOpen({ onSelect: () => Promise.reject(new Error('host rejected')) })
     await act(async () => { fireEvent.keyDown(search, { key: 'Enter' }) })
     expect(screen.getByRole('alert').textContent).toContain('host rejected')
-    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull()
+    expect(screen.queryByRole('button', { name: '重试' })).toBeNull()
     expect(consume).not.toHaveBeenCalled()
     expect(screen.getAllByRole('option').length).toBe(3)
   })

@@ -19,12 +19,12 @@
  * @module cortex-llm-pi-ai/provider
  */
 
-import { createProvider } from '@earendil-works/pi-ai'
 import type { Api, ApiKeyAuth, Model, Provider, ProviderStreams } from '@earendil-works/pi-ai'
 import { anthropicMessagesApi } from '@earendil-works/pi-ai/api/anthropic-messages.lazy'
 import { openAICompletionsApi } from '@earendil-works/pi-ai/api/openai-completions.lazy'
 import { openAIResponsesApi } from '@earendil-works/pi-ai/api/openai-responses.lazy'
-import { catalogProvider } from './catalog.ts'
+import { catalogProvider, PiAiCatalogError } from './catalog.ts'
+import { createProvider } from './models.ts'
 
 /**
  * Wire protocols a configured route may name, mapped to pi-ai's lazily loaded
@@ -33,7 +33,7 @@ import { catalogProvider } from './catalog.ts'
  * catalog route would.
  *
  * The table is deliberately narrow: the protocols a hand-declared route
- * actually reaches for today, each completely describable with a key, an
+ * actually reads, each completely describable with a key, an
  * endpoint, and headers. Bedrock signs with SigV4 over AWS credentials and a
  * region, Vertex needs a project, a location, and application-default
  * credentials, Azure needs provider environment plus an api-version, and Codex
@@ -44,14 +44,6 @@ import { catalogProvider } from './catalog.ts'
  * still reach every protocol through their own provider; only an explicit
  * override is refused.
  */
-// PROVIDER-UI LOCKDOWN NOTE: all three wire protocols below — the two
-// OpenAI-shaped ones AND `anthropic-messages` — are deliberately kept fully
-// implemented, together with every catalog vendor and custom gateway route
-// this adapter serves. Existing and settings.yaml-configured routes must keep
-// working unchanged. The restriction to "an approved local LiteLLM instance
-// only" lives exclusively in the web client
-// (packages/client/ui-settings-models/src/client/lockdown.ts): the UI stops OFFERING external
-// configuration; this adapter never stopped supporting it.
 const PROTOCOLS: Readonly<Record<string, () => ProviderStreams>> = {
   'openai-completions': openAICompletionsApi,
   'openai-responses': openAIResponsesApi,
@@ -184,7 +176,7 @@ export function buildProvider(spec: ProviderSpec): Provider {
   // replaces each catalog model's own. So the route has a single API.
   const factory = spec.api === undefined ? undefined : PROTOCOLS[spec.api]
   if (factory === undefined) {
-    throw new Error(
+    throw new PiAiCatalogError(
       `llm-pi-ai: provider "${spec.provider}" names api "${spec.api}", which this build cannot serve;`
       + ` supported protocols are ${supportedProtocols().join(', ')}`,
     )

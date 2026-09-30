@@ -1,0 +1,4 @@
+- id: sandbox
+  name: '@cortex/sandbox-local'
+- id: skills
+  name: '@cortex/skill'

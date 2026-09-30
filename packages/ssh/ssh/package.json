@@ -1,0 +1,83 @@
+{
+  "name": "@cortex/ssh",
+  "description": "Shared OpenSSH connection and versioned POSIX remote helper",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/ssh/ssh"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./helper": {
+      "types": "./lib/types/helper-entry.d.ts",
+      "default": "./lib/helper.js"
+    },
+    "./protocol": {
+      "types": "./lib/types/protocol.d.ts",
+      "default": "./lib/protocol.js"
+    },
+    "./schemas": {
+      "types": "./lib/types/schemas.d.ts",
+      "default": "./lib/schemas.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/helper.js",
+    "lib/protocol.js",
+    "lib/schemas.js",
+    "lib/protocol-*.js",
+    "lib/schemas-*.js",
+    "lib/stream-security-*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/fs": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/fs-sandbox": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/brand": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/fs": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/fs-sandbox": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/ptc-runtime-node": "workspace:*",
+    "@cortex/fs-ssh": "workspace:*",
+    "@cortex/subprocess-ssh": "workspace:*",
+    "@cortex/sandbox-ssh": "workspace:*",
+    "@cortex/lsp": "workspace:*",
+    "@cortex/lsp-stdio": "workspace:*",
+    "@cortex/brand": "workspace:*"
+  }
+}

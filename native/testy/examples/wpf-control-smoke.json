@@ -1,0 +1,16 @@
+{
+  "id": "wpf-control-smoke",
+  "name": "Virtualized order and WPF state",
+  "intent": "Find a far virtualized order without selecting it, reveal it explicitly, expand Projects, and verify exact WPF control properties.",
+  "category": "WPF controls",
+  "steps": [
+    { "id": "find-order", "title": "Verify the logical order exists", "action": "assertItemExists", "selector": "id:OrdersGrid", "value": "{\"item\":{\"label\":\"Order 1999\"}}", "timeoutMs": 5000 },
+    { "id": "realize-order", "title": "Realize the unique far order", "action": "realizeItem", "selector": "id:OrdersGrid", "value": "{\"item\":{\"label\":\"Order 1999\"}}", "timeoutMs": 5000 },
+    { "id": "reveal-order", "title": "Scroll the realized order into view", "action": "scrollIntoView", "selector": "id:Order-1999", "value": "", "timeoutMs": 5000 },
+    { "id": "selection-unchanged", "title": "Verify revealing did not select the order", "action": "assertProperty", "selector": "id:Order-1999", "value": "{\"property\":\"uia.isSelected\",\"equals\":false}", "timeoutMs": 5000 },
+    { "id": "expand-projects", "title": "Expand the Projects node", "action": "expand", "selector": "id:TreeRoot", "value": "", "timeoutMs": 5000 },
+    { "id": "verify-expanded", "title": "Verify Projects is expanded", "action": "assertProperty", "selector": "id:TreeRoot", "value": "{\"property\":\"uia.expandCollapseState\",\"equals\":\"Expanded\"}", "timeoutMs": 5000 },
+    { "id": "verify-readonly", "title": "Verify the reference field is read-only", "action": "assertProperty", "selector": "id:ReadOnlyReference", "value": "{\"property\":\"uia.isReadOnly\",\"equals\":true}", "timeoutMs": 5000 },
+    { "id": "missing-order", "title": "Verify a nonexistent logical order is absent", "action": "assertItemAbsent", "selector": "id:OrdersGrid", "value": "{\"item\":{\"label\":\"Order 9999\"}}", "timeoutMs": 5000 }
+  ]
+}

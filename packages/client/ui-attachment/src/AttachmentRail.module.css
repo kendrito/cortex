@@ -1,7 +1,3 @@
-/* Thumbnail geometry mirrors Cortex Chat's composer rail: 64px cards with a
-   16px radius, remove control fully inside the card, arrows overlaid at the
-   edges instead of a scrollbar. */
-
 .root {
   position: relative;
   min-width: 0;
@@ -9,6 +5,7 @@
 
 .rail {
   display: flex;
+  align-items: stretch;
   gap: 10px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -17,8 +14,8 @@
   /* The rail scrolls on the composer's elevated input surface: bind the l2
      pair (ui-theme styles/scrollbar.css rebinding contract) so anything that
      does draw a thumb here matches the surface. */
-  --cortex-scrollbar-thumb: var(--cortex-alias-scrollbar-bg-l2);
-  --cortex-scrollbar-thumb-hover: var(--cortex-alias-scrollbar-hover-l2);
+  --cortex-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --cortex-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
 }
 
 .rail::-webkit-scrollbar {
@@ -26,9 +23,7 @@
 }
 
 .item {
-  position: relative;
-  flex: 0 0 64px;
-  width: 64px;
+  flex: none;
   height: 64px;
 }
 
@@ -37,9 +32,9 @@
   height: 64px;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--cortex-alias-border-l2-darkmode-thin);
-  border-radius: 16px;
-  background: var(--cortex-alias-interactive-bg-hover);
+  border: 0.5px solid var(--dsw-alias-border-l2-darkmode-thin);
+  border-radius: var(--dsw-radius-xl);
+  background: var(--dsw-alias-interactive-bg-hover);
   cursor: zoom-in;
 }
 
@@ -62,8 +57,9 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: var(--cortex-alias-button-contrast-fill);
-  color: var(--cortex-alias-label-primary-inverted);
+  corner-shape: round;
+  background: var(--dsw-alias-button-contrast-fill);
+  color: var(--dsw-alias-label-primary-inverted);
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
@@ -86,7 +82,6 @@
     transition: none;
   }
 }
-
 .arrow {
   position: absolute;
   top: 50%;
@@ -96,17 +91,19 @@
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid var(--cortex-alias-border-l2-darkmode-thin);
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l2-darkmode-thin);
   border-radius: 999px;
-  background: var(--cortex-specific-input-major);
-  color: var(--cortex-alias-label-secondary);
-  box-shadow: var(--cortex-shadow-lv2);
+  corner-shape: round;
+  background: var(--dsw-specific-input-major);
+  color: var(--dsw-alias-label-secondary);
+  box-shadow: var(--dsw-elevation-panel);
   cursor: pointer;
   transform: translateY(-50%);
 }
 
 .arrow:hover {
-  background: var(--cortex-alias-interactive-bg-hover-solid);
+  background: var(--dsw-alias-interactive-bg-hover-solid);
 }
 
 .arrowLeft {

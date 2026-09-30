@@ -1,0 +1,44 @@
+{
+  "name": "@cortex/skill-office",
+  "description": "Bundled Word, PowerPoint, and Excel workflows and structural checks",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/skill/skill-office"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "assets",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/skill": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/skill": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~"
+  },
+  "dependencies": {
+    "@deepseek-ai/libreoffice-kit": "^0.1.1",
+    "@cortex/schemastery": "workspace:~",
+    "yaml": "^2.4.2"
+  }
+}

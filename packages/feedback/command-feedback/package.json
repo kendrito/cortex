@@ -1,7 +1,7 @@
 {
   "name": "@cortex/command-feedback",
-  "description": "Log-only session feedback producer and human-facing slash command",
-  "version": "0.1.0-rc.5",
+  "description": "Log-only session feedback: the record event, the sessionFeedback Host Remote, and the human-facing slash command",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,37 +18,51 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
-    "lib/types/**/*.d.ts"
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-telemetry": "workspace:^",
-    "@cortex/anonymous-user-id": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/commands": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/anonymous-user-id": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/typert-protocol": "workspace:*"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-include": "workspace:^",
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-telemetry": "workspace:^",
-    "@cortex/anonymous-user-id": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/anonymous-user-id": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/typert-protocol": "workspace:*"
   }
 }

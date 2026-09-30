@@ -1,0 +1,35 @@
+# PTC mode image overlay: mounts the worker runtime and durable attachment
+# store so a nested read_image result can cross the generic rich-result bridge.
+# The live config selects the shipped vision route for manual use.
+- id: agent-default-model
+  name: '@cortex/agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-flash-vision-exp
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js 'process.env.CORTEX_SNAPSHOT === undefined ? ''zstd'' : ''none'''
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tools
+  name: '@cortex/tools'
+  config:
+    mode: ptc
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- id: attachment-local
+  name: '@cortex/attachment-local'

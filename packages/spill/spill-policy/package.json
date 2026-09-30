@@ -1,7 +1,7 @@
 {
   "name": "@cortex/spill-policy",
-  "description": "Tool-result spill policy for the Cortex — replaces oversized plain-text tool results with a retained preview plus a spill-file path (no service API)",
-  "version": "0.1.0-rc.5",
+  "description": "Token-budgeted tool-result retention with recoverable text and image paths",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,40 +18,56 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
+    "./notice": {
+      "types": "./lib/types/notice.d.ts",
+      "default": "./lib/types/notice.js"
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
+    "lib/types/**/*.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/output-retention": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/spill": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/llm": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/spill": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/token-meter": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/code-runtime-worker-thread": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/output-retention": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/spill": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/attachment-local": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/fs": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/llm-pi-ai": "workspace:*",
+    "@cortex/mcp-client": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/ptc-runtime-node": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/spill": "workspace:*",
+    "@cortex/spill-local": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/token-meter": "workspace:*",
+    "@cortex/tool-fs": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "sharp": "^0.35.3"
   }
 }

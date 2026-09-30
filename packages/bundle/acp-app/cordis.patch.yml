@@ -1,0 +1,24 @@
+# The automation-only ACP application over cortex-base. Stdout belongs to ACP.
+
+- id: system-prompt
+  config:
+    personaSuffix: Your working directory is {{cwd}}.
+    personaPrefix: >-
+      You are a coding agent powered by the {{model}} model.
+
+- id: session-title-llm
+  disabled: true
+
+- insert:
+    - id: acp-app-startup
+      name: '@cortex/acp-app'
+
+    - id: acp
+      name: '@cortex/acp'
+      inject: [acpAppStartup]
+      config:
+        provider: ''
+        model: ''
+
+- id: hmr
+  disabled: true

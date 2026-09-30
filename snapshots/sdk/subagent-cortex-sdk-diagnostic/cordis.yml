@@ -1,0 +1,68 @@
+# TypeScript SDK snapshot patch for foreground and background CORTEX SDK failures.
+
+- id: skill-filesystem
+  name: '@cortex/skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js "process.env.CORTEX_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: session-log-deepseek
+  name: '@cortex/session-log-deepseek'
+  config:
+    enabled: true
+
+- insert:
+    - id: subagent-cortex-sdk-diagnostic
+      name: '@cortex/subagent-cortex-sdk'
+      config:
+        providerName: cortex-sdk-diagnostic
+        profile: sdk
+        patches:
+          - !!js process.env.CORTEX_TEST_CHILD_PATCH
+        cortexHome: !!js cortexHomePath('children/foreground')
+        provider: mock
+        model: mock-echo
+        env:
+          CORTEX_TELEMETRY_DISABLED: '1'
+          CORTEX_TEST_CHILD_FAILURE: '1'
+    - id: tool-subagent-cortex-sdk-diagnostic
+      name: '@cortex/tool-subagent'
+      config:
+        provider: cortex-sdk-diagnostic
+        toolName: subagent_cortex_sdk
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+    - id: subagent-cortex-sdk-diagnostic-background
+      name: '@cortex/subagent-cortex-sdk'
+      config:
+        providerName: cortex-sdk-diagnostic-background
+        profile: sdk
+        patches:
+          - !!js process.env.CORTEX_TEST_CHILD_PATCH
+        cortexHome: !!js cortexHomePath('children/background')
+        provider: mock
+        model: mock-echo
+        env:
+          CORTEX_TELEMETRY_DISABLED: '1'
+          CORTEX_TEST_CHILD_FAILURE: '1'
+          FAKE_INIT_GO: .cortex-sdk-background-release
+    - id: tool-subagent-cortex-sdk-diagnostic-background
+      name: '@cortex/tool-subagent'
+      config:
+        provider: cortex-sdk-diagnostic-background
+        toolName: subagent_cortex_sdk_background
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+    - id: release-cortex-sdk-background-on-job-output
+      name: '../../../apps/cli/tests/profiles/sdk/fixtures/subagent-cortex-sdk-release-on-job-output.ts'

@@ -1,13 +1,12 @@
 {
-  "id": "/",
   "name": "Cortex",
-  "short_name": "Cortex",
-  "start_url": "/",
-  "scope": "/",
+  "short_name": "CORTEX",
+  "start_url": "./",
+  "scope": "./",
   "display": "fullscreen",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

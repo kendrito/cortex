@@ -1,0 +1,44 @@
+{
+  "name": "@cortex/experimental-ptc-runtime-python",
+  "description": "CPython subprocess implementation of the Cortex PTC execution seam",
+  "version": "0.2.0-rc.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/ptc-runtime-python"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "py/**/*.py",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/util-values": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/util-values": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

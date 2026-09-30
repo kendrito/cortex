@@ -1,0 +1,84 @@
+# Minimal live counterpart for the persistent-pwsh-padded-completion snapshot composition.
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  config:
+    models:
+      - id: deepseek-v4-pro
+
+- id: sandbox-policy
+  name: '@cortex/sandbox-policy'
+  config:
+    mode: danger-full-access
+    workspaceRoot: !!js process.cwd()
+
+- id: subprocess
+  name: '@cortex/subprocess-local'
+
+- insert:
+    - id: terminal
+      name: '@cortex/terminal'
+
+- insert:
+    - id: padded-pwsh-backend
+      name: './pwsh-snapshot-backend.mjs'
+
+- id: agent-default-model
+  name: '@cortex/agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js 'process.env.CORTEX_SNAPSHOT === undefined ? ''zstd'' : ''none'''
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  disabled: true
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: You are a concise snapshot agent working in {{cwd}}.
+
+- id: tool-jobs
+  name: '@cortex/tool-jobs'
+  disabled: true
+
+- id: goal
+  name: '@cortex/goal'
+  disabled: true
+
+- id: goal-round-driver
+  name: '@cortex/goal-round-driver'
+  disabled: true
+
+- id: command-goal
+  name: '@cortex/command-goal'
+  disabled: true
+
+- id: tool-goal
+  name: '@cortex/tool-goal'
+  disabled: true
+
+- id: skill
+  name: '@cortex/skill'
+  disabled: true
+
+- id: skill-filesystem
+  name: '@cortex/skill-filesystem'
+  disabled: true
+
+- id: tool-skill
+  name: '@cortex/tool-skill'
+  disabled: true
+
+- id: tool-bash
+  name: '@cortex/tool-bash'
+  disabled: true
+
+- insert:
+    - id: tool-pwsh-persistent
+      name: '@cortex/tool-pwsh-persistent'

@@ -27,16 +27,30 @@ describe('cortex-base bundle', () => {
     )
     expect(Array.isArray(parsed)).toBe(true)
     // The base layer is one insert list over the empty profile root.
-    const rows = (parsed as { insert?: { id?: string; config?: Record<string, unknown> }[] }[]).flatMap(
+    const rows = (parsed as { insert?: { id?: string; config?: Record<string, unknown>; disabled?: boolean }[] }[]).flatMap(
       patch => patch.insert ?? [],
     )
     expect(rows.length).toBeGreaterThan(50)
     expect(rows.some(row => row.id === 'agent-loop')).toBe(true)
-    expect(rows.filter(row => row.id === 'session-telemetry-otel')).toHaveLength(0)
-    expect(rows.filter(row => row.id === 'subagent-codex')).toHaveLength(1)
-    expect(rows.filter(row => row.id === 'subagent-claude-code')).toHaveLength(0)
-    expect(manifest.dependencies).toHaveProperty('@cortex/subagent-codex')
-    expect(manifest.dependencies).not.toHaveProperty('@cortex/subagent-claude-code')
+    expect(rows.find(row => row.id === 'hmr')).toMatchObject({ config: { root: [] } })
+    expect(rows.find(row => row.id === 'llm-pi-ai')?.config).toBeUndefined()
+    expect(rows.find(row => row.id === 'agent-default-model')?.config).toEqual({ provider: '', model: '' })
+    for (const id of ['subagent-codex', 'subagent-claude-code']) {
+      expect(rows.filter(row => row.id === id)).toHaveLength(1)
+      expect(rows.find(row => row.id === id)?.config).toBeUndefined()
+      expect(manifest.dependencies).toHaveProperty(`@cortex/${id}`)
+    }
+    for (const id of [
+      'session-telemetry-otel', 'otel', 'deepseek-account', 'session-log-deepseek',
+      'deepseek-llm-api-extensions', 'plugin-package-inventory-deepseek',
+      'llm-deepseek', 'llm-deepseek-account', 'web', 'web-search-deepseek',
+      'web-fetch-http', 'tool-web',
+    ]) {
+      expect(rows.find(row => row.id === id), id).toBeUndefined()
+    }
+    expect(Object.keys(manifest.dependencies ?? {}).filter(name =>
+      /deepseek|telemetry|\/otel$|\/web$|\/web-(search|fetch)|\/tool-web$/.test(name),
+    )).toEqual([])
   })
 
   it('gates each shell stack by platform with a symmetric disabled expression', () => {

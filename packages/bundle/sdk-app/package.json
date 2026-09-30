@@ -1,0 +1,51 @@
+{
+  "name": "@cortex/sdk-app",
+  "description": "The cortex SDK profile bundle: stdio JSON-RPC serving and process lifecycle over cortex-base",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/bundle/sdk-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@cortex/cmdline": "workspace:*",
+    "@cortex/sdk-jsonrpc-server": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "commander": "^15.0.0",
+    "@cortex/skill-office": "workspace:*",
+    "@cortex/tool-workspace-dependencies": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis": "workspace:~"
+  }
+}

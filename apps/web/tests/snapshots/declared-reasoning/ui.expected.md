@@ -1,7 +1,0 @@
-- menu "Model and reasoning effort":
-  - menuitemradio "Default" [checked]:
-    - text: Default
-    - img
-  - menuitemradio "Off"
-  - menuitemradio "High"
-  - menuitemradio "Max"

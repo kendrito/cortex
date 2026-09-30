@@ -1,0 +1,10 @@
+version: 1
+scenario: subagent-cortex-sdk-dynamic-route
+profile: sdk
+composition: sdk-cortex-sdk-dynamic-route
+recording: authored
+header:
+  class: sdk-cortex-sdk-dynamic-route
+  pin: true
+  childSystemPrompts: [1]
+  childToolSchemas: [1]

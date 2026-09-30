@@ -1,0 +1,82 @@
+{
+  "name": "@cortex/experimental-auto-review",
+  "description": "Per-tool LLM authorization review for the Cortex Auto permission preset",
+  "version": "0.2.0-rc.2",
+  "icon": "./icon.svg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/auto-review"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "icon.svg",
+    "locale/*.json",
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-instructions": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/permission-presets": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@cortex/util-values": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-instructions": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/bash-sandbox": "workspace:*",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/fs-observation-policy": "workspace:*",
+    "@cortex/fs-sandbox": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/permission-presets": "workspace:*",
+    "@cortex/ptc-runtime-node": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/shell": "workspace:*",
+    "@cortex/shell-env": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tool-bash": "workspace:*",
+    "@cortex/tool-fs": "workspace:*",
+    "@cortex/tool-subagent": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/llm-pi-ai": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

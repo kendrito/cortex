@@ -1,0 +1,1 @@
+Turn this observed Customer Desk interaction into an editable test that resets the app, creates Ada Lovelace with ada@example.test, and preserves the supplied confirmation and count assertions exactly.

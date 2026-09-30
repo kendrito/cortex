@@ -1,9 +1,3 @@
-// parseAnsiLines, the ANSI model behind TerminalBlock: anser's SGR runs
-// resolved into inline styles and folded into per-line span arrays, with every
-// escape and control character that carries no color removed first. The DOM
-// side of the same model (which runs get a span wrapper) is in
-// terminal-block.spec.tsx.
-
 import { describe, expect, it } from 'vitest'
 import { parseAnsiLines } from '../src/ansi.ts'
 
@@ -12,12 +6,10 @@ const BS = '\u0008'
 /** A combining acute accent: zero-width, so it takes no terminal column. */
 const ACCENT = '\u0301'
 
-/** Paint `text` with the SGR `codes`, then reset. */
 function sgr(codes: string, text: string): string {
   return `${ESC}[${codes}m${text}${ESC}[0m`
 }
 
-/** The single span of a single-line, single-run parse. */
 function onlySpan(text: string) {
   const lines = parseAnsiLines(text)
   expect(lines).toHaveLength(1)
@@ -49,17 +41,19 @@ describe('parseAnsiLines: text without SGR state', () => {
 
 describe('parseAnsiLines: basic colors mapped onto theme tokens', () => {
   it.each<[string, string, string]>([
-    ['30', 'black', 'var(--cortex-alias-label-primary)'],
-    ['37', 'white', 'var(--cortex-alias-label-primary)'],
-    ['90', 'bright black', 'var(--cortex-alias-label-tertiary)'],
-    ['31', 'red', 'var(--cortex-alias-state-error-primary)'],
-    ['91', 'bright red', 'var(--cortex-alias-state-error-secondary)'],
-    ['32', 'green', 'var(--cortex-alias-state-success-primary)'],
-    ['92', 'bright green', 'var(--cortex-alias-state-success-secondary)'],
-    ['33', 'yellow', 'var(--cortex-alias-state-warn-primary)'],
-    ['93', 'bright yellow', 'var(--cortex-alias-state-warn-secondary)'],
-    ['34', 'blue', 'var(--cortex-alias-state-business-primary)'],
-    ['94', 'bright blue', 'var(--cortex-static-blue-400)'],
+    ['30', 'black', 'var(--dsw-alias-label-primary)'],
+    ['37', 'white', 'var(--dsw-alias-label-primary)'],
+    ['90', 'bright black', 'var(--dsw-alias-label-tertiary)'],
+    ['31', 'red', 'var(--dsw-alias-state-error-primary)'],
+    ['91', 'bright red', 'var(--dsw-alias-state-error-secondary)'],
+    ['32', 'green', 'var(--dsw-alias-state-success-primary)'],
+    ['92', 'bright green', 'var(--dsw-alias-state-success-secondary)'],
+    ['33', 'yellow', 'var(--dsw-alias-state-warn-primary)'],
+    ['93', 'bright yellow', 'var(--dsw-alias-state-warn-secondary)'],
+    ['34', 'blue', 'var(--dsw-alias-state-business-primary)'],
+    ['94', 'bright blue', 'var(--dsw-static-blue-400)'],
+    ['36', 'cyan', 'var(--dsw-static-blue-600)'],
+    ['96', 'bright cyan', 'var(--dsw-static-blue-500)'],
   ])('SGR %s (%s) resolves to %s', (code, _name, token) => {
     expect(onlySpan(sgr(code, 'x'))).toEqual({ text: 'x', style: { color: token } })
   })
@@ -68,7 +62,6 @@ describe('parseAnsiLines: basic colors mapped onto theme tokens', () => {
 describe('parseAnsiLines: colors with no token equivalent', () => {
   it.each<[string, string, string]>([
     ['35', 'magenta', 'rgb(187, 0, 187)'],
-    ['36', 'cyan', 'rgb(0, 187, 187)'],
     ['38;5;208', '256-palette orange', 'rgb(255, 135, 0)'],
     ['38;2;10;20;30', 'truecolor', 'rgb(10, 20, 30)'],
   ])('SGR %s (%s) falls through to %s', (code, _name, literal) => {
@@ -115,7 +108,7 @@ describe('parseAnsiLines: decorations', () => {
 
   it('combines a color with several decorations in one style', () => {
     expect(onlySpan(sgr('1;3;31', 'x')).style).toEqual({
-      color: 'var(--cortex-alias-state-error-primary)',
+      color: 'var(--dsw-alias-state-error-primary)',
       fontWeight: 700,
       fontStyle: 'italic',
     })
@@ -172,7 +165,7 @@ describe('parseAnsiLines: carriage returns', () => {
     // A carriage return moves the cursor; it does not reset the graphic state,
     // so the redraw inherits the color the discarded frame was written with.
     expect(onlySpan(`${ESC}[31mgone\rkept`))
-      .toEqual({ text: 'kept', style: { color: 'var(--cortex-alias-state-error-primary)' } })
+      .toEqual({ text: 'kept', style: { color: 'var(--dsw-alias-state-error-primary)' } })
   })
 
   it('preserves both lines of a CRLF pair instead of treating it as a redraw', () => {
@@ -220,7 +213,7 @@ describe('parseAnsiLines: backspaces', () => {
     // corrupt it and repaint the rest of the line with whatever the remainder
     // parses as. The visible result is `aXY`, still red, with the reset intact.
     expect(parseAnsiLines(`${sgr('31', 'abc')}${BS}${BS}XY`)).toEqual([[
-      { text: 'a', style: { color: 'var(--cortex-alias-state-error-primary)' } },
+      { text: 'a', style: { color: 'var(--dsw-alias-state-error-primary)' } },
       { text: 'XY', style: undefined },
     ]])
   })
@@ -228,8 +221,8 @@ describe('parseAnsiLines: backspaces', () => {
   it('erases across a style boundary without dropping the styles between', () => {
     // The backspace reaches back past the reset to the last printed character.
     expect(parseAnsiLines(`${sgr('32', 'ok')}${ESC}[31m${BS}bad`)).toEqual([[
-      { text: 'o', style: { color: 'var(--cortex-alias-state-success-primary)' } },
-      { text: 'bad', style: { color: 'var(--cortex-alias-state-error-primary)' } },
+      { text: 'o', style: { color: 'var(--dsw-alias-state-success-primary)' } },
+      { text: 'bad', style: { color: 'var(--dsw-alias-state-error-primary)' } },
     ]])
   })
 
@@ -246,7 +239,7 @@ describe('parseAnsiLines: backspaces', () => {
     // the three columns, so the untouched `d` keeps the run's red.
     expect(parseAnsiLines(`${sgr('31', 'bad')}${BS}${BS}${BS}ok`)).toEqual([[
       { text: 'ok', style: undefined },
-      { text: 'd', style: { color: 'var(--cortex-alias-state-error-primary)' } },
+      { text: 'd', style: { color: 'var(--dsw-alias-state-error-primary)' } },
     ]])
   })
 })
@@ -282,15 +275,15 @@ describe('parseAnsiLines: erase and column arithmetic', () => {
   })
 
   it('counts a wide character as the two columns a terminal advances', () => {
-    // `😀` occupies two cells, so a two-character redraw covers exactly it.
-    expect(onlySpan('😀x\rab')).toEqual({ text: 'abx', style: undefined })
+    // `中` occupies two cells, so a two-character redraw covers exactly it.
+    expect(onlySpan('中x\rab')).toEqual({ text: 'abx', style: undefined })
   })
 
   it('does not accumulate a cursor or erase sequence into a cell style', () => {
     // Only SGR carries graphic state. An erase folded into the style string
     // would grow it per redraw and emit boundaries anser has to discard.
     expect(parseAnsiLines(`${ESC}[31ma\r${ESC}[Kb`)).toEqual([[
-      { text: 'b', style: { color: 'var(--cortex-alias-state-error-primary)' } },
+      { text: 'b', style: { color: 'var(--dsw-alias-state-error-primary)' } },
     ]])
   })
 })
@@ -303,7 +296,7 @@ describe('parseAnsiLines: line-end state and column widths', () => {
     // and this exact shape (`\r\x1b[K\x1b[32m✓ built\x1b[0m`) is what every
     // build tool writes.
     expect(parseAnsiLines(`${ESC}[32mdone\rok${ESC}[0m\nplain`)).toEqual([
-      [{ text: 'okne', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
+      [{ text: 'okne', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
       [{ text: 'plain', style: undefined }],
     ])
   })
@@ -337,17 +330,17 @@ describe('parseAnsiLines: line-end state and column widths', () => {
     // open the run at the line end for it to reach the following line.
     expect(parseAnsiLines(`ab\rX${ESC}[31m\nnext`)).toEqual([
       [{ text: 'Xb', style: undefined }],
-      [{ text: 'next', style: { color: 'var(--cortex-alias-state-error-primary)' } }],
+      [{ text: 'next', style: { color: 'var(--dsw-alias-state-error-primary)' } }],
     ])
   })
 
   it('blanks a wide character\'s spacer once its lead cell is overwritten', () => {
-    // Verified in a real terminal: `😀x` redrawn with `A` shows `A x` — the wide
+    // Verified in a real terminal: `中x` redrawn with `A` shows `A x` — the wide
     // glyph's second cell becomes a blank rather than closing the gap, so the
     // `x` keeps column 3.
-    expect(onlySpan('😀x\rA')).toEqual({ text: 'A x', style: undefined })
+    expect(onlySpan('中x\rA')).toEqual({ text: 'A x', style: undefined })
     // Covering both of its columns leaves no spacer behind.
-    expect(onlySpan('😀x\rab')).toEqual({ text: 'abx', style: undefined })
+    expect(onlySpan('中x\rab')).toEqual({ text: 'abx', style: undefined })
   })
 
   it('replays an erase whose parameters carry a semicolon', () => {
@@ -414,7 +407,7 @@ describe('parseAnsiLines: bounded state and true widths', () => {
     ]])
     // A bright foreground and a bright background, the 90-97 / 100-107 arms.
     expect(parseAnsiLines(`${ESC}[91mA\r${ESC}[KB`)).toEqual([[
-      { text: 'B', style: { color: 'var(--cortex-alias-state-error-secondary)' } },
+      { text: 'B', style: { color: 'var(--dsw-alias-state-error-secondary)' } },
     ]])
     expect(parseAnsiLines(`${ESC}[101mA\r${ESC}[KB`)).toEqual([[
       { text: 'B', style: { backgroundColor: 'rgb(255, 85, 85)' } },
@@ -441,26 +434,26 @@ describe('parseAnsiLines: bounded state and true widths', () => {
     // Verified in a real terminal (`A x`): the redraw puts the cursor at column
     // 0, the backspace clamps there, and writing `A` over the wide lead blanks
     // its spacer rather than letting the `x` slide left.
-    expect(onlySpan(`\u{1f600}x\r${BS}A`)).toEqual({ text: 'A x', style: undefined })
+    expect(onlySpan(`\u4e2dx\r${BS}A`)).toEqual({ text: 'A x', style: undefined })
     // An erase reaching the lead blanks its spacer through the same helper.
     // Verified in a real terminal (`   |`): 1K blanks through the cursor column,
     // so the wide glyph's two cells and the `x` all become blanks.
-    expect(onlySpan(`\u{1f600}x${ESC}[1K|`)).toEqual({ text: '   |', style: undefined })
+    expect(onlySpan(`\u4e2dx${ESC}[1K|`)).toEqual({ text: '   |', style: undefined })
   })
 
   it('clears the lead when the write lands on the spacer itself', () => {
-    // Two backspaces from after `😀x` stop ON the wide glyph's second cell;
+    // Two backspaces from after `中x` stop ON the wide glyph's second cell;
     // writing there blanks the lead through the spacer side of the pair clear,
     // so the glyph cannot survive as half a character.
-    expect(onlySpan(`😀x${BS}${BS}A`)).toEqual({ text: ' Ax', style: undefined })
+    expect(onlySpan(`中x${BS}${BS}A`)).toEqual({ text: ' Ax', style: undefined })
   })
 
   it('keeps a surviving spacer as a blank when its lead was replaced by a spacer', () => {
-    // `😁` written over the first glyph's spacer puts its own spacer on the
+    // `好` written over the first glyph's spacer puts its own spacer on the
     // second glyph's lead cell — a write that goes down without a pair clear.
     // The second glyph's spacer survives with a dead lead and must emit a
     // blank, or everything after it shifts one column left.
-    expect(onlySpan(`😀😀${BS}${BS}${BS}😁`)).toEqual({ text: ' 😁 ', style: undefined })
+    expect(onlySpan(`中中${BS}${BS}${BS}好`)).toEqual({ text: ' 好 ', style: undefined })
   })
 
   it('blanks both halves of a wide pair when either is overwritten', () => {
@@ -469,7 +462,7 @@ describe('parseAnsiLines: bounded state and true widths', () => {
     // Verified in a real terminal: two wide chars, CR, then `A` shows `A ` and
     // the second glyph — writing the lead cell blanks its spacer, so the column
     // stays occupied rather than collapsing.
-    expect(onlySpan('\u{1f600}\u{1f600}\rA')).toEqual({ text: 'A \u{1f600}', style: undefined })
+    expect(onlySpan('\u4e2d\u4e2d\rA')).toEqual({ text: 'A \u4e2d', style: undefined })
   })
 })
 
@@ -479,8 +472,8 @@ describe('parseAnsiLines: SGR across lines', () => {
     // A newline does not reset the graphic state, so a replayed line must hand
     // its state to the next one instead of closing it off.
     expect(parseAnsiLines(`${ESC}[31mabc\rX\nnext`)).toEqual([
-      [{ text: 'Xbc', style: { color: 'var(--cortex-alias-state-error-primary)' } }],
-      [{ text: 'next', style: { color: 'var(--cortex-alias-state-error-primary)' } }],
+      [{ text: 'Xbc', style: { color: 'var(--dsw-alias-state-error-primary)' } }],
+      [{ text: 'next', style: { color: 'var(--dsw-alias-state-error-primary)' } }],
     ])
   })
 
@@ -488,9 +481,9 @@ describe('parseAnsiLines: SGR across lines', () => {
     // The middle line has no movement, so it is not replayed — but its own SGR
     // still has to reach the line after it.
     expect(parseAnsiLines(`a\r${ESC}[32mb\nplain\nc`)).toEqual([
-      [{ text: 'b', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
-      [{ text: 'plain', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
-      [{ text: 'c', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
+      [{ text: 'b', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
+      [{ text: 'plain', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
+      [{ text: 'c', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
     ])
   })
 })
@@ -498,15 +491,15 @@ describe('parseAnsiLines: SGR across lines', () => {
 describe('parseAnsiLines: runs spanning lines', () => {
   it('carries one run\'s style onto every line it covers', () => {
     expect(parseAnsiLines(sgr('32', 'first\nsecond'))).toEqual([
-      [{ text: 'first', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
-      [{ text: 'second', style: { color: 'var(--cortex-alias-state-success-primary)' } }],
+      [{ text: 'first', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
+      [{ text: 'second', style: { color: 'var(--dsw-alias-state-success-primary)' } }],
     ])
   })
 
   it('keeps several runs of one line in order', () => {
     expect(parseAnsiLines(`plain${sgr('31', 'red')}tail`)).toEqual([[
       { text: 'plain', style: undefined },
-      { text: 'red', style: { color: 'var(--cortex-alias-state-error-primary)' } },
+      { text: 'red', style: { color: 'var(--dsw-alias-state-error-primary)' } },
       { text: 'tail', style: undefined },
     ]])
   })

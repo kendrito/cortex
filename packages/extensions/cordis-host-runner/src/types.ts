@@ -4,7 +4,8 @@
  */
 
 import type { Branded } from '@cortex/brand'
-import type { JsonValue, SessionId } from '@cortex/session/types'
+import type { SessionId } from '@cortex/session/types'
+import type { JsonValue } from '@cortex/util-values'
 
 /** Stable identity of one dynamic plugin instance. */
 export type CordisDynamicPluginId = Branded<'CordisDynamicPluginId'>
@@ -83,7 +84,10 @@ export interface CordisInspectQueryResolved {
 
 /** Whether a Client answer claimed the still-pending query. */
 export interface CordisInspectResolveAck {
-  /** False for unknown, cancelled, stale, or late answers. */
+  /**
+   * True only for a valid success that settles the query;
+   * false for retained failures and unknown, timed out, cancelled, or late answers.
+   */
   accepted: boolean
 }
 

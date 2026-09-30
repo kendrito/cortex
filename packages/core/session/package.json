@@ -1,7 +1,7 @@
 {
   "name": "@cortex/session",
   "description": "Event-sourced session store for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -26,6 +26,10 @@
       "types": "./lib/types/types.d.ts",
       "default": "./lib/types/types.js"
     },
+    "./fork": {
+      "types": "./lib/types/fork.d.ts",
+      "default": "./lib/types/fork.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json",
     "./surface": {
@@ -41,20 +45,19 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/typert-protocol": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/scope": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/typert-protocol": "workspace:^",
-    "@cortex/typert-registry": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/invariants": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/typert-registry": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@cortex/llm": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/util-values": "workspace:*"
   }
 }

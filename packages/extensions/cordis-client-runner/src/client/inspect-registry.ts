@@ -3,9 +3,9 @@
 import type { Context } from '@cortex/cordis'
 import type {
   CordisInspectProviderManifest, CordisInspectQueryRequest, CordisInspectQueryResolution,
-  CordisInspectRequestId, JsonValue,
+  CordisInspectRequestId, SessionId,
 } from '@cortex/api-remotes/client'
-import type { SessionId } from '@cortex/client-connection/client'
+import type { JsonValue } from '@cortex/util-values'
 
 /** Context supplied to a Client inspect provider query. */
 export interface ClientCordisInspectQueryContext {

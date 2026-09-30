@@ -1,0 +1,20 @@
+# Filesystem-scenario overlay: the sandboxed filesystem stack already lives in
+# `cortex-base`, so this patch changes only the local tool-result spill
+# storage those scenarios exercise.
+
+- id: spill-local
+  name: '@cortex/spill-local'
+  config:
+    root: !!js process.env.CORTEX_SNAPSHOT_SPILL_ROOT ?? './.spill'
+
+- id: spill-policy
+  name: '@cortex/spill-policy'
+  config:
+    maxInlineTokens: !!js process.env.CORTEX_SNAPSHOT && 200 || 12500
+
+- insert:
+    - id: snapshot-spill-locators
+      name: ../../../scripts/snapshot-spill-locators.ts
+      config:
+        root: !!js process.env.CORTEX_SNAPSHOT_SPILL_ROOT
+        locatorRoot: !!js process.env.CORTEX_SNAPSHOT_SPILL_LOCATOR_ROOT

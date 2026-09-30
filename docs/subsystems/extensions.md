@@ -1,5 +1,8 @@
 # Extensions
 
+The [Testy plugin](../../packages/extensions/testy/README.md) contributes a packaged local testing engine, a browser workspace, and MCP tools through one optional plugin. Its authenticated Remote namespace exposes engine status, its operation catalog, operation execution, evidence resources, and the native Studio launcher. Testy auxiliary model requests and settlements are logged in Cortex Sessions while model selection and provider credentials remain owned by Cortex.
+
+`TestyPluginStatus` reports platform support, connection state, workspace, selected Cortex model, active runs, and the current revision. `TestyToolResult` preserves MCP content, optional structured JSON, and the tool error flag so the browser and chat can consume the same native operation result. These client-safe contracts are exported by `@cortex/testy/types`.
 
 The extensions subsystem lets an agent define versioned Cordis packages, run their host and browser halves, and query approved runtime metadata before writing code. Package lifecycle and sandbox behavior belong to the [`packages/extensions`](../../packages/extensions/README.md) package group.
 
@@ -9,7 +12,7 @@ The extensions subsystem lets an agent define versioned Cordis packages, run the
 
 ## Cordis API
 
-Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — this section is byte-identical in both language sides of the page. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
+Generated from source by `scripts/gen-cordis-catalog.ts` (verified fresh by `pnpm run verify-cordis-catalog` in doc-sync; regenerate with `pnpm run gen-cordis-catalog`) — the language sides differ only in locale-specific paired document paths. Signature blocks use a `ts cordis-catalog` fence and keep the original source JSDoc; dispatch modes are defined in the [primer](../cordis-primer.md#dispatch-modes), and the framework-inherited `ctx` API lives in [cordis-api/inherited.md](../cordis-api/inherited.md).
 
 <a id="ctxcordisinspect--cordisinspectregistryservice"></a>
 
@@ -45,7 +48,8 @@ list(): CordisInspectProviderView[]
  * @param input - optional lossless JSON input.
  * @param agent - requesting Agent and scope.
  * @param signal - tool-call cancellation.
- * @returns provider JSON data.
+ * @returns provider JSON data; Client queries fail fast when Gateway has no live Client
+ * and retain only the first observed failure diagnostic for timeout reporting.
  */
 async query( platform: CordisInspectPlatform, providerId: string, methodName: string, input: JsonValue | undefined, agent: Agent, signal: AbortSignal, ): Promise<JsonValue>
 
@@ -54,14 +58,14 @@ async query( platform: CordisInspectPlatform, providerId: string, methodName: st
  * @param agent - Agent whose Session owns the query.
  * @param requestId - Pending Client query identity.
  * @param resolution - Client provider result or failure.
- * @returns whether this response settled the still-pending query.
+ * @returns acknowledgement with accepted true only for a success that settles the query; only the first failure diagnostic is retained.
  */
 resolveClientQuery( agent: Agent, requestId: CordisInspectRequestId, resolution: CordisInspectQueryResolution, ): CordisInspectResolveAck
 ```
 
 Types: [Agent](core.md)
 
-Source: [`packages/extensions/cordis-host-runner/src/inspect-registry.ts:46`](../../packages/extensions/cordis-host-runner/src/inspect-registry.ts)
+Source: [`packages/extensions/cordis-host-runner/src/inspect-registry.ts`](../../packages/extensions/cordis-host-runner/src/inspect-registry.ts)
 
 <a id="ctxdynamiccordisrunner--dynamiccordisrunnerservice"></a>
 
@@ -167,11 +171,12 @@ async stop(agent: Agent, pluginId: CordisDynamicPluginId): Promise<DynamicCordis
 @Remote('syncInspectManifest') syncInspectManifest(providers: readonly CordisInspectProviderManifest[]): null
 
 /**
- * Claim one pending Client inspect query with its live result.
+ * Submit a Client inspect result or failure for a pending query.
  * @param agent - Session that owns the query.
  * @param requestId - exact pending query identity.
  * @param resolution - provider result or structured refusal.
- * @returns whether this answer won the query.
+ * @returns acknowledgement with accepted true only for a valid success that settles the query;
+ * pending-query failures return { accepted: false } and retain only the first diagnostic.
  */
 @Remote('resolveInspectQuery') resolveInspectQuery( agent: Agent, requestId: CordisInspectRequestId, resolution: CordisInspectQueryResolution, ): CordisInspectResolveAck
 
@@ -253,7 +258,75 @@ inspectPackage( agent: Agent, pluginId: CordisDynamicPluginId, packageId: Cordis
 
 Types: [Agent](core.md)
 
-Source: [`packages/extensions/cordis-host-runner/src/index.ts:124`](../../packages/extensions/cordis-host-runner/src/index.ts)
+Source: [`packages/extensions/cordis-host-runner/src/index.ts`](../../packages/extensions/cordis-host-runner/src/index.ts)
+
+<a id="ctxinspector--inspectorservice"></a>
+
+### `ctx.inspector` — `InspectorService`
+
+Shared Host/Client service façade over the realm's source publisher.
+
+```ts cordis-catalog
+/**
+ * Publish one JSON observation without waiting for Worker delivery.
+ * @param topic - Domain-owned topic name.
+ * @param payload - JSON value validated before it reaches the carrier.
+ * @param monotonicMs - Source-clock timestamp; defaults to `performance.now()`.
+ */
+publish(topic: string, payload: InspectorJsonValue, monotonicMs?: number): void
+```
+
+Source: [`packages/experimental/inspector/src/index.ts`](../../packages/experimental/inspector/src/index.ts)
+
+<a id="ctxtesty--testyservice"></a>
+
+### `ctx.testy` — `TestyService`
+
+One optional plugin owns UI availability, all MCP registrations, and every child capability.
+
+```ts cordis-catalog
+/**
+ * Read local engine availability and the model selected for the next GUI operation.
+ * @param contextSessionId - selected chat whose saved model powers the operation.
+ * @returns current engine status and the selected Cortex model.
+ */
+@Remote async status(contextSessionId?: SessionId): Promise<TestyPluginStatus>
+
+/**
+ * Return the installed engine's complete MCP tool descriptions and JSON schemas.
+ * @returns the engine's complete validated tool catalog.
+ */
+@Remote tools(): JsonValue[]
+
+/**
+ * Run an engine operation from the authenticated Cortex testing pane.
+ * @param name - exact installed tool name.
+ * @param args - arguments validated by the backend's tool schema.
+ * @param contextSessionId - optional saved or live chat supplying the model and workspace.
+ * @param signal - caller cancellation supplied by the API gateway.
+ * @returns MCP content and structured data, including explicit operation failures.
+ */
+@Remote call( name: string, args: Record<string, JsonValue>, contextSessionId: SessionId | undefined, signal: AbortSignal, ): Promise<TestyToolResult>
+
+/**
+ * Read Testy's workspace-contained screenshot or report resource.
+ * @param uri - resource URI returned by Testy.
+ * @param signal - caller cancellation supplied by the API gateway.
+ * @returns typed text or base64 resource content.
+ */
+@Remote resource(uri: string, signal: AbortSignal): Promise<JsonValue>
+
+/**
+ * Open the packaged native Studio against this workspace and the initiating Cortex model.
+ * @param contextSessionId - optional selected chat supplying the model and workspace context.
+ * @returns completion once the native Studio process has started.
+ */
+@Remote nativeStudio(contextSessionId?: SessionId): Promise<void>
+```
+
+Types: [SessionId](core.md)
+
+Source: [`packages/extensions/testy/src/index.ts`](../../packages/extensions/testy/src/index.ts)
 
 <a id="cordis-events"></a>
 
@@ -274,7 +347,7 @@ One exact Plugin/Package activation is now live in the Host.
 'cordis/dynamic-package'(pkg: DynamicCordisPackage): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:379`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
 <a id="cordisdynamic-retract--emit"></a>
 
@@ -291,7 +364,7 @@ One exact activation was withdrawn.
 'cordis/dynamic-retract'(retracted: DynamicCordisRetracted): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:385`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
 <a id="cordisinspect-query--emit"></a>
 
@@ -308,7 +381,7 @@ Request a live read-only query from the Client inspect registry.
 'cordis/inspect-query'(request: CordisInspectQueryRequest): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:391`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
 <a id="cordisinspect-query-resolved--emit"></a>
 
@@ -325,7 +398,7 @@ Notify every Client that an inspect query has settled or been cancelled.
 'cordis/inspect-query-resolved'(resolved: CordisInspectQueryResolved): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:397`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
 <a id="cordisrequest-run--emit"></a>
 
@@ -342,7 +415,7 @@ A Client-bearing activation needs a browser page, and may require a user decisio
 'cordis/request-run'(request: DynamicCordisRunRequest): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:367`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 
 <a id="cordisrequest-run-resolved--emit"></a>
 
@@ -359,5 +432,5 @@ A pending Client activation request left the answerable state.
 'cordis/request-run-resolved'(resolved: DynamicCordisRequestResolved): void
 ```
 
-Source: [`packages/extensions/cordis-host-runner/src/types.ts:373`](../../packages/extensions/cordis-host-runner/src/types.ts)
+Source: [`packages/extensions/cordis-host-runner/src/types.ts`](../../packages/extensions/cordis-host-runner/src/types.ts)
 <!-- END GENERATED cordis-surface -->

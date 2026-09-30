@@ -1,23 +1,23 @@
 /** Pure first-run readiness projection over the shared Models join. */
 import { describe, expect, it } from 'vitest'
-import type { CredentialView } from '@cortex/api-remotes/client'
+import type { CredentialInfo } from '@cortex/api-remotes/client'
 import type { ModelsSettingsState, ProviderRow } from '../src/client/store.ts'
 import { onboardingReadiness, providerUsable } from '../src/client/store.ts'
 
-const missingCredential: CredentialView = { configured: false, writable: true }
+const missingCredential: CredentialInfo = { configured: false, writable: true }
 
 function row(overrides: Partial<ProviderRow> = {}): ProviderRow {
   return {
     entry: {
-      provider: 'cortex-official',
-      displayName: 'Cortex',
-      settingsNs: 'llm-acme',
+      provider: 'deepseek-official',
+      displayName: 'DeepSeek',
+      settingsNs: 'llm-deepseek',
       settingsPath: [],
       active: true,
     },
     configured: true,
     removable: false,
-    apiKeyEnv: 'CORTEX_API_KEY',
+    apiKeyEnv: 'DEEPSEEK_API_KEY',
     credential: missingCredential,
     ...overrides,
   }
@@ -71,22 +71,11 @@ describe('onboardingReadiness', () => {
     expect(onboardingReadiness(state({ status: 'idle', rows: [] }))).toEqual({ kind: 'loading' })
     expect(onboardingReadiness(state({ status: 'loading', rows: [] }))).toEqual({ kind: 'loading' })
     expect(onboardingReadiness(state({ rows: [] }))).toEqual({ kind: 'adapter-absent' })
-    // The official route is the whole-section `cortex-official` entry: another
-    // route id, or the same id nested under a pi-ai profile path, is not it.
     expect(onboardingReadiness(state({
       rows: [row({
         entry: {
           ...row().entry,
-          provider: 'other-vendor',
-        },
-      })],
-    }))).toEqual({ kind: 'adapter-absent' })
-    expect(onboardingReadiness(state({
-      rows: [row({
-        entry: {
-          ...row().entry,
-          settingsNs: 'llm-pi-ai',
-          settingsPath: ['providers', 'cortex-official'],
+          settingsNs: '',
         },
       })],
     }))).toEqual({ kind: 'adapter-absent' })

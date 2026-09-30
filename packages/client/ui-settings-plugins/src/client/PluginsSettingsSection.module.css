@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: 12px;
   max-width: 760px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .heading {
@@ -17,14 +17,14 @@
 .intro {
   margin: 0;
   font-size: 13px;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 .tabs {
   display: flex;
   align-items: flex-end;
   gap: 22px;
-  border-bottom: 1px solid var(--cortex-alias-border-l2);
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
   margin-top: 2px;
 }
 
@@ -33,7 +33,7 @@
   border: 0;
   padding: 7px 1px 9px;
   background: transparent;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   font: inherit;
   font-size: 13px;
   line-height: 20px;
@@ -42,7 +42,7 @@
 
 .tab:hover,
 .tab[data-active='true'] {
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .tab[data-active='true']::after,
@@ -53,15 +53,15 @@
   left: 0;
   height: 2px;
   border-radius: 2px 2px 0 0;
-  background: var(--cortex-alias-label-primary);
+  background: var(--dsw-alias-label-primary);
   content: '';
 }
 
 .tab:focus-visible {
-  outline: 2px solid var(--cortex-alias-state-business-primary);
+  outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
   outline-offset: 2px;
   border-radius: 2px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .panel {
@@ -81,5 +81,28 @@
 .empty {
   margin: 0;
   font-size: 13px;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* Configurable tab: the card list. */
+
+.configurable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Preset detail page: the settings section over the same cards. */
+
+.presetSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.presetSettingsTitle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
 }

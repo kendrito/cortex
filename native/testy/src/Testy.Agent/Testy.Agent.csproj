@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Testy.Agent</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\Testy.Studio\Assets\Testy.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The tray uses Studio's app icon (one file, linked). TrayContext falls back to a drawn icon if it can't be loaded. -->
+    <EmbeddedResource Include="..\Testy.Studio\Assets\Testy.ico" Link="Assets\Testy.ico" LogicalName="Testy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testy.Core\Testy.Core.csproj" />
+  </ItemGroup>
+</Project>

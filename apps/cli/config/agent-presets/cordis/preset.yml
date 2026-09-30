@@ -1,3 +1,0 @@
-name: Creator mode
-description: For building custom agent presets: everything Standard mode can do, plus runtime inspection, plugin experiments and preset-authoring guidance.
-order: 4

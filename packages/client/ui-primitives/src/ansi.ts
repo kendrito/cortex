@@ -1,9 +1,5 @@
-// ANSI model behind TerminalBlock: anser splits the SGR runs, this module
-// resolves each run's colors and decorations into a plain style record and
-// folds the runs into per-line span arrays so a height cap can slice whole
-// lines. Sequences anser does not turn into color (OSC, cursor movement,
-// other C0 controls) are removed before parsing so they never reach the DOM
-// as literal characters.
+// Strip control sequences that anser does not consume before resolving SGR
+// runs, so they cannot reach the DOM as literal characters.
 
 import Anser from 'anser'
 import type { CSSProperties } from 'react'
@@ -41,21 +37,25 @@ export type AnsiLine = readonly AnsiSpan[]
  * semantic. Black and white both resolve to the primary label color so text
  * stays legible under either theme instead of matching the surface it sits
  * on; bright black takes the tertiary label color (the muted-gray role).
- * Magenta and cyan have no token equivalent in this design system and fall
- * through to anser's literal rgb, as do all 256-palette and truecolor values.
+ * Cyan and bright cyan take two static blues: the design system has no cyan,
+ * and anser's literal bright cyan is unreadable on the light theme's code
+ * surface. Magenta has no token equivalent and falls through to anser's
+ * literal rgb, as do all 256-palette and truecolor values.
  */
 const TOKEN_BY_BASIC_RGB: Record<string, string> = {
-  '0,0,0': 'var(--cortex-alias-label-primary)',
-  '255,255,255': 'var(--cortex-alias-label-primary)',
-  '85,85,85': 'var(--cortex-alias-label-tertiary)',
-  '187,0,0': 'var(--cortex-alias-state-error-primary)',
-  '255,85,85': 'var(--cortex-alias-state-error-secondary)',
-  '0,187,0': 'var(--cortex-alias-state-success-primary)',
-  '0,255,0': 'var(--cortex-alias-state-success-secondary)',
-  '187,187,0': 'var(--cortex-alias-state-warn-primary)',
-  '255,255,85': 'var(--cortex-alias-state-warn-secondary)',
-  '0,0,187': 'var(--cortex-alias-state-business-primary)',
-  '85,85,255': 'var(--cortex-static-blue-400)',
+  '0,0,0': 'var(--dsw-alias-label-primary)',
+  '255,255,255': 'var(--dsw-alias-label-primary)',
+  '85,85,85': 'var(--dsw-alias-label-tertiary)',
+  '187,0,0': 'var(--dsw-alias-state-error-primary)',
+  '255,85,85': 'var(--dsw-alias-state-error-secondary)',
+  '0,187,0': 'var(--dsw-alias-state-success-primary)',
+  '0,255,0': 'var(--dsw-alias-state-success-secondary)',
+  '187,187,0': 'var(--dsw-alias-state-warn-primary)',
+  '255,255,85': 'var(--dsw-alias-state-warn-secondary)',
+  '0,0,187': 'var(--dsw-alias-state-business-primary)',
+  '85,85,255': 'var(--dsw-static-blue-400)',
+  '0,187,187': 'var(--dsw-static-blue-600)',
+  '85,255,255': 'var(--dsw-static-blue-500)',
 }
 
 /**
@@ -109,9 +109,8 @@ const TAB_WIDTH = 8
 const ZERO_WIDTH = /^[\p{Mn}\p{Me}\p{Cf}\u200b-\u200f\u2060]$/u
 
 /**
- * Characters a terminal advances two columns for: double-width scripts and
- * punctuation (Unicode East Asian Width = Wide), fullwidth forms, and
- * characters with emoji presentation. Text-presentation
+ * Characters a terminal advances two columns for: CJK scripts, fullwidth forms,
+ * CJK punctuation, and characters with emoji presentation. Text-presentation
  * symbols (`\u2713`, `\u26a0` and the rest of U+2600-U+27BF) are ONE column and
  * must stay out of this set.
  */
@@ -127,8 +126,8 @@ const WIDE_CHAR = new RegExp(
 )
 
 /**
- * Whether a character occupies two terminal columns (double-width scripts,
- * fullwidth forms, emoji). Covers the ranges a command's output realistically carries; a
+ * Whether a character occupies two terminal columns (CJK, fullwidth forms,
+ * emoji). Covers the ranges a command's output realistically carries; a
  * narrower guess would misalign the columns this card exists to preserve.
  * @param char - one character from the output.
  * @returns true when the terminal advances two columns for it.

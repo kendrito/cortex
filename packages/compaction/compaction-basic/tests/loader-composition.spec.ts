@@ -8,6 +8,7 @@ import Loader from '@cortex/cordis-plugin-loader'
 import Include from '@cortex/cordis-plugin-include'
 import LlmRuntime from '@cortex/llm'
 import SessionStore from '@cortex/session'
+import SessionProjectionRegistry from '@cortex/session-projection'
 import TokenMeter from '@cortex/token-meter'
 import BasicCompactionEngine from '@cortex/compaction-basic'
 import ToolResultPruner from '@cortex/compaction-tool-result-pruner'
@@ -34,6 +35,7 @@ async function loadYaml(lines: readonly string[]): Promise<Context> {
   const modules = new Map<string, unknown>([
     ['@cortex/llm', LlmRuntime],
     ['@cortex/session', SessionStore],
+    ['@cortex/session-projection', SessionProjectionRegistry],
     ['@cortex/token-meter', TokenMeter],
     ['@cortex/compaction-tool-result-pruner', ToolResultPruner],
     ['@cortex/compaction-basic', BasicCompactionEngine],
@@ -58,6 +60,7 @@ describe('real Loader composition', () => {
     const loaded = await loadYaml([
       "- name: '@cortex/llm'",
       "- name: '@cortex/session'",
+      "- name: '@cortex/session-projection'",
       "- name: '@cortex/token-meter'",
       "- name: '@cortex/compaction-tool-result-pruner'",
       '  config:',
@@ -67,6 +70,12 @@ describe('real Loader composition', () => {
       "- name: '@cortex/compaction-basic'",
       '  config:',
       '    thresholdRatio: 0.5',
+      '    headroomTokens: 4000',
+      '    modelPolicies:',
+      '      - provider: mock',
+      '        model: small',
+      '        headroomTokens: 0',
+      '        maxTokens: 32',
       '    retainRatio: 0.125',
       '    auto: false',
     ])
@@ -77,8 +86,10 @@ describe('real Loader composition', () => {
     expect(unloaded).toEqual([])
     expect(loaded.get('toolResultPruner')).toBeInstanceOf(ToolResultPruner)
     expect(loaded.get('compaction')).toBeInstanceOf(BasicCompactionEngine)
-    expect((loaded.compaction as unknown as BasicCompactionEngine).config).toMatchObject({
+    expect((loaded.compaction as BasicCompactionEngine).config).toMatchObject({
       thresholdRatio: 0.5,
+      headroomTokens: 4000,
+      modelPolicies: [{ provider: 'mock', model: 'small', headroomTokens: 0, maxTokens: 32 }],
       retainRatio: 0.125,
       auto: false,
     })
@@ -86,6 +97,7 @@ describe('real Loader composition', () => {
 
   it('rejects stale token-meter config after Schemastery normalization', async () => {
     context = new Context()
+    await context.plugin(SessionProjectionRegistry)
     await expect(context.plugin(TokenMeter, {
       contextWindow: 4096,
     } as never)).rejects.toThrow(/TokenMeterConfig: unknown key "contextWindow"/)
@@ -95,6 +107,7 @@ describe('real Loader composition', () => {
     context = new Context()
     await context.plugin(LlmRuntime)
     await context.plugin(SessionStore)
+    await context.plugin(SessionProjectionRegistry)
     await context.plugin(TokenMeter)
     await expect(context.plugin(BasicCompactionEngine, {
       models: { legacy: { thresholdRatio: 0.5 } },
@@ -105,6 +118,7 @@ describe('real Loader composition', () => {
     context = new Context()
     await context.plugin(LlmRuntime)
     await context.plugin(SessionStore)
+    await context.plugin(SessionProjectionRegistry)
     await context.plugin(TokenMeter)
     await expect(context.plugin(BasicCompactionEngine, {
       retainRatio: 0.2,
@@ -120,6 +134,7 @@ describe('real Loader composition', () => {
     context = new Context()
     await context.plugin(LlmRuntime)
     await context.plugin(SessionStore)
+    await context.plugin(SessionProjectionRegistry)
     await context.plugin(TokenMeter)
     await expect(context.plugin(BasicCompactionEngine, {
       summarizationProvider: 'default-provider',

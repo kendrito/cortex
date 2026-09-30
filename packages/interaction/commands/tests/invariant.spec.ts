@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
 import * as CommandInvariant from '@cortex/commands/invariant'
 import InvariantRegistry, { InvariantError } from '@cortex/invariants'
-import SessionStore, { SessionId, type Session } from '@cortex/session'
+import SessionStore, { SessionId, SessionSeq, type Session } from '@cortex/session'
 import { CommandId } from '@cortex/commands'
 
 async function mount(installCompanion = true): Promise<{ ctx: Context; session: Session }> {
@@ -46,7 +46,7 @@ describe('command lifecycle invariants', () => {
       session.append('command/done', {
         commandId: CommandId('cmd-invalid'),
         kind: 'success',
-        sourceEventSeq,
+        sourceEventSeq: sourceEventSeq as never,
       })
     }).toThrow(expect.objectContaining<Partial<InvariantError>>({
       code: 'INVARIANT',
@@ -78,7 +78,7 @@ describe('command lifecycle invariants', () => {
     session.append('command/done', {
       commandId: CommandId('cmd-late'),
       kind: 'success',
-      sourceEventSeq: 0,
+      sourceEventSeq: SessionSeq(0),
     })
 
     await expect(ctx.plugin(CommandInvariant)).rejects.toMatchObject({

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/cordis-plugin-group",
   "description": "Nested plugin group for cordis",
-  "version": "1.0.1",
+  "version": "1.0.4",
   "publishConfig": {
     "access": "public"
   },
@@ -30,7 +30,7 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis": "workspace:~"
   }
 }

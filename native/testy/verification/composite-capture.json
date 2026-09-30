@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "startedAt": "2026-09-30T13:41:35.6916807+00:00",
+  "finishedAt": "2026-09-30T13:41:35.7028891+00:00",
+  "checks": [
+    {
+      "name": "Composite preserves Z-order, negative origins and neutral gaps",
+      "passed": true
+    },
+    {
+      "name": "Coordinate map rejects gaps and maps physical pixels",
+      "passed": true
+    },
+    {
+      "name": "Stale surface ordering, activation and identity fail closed",
+      "passed": true
+    },
+    {
+      "name": "Superseded concurrent and cancelled render cannot replace committed bytes or metadata",
+      "passed": true
+    }
+  ],
+  "error": ""
+}

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-bash-persistent",
   "description": "Model-facing owner-scoped persistent Bash tool backed by the Harness PTY service",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,44 +18,41 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/terminal": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-include": "workspace:^",
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/terminal": "workspace:^",
-    "@cortex/terminal-bash": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subprocess-local": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/terminal-bash": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session-projection": "workspace:*"
   }
 }

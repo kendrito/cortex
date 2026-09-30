@@ -1,33 +1,38 @@
 // @vitest-environment jsdom
-/** LanguageRow behavior: selector pill shows the active locale, the menu
- * opens/closes, and selection drives setLocale. */
+import type { GlobalStandardProps } from '@cortex/client-ui-slots'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { createSnapshotStore, type SessionListState, type WorkspaceListState } from '@cortex/client-runtime/client'
-import { bindSnapshotSelector } from '@cortex/client-web-react'
+import type { SessionListState } from '@cortex/api-session-controller/client'
+import type { WorkspaceSnapshot } from '@cortex/api-workspace-controller/client'
+import { createSnapshotStore } from '@cortex/client-store'
+import { bindSnapshotSelector } from '@cortex/client-test-runtime'
 import { LanguageRow } from '../src/client/LanguageRow.tsx'
 import type { LanguageRowComponentProps } from '../src/client/LanguageRow.tsx'
 import { createLanguageRowStore } from '../src/client/settings-store.ts'
 
+// Every fixture carries the resource hook the resources plugin merges into GlobalStandardProps.
+const useResource = (() => ({ status: 'none' as const, value: undefined, failure: undefined, reload: () => {} })) as GlobalStandardProps['useResource']
+const usePanelInfo: GlobalStandardProps['usePanelInfo'] = selector => selector({ activePanelId: null })
+
 afterEach(cleanup)
 
-// The row renders whatever the store mirrors; a second locale row (an id
-// this app does not ship) exercises selection without any shipped pair.
-const OPTIONS = [{ id: 'en', label: 'English' }, { id: 'fr', label: 'Français' }]
+const OPTIONS = [{ id: 'zh', label: '中文' }, { id: 'en', label: 'English' }]
 
-/** Empty global standard-kit hooks (the row reads neither). */
 function emptySessions() {
   const store = createSnapshotStore<SessionListState>(
-    { ids: [], byId: {}, current: undefined, phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined })
+    { ids: [], byId: {}, phase: 'ready', projectionsBySession: {} })
   return bindSnapshotSelector(store)
 }
 function emptyWorkspaces() {
-  const store = createSnapshotStore<WorkspaceListState>({
-    items: [], archivedSessionIds: [], state: 'idle', phase: 'ready', error: null,
-    baselinesReady: true, recentWorkspaceId: undefined,
+  const store = createSnapshotStore<WorkspaceSnapshot>({
+    items: [], archivedSessionIds: [], pinnedSessionIds: [], state: 'idle', phase: 'ready', error: null,
   })
   return bindSnapshotSelector(store)
 }
+
+type AttentionSnapshot = Parameters<Parameters<LanguageRowComponentProps['useSessionStatus']>[0]>[0]
+const noAttention: AttentionSnapshot = new Map()
+const useSessionStatus: LanguageRowComponentProps['useSessionStatus'] = selector => selector(noAttention)
 
 function mount(active = 'en') {
   // Real store instance — the sanctioned zero-machinery path for tests.
@@ -36,6 +41,8 @@ function mount(active = 'en') {
   const setLocale = vi.fn()
   const props: LanguageRowComponentProps = {
     useSessions: emptySessions(),
+    useSessionStatus,
+    usePanelInfo, useSessionRetainInfo: () => undefined, useResource,
     useWorkspaces: emptyWorkspaces(),
     useStore: bindSnapshotSelector(store),
     actions: store.actions,
@@ -59,26 +66,26 @@ describe('LanguageRow', () => {
     const trigger = screen.getByRole('button', { name: /English/ })
     fireEvent.click(trigger)
     expect(trigger.getAttribute('aria-expanded')).toBe('true')
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Français' }))
-    expect(b.setLocale).toHaveBeenCalledWith('fr')
+    fireEvent.click(screen.getByRole('menuitem', { name: '中文' }))
+    expect(b.setLocale).toHaveBeenCalledWith('zh')
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
-    expect(screen.queryByRole('menuitem', { name: 'Français' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: '中文' })).toBeNull()
   })
 
   it('closes on outside pointerdown without selecting', () => {
     const b = mount('en')
     fireEvent.click(screen.getByRole('button', { name: /English/ }))
-    expect(screen.getByRole('menuitem', { name: 'Français' })).toBeDefined()
+    expect(screen.getByRole('menuitem', { name: '中文' })).toBeDefined()
     fireEvent.pointerDown(document.body)
-    expect(screen.queryByRole('menuitem', { name: 'Français' })).toBeNull()
+    expect(screen.queryByRole('menuitem', { name: '中文' })).toBeNull()
     expect(b.setLocale).not.toHaveBeenCalled()
   })
 
   it('follows store changes; an unknown active id falls back to the id itself', () => {
     const b = mount('en')
-    act(() => { b.store.actions.sync('fr', OPTIONS, 1) })
-    expect(screen.getByRole('button', { name: /Français/ })).toBeDefined()
-    act(() => { b.store.actions.sync('de', OPTIONS, 2) })
-    expect(screen.getByRole('button', { name: /de/ })).toBeDefined()
+    act(() => { b.store.actions.sync('zh', OPTIONS, 1) })
+    expect(screen.getByRole('button', { name: /中文/ })).toBeDefined()
+    act(() => { b.store.actions.sync('fr', OPTIONS, 2) })
+    expect(screen.getByRole('button', { name: /fr/ })).toBeDefined()
   })
 })

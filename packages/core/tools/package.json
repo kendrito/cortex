@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tools",
   "description": "Tool registry and execution pipeline for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -41,28 +41,35 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/code-runtime": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/code-runtime": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*"
   }
 }

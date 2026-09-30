@@ -2,15 +2,15 @@
 // call/result slice.
 
 import { describe, expect, it } from 'vitest'
-import type { RunningToolCall, ToolResultNode } from '@cortex/client-runtime/client'
+import type { StartedToolCall, ToolResultNode } from '@cortex/client-ui-chat/client'
 import { cordisActionCard, cordisDefineCard } from '../src/client/card-model.ts'
 
 const ARGS = '{"name":"clock","purpose":"Top bar clock","code":{"client":"return {}","host":"harness.handle(\'now\', () => Date.now())"}}'
 
-function running(over: Partial<RunningToolCall> = {}): RunningToolCall {
+function running(over: Partial<StartedToolCall> = {}): StartedToolCall {
   return {
-    callId: 'call-1', name: 'cordis_define', argsRaw: ARGS, turn: 1, step: 1, time: 1_000,
-    callView: null, subCalls: [], ...over,
+    phase: 'start' as const, callId: 'call-1', name: 'cordis_define', argsRaw: ARGS, turn: 1, step: 1, time: 1_000,
+    subCalls: [], ...over,
   }
 }
 
@@ -19,7 +19,7 @@ function settled(over: Partial<ToolResultNode> = {}): ToolResultNode {
     kind: 'tool-result', seq: 2, time: 2_000, callId: 'call-1',
     call: { name: 'cordis_define', argsRaw: ARGS }, callTime: 1_000,
     content: [{ type: 'text', text: 'defined dyn-1' }], isError: false,
-    meta: { pluginId: 'dyn-1', packageId: 'pkg-1' }, callView: null, resultView: null, subCalls: [], ...over,
+    meta: { pluginId: 'dyn-1', packageId: 'pkg-1' }, subCalls: [], ...over,
   }
 }
 

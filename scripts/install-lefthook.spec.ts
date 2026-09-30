@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   lstatSync,
   readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   symlinkSync,
@@ -16,13 +17,10 @@ import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
-import { removeFixtureSafely, unlinkFixtureLinks } from './test-fixture-cleanup.ts'
+import { removeFixtureSafely } from './test-fixture-cleanup.ts'
 
 const installer = fileURLToPath(new URL('./install-lefthook.mjs', import.meta.url))
 const fixtures: string[] = []
-// Multi-worktree cases spawn several Git and Node subprocesses; coverage concurrency can
-// legitimately exceed Vitest's default deadline without changing the installer behavior.
-const MULTI_PROCESS_TEST_TIMEOUT_MS = 20_000
 
 interface Fixture {
   container: string
@@ -91,6 +89,8 @@ try {
 }
 const delay = Number(process.env.CORTEX_TEST_LEFTHOOK_DELAY_MS ?? 0)
 if (delay > 0) Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delay)
+const replaceLockPath = process.env.CORTEX_TEST_LEFTHOOK_REPLACE_LOCK_PATH
+if (replaceLockPath !== undefined) writeFileSync(replaceLockPath, 'replacement owner\\n')
 const shouldFail = process.env.CORTEX_TEST_LEFTHOOK_FAIL === '1'
 if (!shouldFail) {
   const binary = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'lefthook.cmd' : 'lefthook')
@@ -159,9 +159,15 @@ function gitDirectory(fixture: Fixture, root: string): string {
   return git(fixture, root, ['rev-parse', '--absolute-git-dir'])
 }
 
+// The installer resolves the common directory against Git's own top-level path, and the host
+// spells that path differently from the fixture directory this file created: Git canonicalizes
+// Windows 8.3 short names and the macOS `/var` symlink, while `mkdtempSync` returns the temp
+// directory's own spelling. Canonicalizing the fixture-side directory collapses both spellings
+// onto the one directory the installer touches, so an injected failure on this path reaches the
+// installer's own lock instead of a differently spelled name for it.
 function commonDirectory(fixture: Fixture): string {
   const output = git(fixture, fixture.main, ['rev-parse', '--git-common-dir'])
-  return isAbsolute(output) ? output : resolve(fixture.main, output)
+  return realpathSync.native(isAbsolute(output) ? output : resolve(fixture.main, output))
 }
 
 function hooksPath(fixture: Fixture, root: string): string {
@@ -173,7 +179,7 @@ function installLockPath(fixture: Fixture): string {
 }
 
 async function waitForPath(path: string): Promise<void> {
-  const deadline = Date.now() + 5_000
+  const deadline = Date.now() + 10_000
   while (!existsSync(path)) {
     if (Date.now() >= deadline) throw new Error(`timed out waiting for ${path}`)
     await new Promise(resolveWait => setTimeout(resolveWait, 10))
@@ -184,9 +190,10 @@ function runInstaller(
   fixture: Fixture,
   root: string,
   extraEnv: NodeJS.ProcessEnv = {},
+  nodeArgs: string[] = [],
 ): Promise<CommandResult> {
   return new Promise((resolveResult, reject) => {
-    const child = spawn(process.execPath, [installer], {
+    const child = spawn(process.execPath, [...nodeArgs, installer], {
       cwd: root,
       env: { ...fixture.env, ...extraEnv },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -200,7 +207,15 @@ function runInstaller(
   })
 }
 
-describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
+// Every case builds scratch worktrees and drives them through spawned Git and
+// Node subprocesses, so the suite is bound by process creation rather than by
+// its assertions. The value matches CORTEX_COVERAGE_TEST_TIMEOUT_MS, which the
+// Windows coverage lane passes as --testTimeout: a describe value overrides that
+// flag rather than yielding to it, so a smaller one here lowers what the lane
+// grants every case in this file, none of which carries an allowance of its own.
+// Rationale and the paired hook budget are in
+// .agents/notes/archived/testing/2026-08-29-windows-lane-hook-and-lefthook-budget.md.
+describe('worktree-local Lefthook installer', { timeout: 90_000 }, () => {
   for (const [label, extraEnv] of [
     ['CI', { CI: 'true' }],
     ['GitHub Actions', { GITHUB_ACTIONS: 'true' }],
@@ -263,14 +278,10 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
     expect(gitResult(fixture, fixture.main, ['config', '--file', commonConfig, '--get', 'core.bare']).status).toBe(1)
 
     const mainHookBeforeRemoval = readFileSync(join(mainHooks, 'pre-commit'), 'utf8')
-    // Windows Git follows MOUNT_POINT junctions into their real targets while
-    // removing a worktree; unlink any reparse point first so the removal stays
-    // inside the fixture.
-    unlinkFixtureLinks(fixture.linked)
     git(fixture, fixture.main, ['worktree', 'remove', '--force', fixture.linked])
     expect(readFileSync(join(mainHooks, 'pre-commit'), 'utf8')).toBe(mainHookBeforeRemoval)
     expect(readFileSync(legacyHook, 'utf8')).toBe('#!/bin/sh\n# legacy hook\n')
-  }, MULTI_PROCESS_TEST_TIMEOUT_MS)
+  })
 
   it('replaces the owned hook path Git copies into a newly added worktree', async () => {
     const fixture = createFixture()
@@ -294,7 +305,7 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
       '# config=late-linked-worktree-config',
     )
     expect(readFileSync(join(mainHooks, 'pre-commit'), 'utf8')).toBe(mainHookBefore)
-  }, MULTI_PROCESS_TEST_TIMEOUT_MS)
+  })
 
   it('serializes concurrent installs and keeps repeated output stable', async () => {
     const fixture = createFixture()
@@ -315,22 +326,107 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
     expect(readFileSync(mainHookPath, 'utf8')).toBe(initialHook)
     expect(existsSync(join(commonDirectory(fixture), 'cortex-lefthook-install.lock'))).toBe(false)
     expect(existsSync(join(hooksPath(fixture, fixture.main), '.fake-lefthook-running'))).toBe(false)
-  }, MULTI_PROCESS_TEST_TIMEOUT_MS)
+  })
+
+  /** Inject one lock-access failure and assert the installer's documented outcome. */
+  async function expectInjectedLockAccessFailure(
+    fixture: Fixture,
+    { operation, code, expires }: { operation: string; code: string; expires: boolean },
+  ): Promise<void> {
+    const lockPath = installLockPath(fixture)
+    const probe = join(fixture.container, 'lock-access-probe')
+    const preload = join(fixture.container, 'lock-access.cjs')
+    if (operation !== 'openSync') {
+      writeFileSync(lockPath, `${process.pid} 00000000-0000-4000-8000-000000000001\n`)
+    }
+    // The subprocess owns the injected filesystem error and clock; the test process stays unchanged.
+    writeFileSync(preload, `
+const fs = require('node:fs')
+const { syncBuiltinESMExports } = require('node:module')
+const lockPath = ${JSON.stringify(lockPath)}
+const operation = ${JSON.stringify(operation)}
+const original = fs[operation]
+const now = Date.now
+let injected = false
+fs[operation] = function(path, ...args) {
+  if (path === lockPath && !injected) {
+    injected = true
+    fs.writeFileSync(${JSON.stringify(probe)}, 'injected')
+    if (operation !== 'openSync') fs.unlinkSync(lockPath)
+    if (${expires}) Date.now = () => now() + 31000
+    throw Object.assign(new Error('injected lock access failure'), { code: ${JSON.stringify(code)} })
+  }
+  return original.call(this, path, ...args)
+}
+syncBuiltinESMExports()
+`)
+
+    const result = await runInstaller(fixture, fixture.main, {}, ['--require', preload])
+
+    expect(existsSync(probe), `lock injection missing: exit ${result.status}\n${result.stderr}`).toBe(true)
+    expect(readFileSync(probe, 'utf8')).toBe('injected')
+    const recovers = process.platform === 'win32' && code === 'EPERM' && !expires
+    expect(result.status, result.stderr).toBe(recovers ? 0 : 1)
+    if (recovers) {
+      expect(existsSync(join(hooksPath(fixture, fixture.main), 'pre-push'))).toBe(true)
+      expect(existsSync(lockPath)).toBe(false)
+    } else {
+      expect(result.stderr).toContain('injected lock access failure')
+      expect(existsSync(hooksPath(fixture, fixture.main))).toBe(false)
+    }
+  }
+
+  it.each([
+    { operation: 'openSync', code: 'EPERM', expires: false },
+    { operation: 'readFileSync', code: 'EPERM', expires: false },
+    { operation: 'lstatSync', code: 'EPERM', expires: false },
+    { operation: 'openSync', code: 'EPERM', expires: true },
+    { operation: 'openSync', code: 'EACCES', expires: false },
+  ])('handles $operation $code with expired deadline=$expires', async ({ operation, code, expires }) => {
+    await expectInjectedLockAccessFailure(createFixture(), { operation, code, expires })
+  })
+
+  // The alias forces the installer's resolved common directory to differ from the path this spec
+  // composes on every host — a junction on Windows, a directory symlink elsewhere — instead of
+  // depending on a runner whose temp directory happens to carry a short name.
+  it('handles an injected lock failure through an aliased worktree root', async () => {
+    const fixture = createFixture()
+    const alias = join(fixture.container, 'main-alias')
+    symlinkSync(fixture.main, alias, process.platform === 'win32' ? 'junction' : 'dir')
+    fixture.main = alias
+
+    await expectInjectedLockAccessFailure(fixture, { operation: 'openSync', code: 'EPERM', expires: false })
+  })
 
   it('waits for a concurrent installer to finish publishing its lock record', async () => {
     const fixture = createFixture()
     const lockPath = installLockPath(fixture)
+    const publicationBarrier = join(fixture.container, 'lock-publication')
+    const observationBarrier = join(fixture.container, 'lock-observation')
     const publishing = runInstaller(fixture, fixture.main, {
-      CORTEX_TEST_LEFTHOOK_LOCK_WRITE_DELAY_MS: '200',
+      CORTEX_TEST_LEFTHOOK_LOCK_PUBLISH_BARRIER: publicationBarrier,
     })
-    await waitForPath(lockPath)
-    expect(readFileSync(lockPath, 'utf8')).toBe('')
-
-    const waiting = runInstaller(fixture, fixture.linked)
-    const results = await Promise.all([publishing, waiting])
-
-    for (const result of results) expect(result.status, result.stderr).toBe(0)
-    expect(existsSync(lockPath)).toBe(false)
+    let waiting: Promise<CommandResult> | undefined
+    const release = (): void => {
+      writeFileSync(`${publicationBarrier}.release`, '')
+      writeFileSync(`${observationBarrier}.release`, '')
+    }
+    try {
+      await waitForPath(`${publicationBarrier}.ready`)
+      expect(readFileSync(lockPath, 'utf8')).toBe('')
+      waiting = runInstaller(fixture, fixture.linked, {
+        CORTEX_TEST_LEFTHOOK_LOCK_OBSERVE_BARRIER: observationBarrier,
+      })
+      await waitForPath(`${observationBarrier}.ready`)
+      expect(readFileSync(lockPath, 'utf8')).toBe('')
+      release()
+      const results = await Promise.all([publishing, waiting])
+      for (const result of results) expect(result.status, result.stderr).toBe(0)
+      expect(existsSync(lockPath)).toBe(false)
+    } finally {
+      release()
+      await Promise.allSettled([publishing, ...waiting === undefined ? [] : [waiting]])
+    }
   })
 
   it('repairs its owned absolute hook path after the checkout moves', async () => {
@@ -353,7 +449,7 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
     expect(readFileSync(join(movedHooks, '.cortex-lefthook-owned'), 'utf8')).toContain(
       JSON.stringify(movedHooks),
     )
-  }, MULTI_PROCESS_TEST_TIMEOUT_MS)
+  })
 
   it.skipIf(process.platform === 'win32')('refuses a multiply linked ownership marker before relocation rewrites it', async () => {
     const fixture = createFixture()
@@ -394,7 +490,7 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
       expect(result.stderr).toContain('non-regular or multiply linked hook entry')
       expect(readFileSync(externalHook, 'utf8')).toBe(externalContent)
     }
-  }, MULTI_PROCESS_TEST_TIMEOUT_MS)
+  })
 
   it('restores the marker-backed stale hook path when relocation reinstall fails', async () => {
     const fixture = createFixture()
@@ -506,16 +602,14 @@ describe('worktree-local Lefthook installer', { timeout: 15_000 }, () => {
   it('does not release an installer lock whose ownership changed', async () => {
     const fixture = createFixture()
     const lockPath = installLockPath(fixture)
-    const runningPath = join(hooksPath(fixture, fixture.main), '.fake-lefthook-running')
-    const install = runInstaller(fixture, fixture.main, { CORTEX_TEST_LEFTHOOK_DELAY_MS: '250' })
-    await waitForPath(runningPath)
-    const replacementRecord = 'replacement owner\n'
-    writeFileSync(lockPath, replacementRecord)
+    // The fake child replaces the record while the installer holds the lock.
+    const result = await runInstaller(fixture, fixture.main, {
+      CORTEX_TEST_LEFTHOOK_REPLACE_LOCK_PATH: lockPath,
+    })
 
-    const result = await install
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('installer lock ownership changed')
-    expect(readFileSync(lockPath, 'utf8')).toBe(replacementRecord)
+    expect(readFileSync(lockPath, 'utf8')).toBe('replacement owner\n')
   })
 
   it.skipIf(process.platform === 'win32')('preserves trailing spaces in worktree paths', async () => {

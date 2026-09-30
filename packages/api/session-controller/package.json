@@ -1,0 +1,165 @@
+{
+  "name": "@cortex/api-session-controller",
+  "description": "Session Remote commands, cold reads, and live control transport",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/api/session-controller"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./remote-events": {
+      "types": "./lib/types/remote-events.d.ts",
+      "default": "./lib/types/remote-events.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "external": [
+        "@cortex/api-gateway/client"
+      ],
+      "inject": [
+        "@cortex/api-gateway",
+        "@cortex/client-file-upload"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/brand": "workspace:*",
+    "@cortex/deque": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "mime-types": "^3.0.2",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-default-model": "workspace:*",
+    "@cortex/agent-preset-registry": "workspace:*",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-file-upload": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/credentials": "workspace:*",
+    "@cortex/file-reference": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/native-command": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-projection-cache": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/settings": "workspace:*",
+    "@cortex/skill": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/typert-registry": "workspace:*",
+    "@cortex/util-time": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/util-workspace-path": "workspace:*",
+    "@cortex/workspace": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/session-persistence": {
+      "optional": true
+    },
+    "@cortex/session-projection-cache": {
+      "optional": true
+    },
+    "@cortex/settings": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-default-model": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/agent-preset-registry": "workspace:*",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-file-upload": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/credentials": "workspace:*",
+    "@cortex/file-reference": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/native-command": "workspace:*",
+    "@cortex/permission-presets": "workspace:*",
+    "@cortex/remote-mock": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-projection-cache": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/settings": "workspace:*",
+    "@cortex/skill": "workspace:*",
+    "@cortex/storage": "workspace:*",
+    "@cortex/storage-domain": "workspace:*",
+    "@cortex/storage-json": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/typert-registry": "workspace:*",
+    "@cortex/util-crypto": "workspace:*",
+    "@cortex/util-time": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/util-workspace-path": "workspace:*",
+    "@cortex/workspace": "workspace:*",
+    "@types/mime-types": "^3.0.1"
+  }
+}

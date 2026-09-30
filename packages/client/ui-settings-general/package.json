@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-settings-general",
   "description": "Settings ownerless-copy and product onboarding plugin: the General section, shell trigger/header chrome content, settings dictionaries, and the versioned welcome notice",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,13 +18,12 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./client": {
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts"
     },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
@@ -32,12 +31,12 @@
   "cortex": {
     "client": {
       "inject": [
-        "@cortex/client-runtime",
         "@cortex/client-ui-settings",
         "@cortex/client-locale",
         "@cortex/client-connection",
         "@cortex/api-remotes",
-        "@cortex/client-ui-sidebar"
+        "@cortex/client-ui-sidebar",
+        "@cortex/client-shortcuts"
       ],
       "platform": "web"
     }
@@ -48,43 +47,35 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@cortex/settings": "workspace:^",
-    "@cortex/schemastery": "workspace:^",
-    "clsx": "^2.0.0"
+    "@cortex/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/client-connection": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-sidebar": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/client-web-react": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/cordis": "workspace:^",
-    "react": "^18.2.0"
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/client-connection": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-test-runtime": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-sidebar": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/client-web-react": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/cordis": "workspace:^",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-settings": "workspace:*",
+    "@cortex/client-ui-sidebar": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/remote-mock": "workspace:*",
     "@types/react": "~18.3.1",
-    "react": "^18.2.0"
+    "@types/react-dom": "~18.3.0",
+    "clsx": "^2.0.0",
+    "react": "^18.2.0",
+    "@cortex/settings": "workspace:*",
+    "react-dom": "^18.2.0",
+    "@cortex/client-shortcuts": "workspace:*"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
   ]

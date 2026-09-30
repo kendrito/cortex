@@ -1,0 +1,13 @@
+- insert:
+    - id: speech-to-text
+      name: '@cortex/experimental-speech-to-text'
+      config:
+        defaultProvider: sensevoice-local
+    - id: speech-to-text-sensevoice
+      name: '@cortex/experimental-speech-to-text-sensevoice'
+      config:
+        dataRoot: !!js cortexHomePath('speech-to-text', 'sensevoice')
+    - id: api-speech-to-text
+      name: '@cortex/experimental-api-speech-to-text'
+    - id: ui-voice-input
+      name: '@cortex/experimental-client-ui-voice-input'

@@ -1,18 +1,17 @@
 // @vitest-environment jsdom
-// Dedicated skill tool row: replay-stable naming, lifecycle states, disclosure,
-// keyboard operation, exact output, and the trajectory Inspect handoff.
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { RunningToolCall, ToolResultNode } from '@cortex/client-runtime/client'
+import type { StartedToolCall, ToolResultNode } from '@cortex/client-ui-chat/client'
+import type { ToolCallOwnerProps } from '@cortex/client-ui-tool/client'
 import { makeTranslate } from '@cortex/client-test-runtime'
+import { zh as commonZh } from '@cortex/client-locale/src/locales/zh.ts'
 import { SkillRow } from '../src/client/SkillRow.tsx'
-import { en as commonEn } from '@cortex/client-locale/src/locales/index.ts'
-import { en } from '../src/client/locales.ts'
+import { zh } from '../src/client/locales.ts'
 
 type SkillRowProps = Parameters<typeof SkillRow>[0]
 
-const t: SkillRowProps['t'] = makeTranslate(en, commonEn)
+const t: SkillRowProps['t'] = makeTranslate(zh, commonZh)
 
 afterEach(cleanup)
 
@@ -26,46 +25,57 @@ function settled(over: Partial<ToolResultNode> = {}): ToolResultNode {
     callTime: 2_000,
     content: [{ type: 'text', text: 'Follow the issue workflow.\nKeep project fields in sync.' }],
     isError: false,
-    callView: null,
-    resultView: null,
     subCalls: [],
     ...over,
   }
 }
 
-function running(argsRaw = '{"name":"cortex-manage-issues"}'): RunningToolCall {
+function running(argsRaw = '{"name":"cortex-manage-issues"}'): StartedToolCall {
   return {
-    callId: 'call-skill', name: 'skill', argsRaw, turn: 1, step: 1, time: 2_000, callView: null, subCalls: [],
+    phase: 'start' as const, callId: 'call-skill', name: 'skill', argsRaw, turn: 1, step: 1, time: 2_000, subCalls: [],
   }
 }
 
 function props(block: SkillRowProps['block'], inspect?: () => void): SkillRowProps {
-  return {
+  const owner: ToolCallOwnerProps = {
     callId: block.callId,
     toolName: 'skill',
-    block,
+    ...('kind' in block ? { phase: 'result' as const, block }
+      : block.phase === 'preparing' ? { phase: 'preparing' as const, block } : { phase: 'start' as const, block }),
+    useDisclosure: () => ({ expanded: false, setExpanded: vi.fn(), toggle: vi.fn() }),
+    loadImage: vi.fn<ToolCallOwnerProps['loadImage']>(),
     openFile: vi.fn(),
     inspect,
-    t,
-  } as unknown as SkillRowProps
+  }
+  return { ...owner, t } as SkillRowProps
 }
 
 describe('SkillRow', () => {
+  it('shows preparation without arguments, instructions, or disclosure', () => {
+    const view = render(<SkillRow {...props({
+      phase: 'preparing', callId: 'call-skill', name: 'skill', turn: 1, step: 1, time: 1, subCalls: [],
+    })} />)
+    expect(view.getByText('准备加载技能')).toBeTruthy()
+    expect(view.container.querySelector('svg')).not.toBeNull()
+    expect(view.queryByRole('button')).toBeNull()
+    expect(view.container.querySelector('pre')).toBeNull()
+  })
+
   it('renders a compact Bash-shaped summary and discloses the exact instructions', () => {
     const inspect = vi.fn()
     const view = render(<SkillRow {...props(settled(), inspect)} />)
-    const row = screen.getByRole('button', { name: 'Skillcortex-manage-issues' })
+    const row = screen.getByRole('button', { name: '加载技能cortex-manage-issues' })
     expect(row.getAttribute('aria-expanded')).toBe('false')
     expect(view.container.querySelector('[data-tool="skill"]')?.getAttribute('data-state')).toBe('ok')
     expect(view.container.querySelector('[data-tool="skill"] svg')?.getAttribute('width')).toBe('14')
-    expect(screen.queryByLabelText('Instructions')).toBeNull()
+    expect(screen.queryByLabelText('说明')).toBeNull()
 
     fireEvent.click(row)
     expect(row.getAttribute('aria-expanded')).toBe('true')
-    const card = screen.getByLabelText('Instructions')
-    expect(card.textContent).toBe('InstructionsFollow the issue workflow.\nKeep project fields in sync.')
+    const card = screen.getByLabelText('说明')
+    expect(card.textContent).toBe('说明Follow the issue workflow.\nKeep project fields in sync.')
     expect(view.container.textContent).not.toContain('{"name":"cortex-manage-issues"}')
-    fireEvent.click(screen.getByRole('button', { name: 'Inspect' }))
+    fireEvent.click(screen.getByRole('button', { name: '查看' }))
     expect(inspect).toHaveBeenCalledTimes(1)
 
     fireEvent.click(row)
@@ -87,7 +97,7 @@ describe('SkillRow', () => {
     const view = render(<SkillRow {...props(running())} />)
     const row = view.container.querySelector('[data-tool="skill"] > div')!
     expect(row.getAttribute('role')).toBeNull()
-    expect(view.container.textContent).toContain('Loading skill')
+    expect(view.container.textContent).toContain('正在加载 skill')
     expect(view.container.textContent).toContain('cortex-manage-issues')
     expect(view.container.querySelector('svg [fill="currentColor"]')).not.toBeNull()
   })
@@ -98,8 +108,10 @@ describe('SkillRow', () => {
       isError: true,
       error: { name: 'SkillError', code: 'missing' },
     }))} />)
-    const row = screen.getByRole('button', { name: 'Skill load failedSkillSkillError: missing resource' })
+    const row = screen.getByRole('button', { name: 'skill 加载失败加载技能SkillError: missing resource' })
     expect(view.container.querySelector('[data-tool="skill"]')?.getAttribute('data-state')).toBe('error')
+    expect(view.container.querySelector('[data-tool="skill"] [role="button"] svg')).not.toBeNull()
+    expect(view.container.querySelector('[data-tool="skill"] [data-state]')).toBeNull()
     expect(row.textContent).not.toContain('Check SKILL.md.')
     fireEvent.click(row)
     const output = view.container.querySelector('pre')!
@@ -111,8 +123,10 @@ describe('SkillRow', () => {
     const stoppedView = render(<SkillRow {...props(settled({
       error: { name: 'InterruptedError', code: 'interrupted' },
     }))} />)
-    expect(stoppedView.container.textContent).toContain('Skill load stopped')
-    expect(stoppedView.container.querySelector('[data-state="warning"]')).not.toBeNull()
+    const stoppedSummary = stoppedView.getByText('skill 加载已中止')
+    expect(stoppedSummary.parentElement?.className).toContain('stoppedSummary')
+    expect(stoppedView.container.querySelector('[data-tool="skill"] [role="button"] svg')).not.toBeNull()
+    expect(stoppedView.container.querySelector('[data-tool="skill"] [data-state]')).toBeNull()
     cleanup()
 
     const structuredView = render(<SkillRow {...props(settled({
@@ -127,7 +141,7 @@ describe('SkillRow', () => {
       isError: true,
       error: { name: 'SkillError', code: 'missing' },
     }))} />)
-    const errorRow = screen.getByRole('button', { name: 'Skill load failedSkillSkillError: missing' })
+    const errorRow = screen.getByRole('button', { name: 'skill 加载失败加载技能SkillError: missing' })
     fireEvent.click(errorRow)
     expect(screen.getAllByText('SkillError: missing')).toHaveLength(2)
   })
@@ -148,6 +162,6 @@ describe('SkillRow', () => {
     const blank = render(<SkillRow {...props(settled({ call: null, content: [] }))} />)
     expect(blank.container.textContent).toContain('call-skill')
     expect(blank.container.querySelector('[role="button"]')).toBeNull()
-    expect(blank.container.textContent).not.toContain('Loading skill')
+    expect(blank.container.textContent).not.toContain('正在加载 skill')
   })
 })

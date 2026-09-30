@@ -1,0 +1,11 @@
+{
+  "id": "example-delayed-check",
+  "name": "Background check completes",
+  "intent": "Start an asynchronous background check and verify its completed result.",
+  "category": "Customer Desk",
+  "steps": [
+    { "id": "reset", "title": "Reset the test lab", "action": "click", "selector": "id:ResetButton", "value": "", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "start", "title": "Start background check", "action": "click", "selector": "id:DelayedButton", "value": "", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "verify", "title": "Verify asynchronous result", "action": "assertText", "selector": "id:StatusMessage", "value": "Background check complete.", "timeoutMs": 5000, "x": 0, "y": 0 }
+  ]
+}

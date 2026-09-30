@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+.vs/
+data/
+artifacts/
+dist/
+*.user
+# Detailed verification evidence (screenshots, logs, run folders; several GB) stays on the machine that produced it.
+# The summaries at the top of verification/ are kept.
+verification/*/

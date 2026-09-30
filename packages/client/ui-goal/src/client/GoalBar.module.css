@@ -17,6 +17,8 @@
 }
 
 .bar {
+  position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -26,15 +28,27 @@
   height: 36px;
   margin: 0 auto;
   padding: 4px 5px 4px 12px;
-  border: 1px solid var(--cortex-alias-border-l1);
-  border-radius: 12px;
-  background: var(--cortex-specific-tip);
+  border: 0;
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
+  border-radius: var(--dsw-radius-md);
+  box-shadow: var(--dsw-elevation-panel);
+}
+
+.bar::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--dsw-specific-menu);
+  backdrop-filter: var(--dsw-menu-backdrop-filter);
+  content: '';
+  pointer-events: none;
 }
 
 .goalGlyph {
   display: inline-flex;
   flex: none;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 /* Matches the Todo/Queue panel titles (13/24 medium, primary) so the three
@@ -44,7 +58,7 @@
   font-size: 13px;
   line-height: 24px;
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .objective {
@@ -53,7 +67,7 @@
   overflow: hidden;
   font-size: 13px;
   line-height: 20px;
-  color: var(--cortex-alias-label-primary-dimmed);
+  color: var(--dsw-alias-label-primary-dimmed);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -62,7 +76,7 @@
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
   font-size: 12px;
   line-height: 20px;
   text-overflow: ellipsis;
@@ -76,21 +90,21 @@
   min-width: 0;
   height: 26px;
   padding: 0 8px;
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 6px;
-  background: var(--cortex-alias-bg-base);
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-sm);
+  background: var(--dsw-alias-bg-base);
   font-size: 13px;
   line-height: 20px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
   outline: none;
 }
 
 .objectiveInput:focus {
-  border-color: var(--cortex-alias-state-business-primary);
+  border-color: var(--dsw-alias-state-business-primary);
 }
 
 .objectiveInput::placeholder {
-  color: var(--cortex-alias-label-caption);
+  color: var(--dsw-alias-label-caption);
 }
 
 /* ---- Icon actions ---- */
@@ -111,14 +125,15 @@
   padding: 0;
   border: none;
   border-radius: 999px;
+  corner-shape: round;
   background: transparent;
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
   cursor: pointer;
 }
 
 .iconBtn:hover {
-  background: var(--cortex-alias-interactive-bg-hover);
-  color: var(--cortex-alias-label-secondary);
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .iconBtn:disabled {

@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest'
 import fc from 'fast-check'
-import { isJsonValue } from '@cortex/session'
+import { isJsonValue } from '@cortex/util-values'
 import { parameterSchemaSpecToJsonSchema, validateArgs } from '@cortex/tools'
 import type { ParameterPropertySpec, ParameterSchemaSpec, ValueSchemaSpec } from '@cortex/tools'
 

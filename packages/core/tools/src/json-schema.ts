@@ -1,5 +1,5 @@
 /**
- * Enforced JSON Schema subset shared by tool outputs, generated Code Mode
+ * Enforced JSON Schema subset shared by tool outputs, generated PTC mode
  * types, subagents, and workflows. The subset accepts any JSON root, an
  * annotation-only schema for unconstrained JSON, one scalar `type`, object
  * `properties`/`required`/boolean `additionalProperties`, array `items`,
@@ -11,8 +11,8 @@
  * @module cortex-tools/json-schema
  */
 
-import { assertNever, HarnessError } from '@cortex/llm'
-import { isJsonValue, type JsonValue } from '@cortex/session'
+import { HarnessError } from '@cortex/llm'
+import { assertNever, isJsonValue, type JsonValue } from '@cortex/util-values'
 
 /** Scalar JSON values supported by `enum` and `const`. */
 export type JsonSchemaScalar = string | number | boolean | null

@@ -9,10 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from cortex_harness import CortexHarness, HarnessClient, HarnessConfig, Notification, SdkProtocolError
+from cortex_harness import CortexHarness, HarnessClient, HarnessConfig, Notification, RunResult, SdkProtocolError
+from cortex_harness.errors import JsonRpcError
 
 
-def test_high_level_sdk_runs_turn_and_collects_final_response(tmp_path: Path) -> None:
+def test_high_level_sdk_runs_turn_and_preserves_auto_review_errors(tmp_path: Path) -> None:
     script = tmp_path / "fake_runtime.py"
     env_dump = tmp_path / "env.json"
     init_dump = tmp_path / "init.json"
@@ -42,6 +43,77 @@ for line in sys.stdin:
         print(json.dumps({"jsonrpc": "2.0", "method": "session.event", "params": {"sessionId": params["sessionId"], "event": {"type": "agent/inbox/spliced", "data": {"target": "next-turn", "start": 0, "inserted": [{"id": "message-1"}]}}}}), flush=True)
         print(json.dumps({"jsonrpc": "2.0", "method": "session.status", "params": {"sessionId": params["sessionId"], "status": "running"}}), flush=True)
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"messageId": "message-1"}}), flush=True)
+        print(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "session.event",
+            "params": {
+                "sessionId": params["sessionId"],
+                "event": {
+                    "type": "tool/result",
+                    "data": {
+                        "turn": 1,
+                        "step": 1,
+                        "message": {
+                            "source": {"kind": "tool", "callId": "native-call"},
+                            "content": [{
+                                "type": "tool-result",
+                                "toolCallId": "native-call",
+                                "content": [{"type": "text", "text": "Error: blocked by policy"}],
+                                "isError": True,
+                            }],
+                            "role": "user",
+                            "id": "native-result",
+                        },
+                        "error": {
+                            "name": "AutoReviewDeniedError",
+                            "code": "AUTO_REVIEW_DENIED",
+                            "reason": " native raw\\nreason ",
+                        },
+                    },
+                },
+            },
+        }), flush=True)
+        print(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "session.event",
+            "params": {
+                "sessionId": params["sessionId"],
+                "event": {
+                    "type": "tool/ptc-dispatch-start",
+                    "data": {
+                        "rootCallId": "run-code-call",
+                        "parentCallId": "run-code-call",
+                        "subCallId": "run-code-call:ptc:1",
+                        "name": "bash",
+                        "arguments": {"command": "git push --force"},
+                    },
+                },
+            },
+        }), flush=True)
+        print(json.dumps({
+            "jsonrpc": "2.0",
+            "method": "session.event",
+            "params": {
+                "sessionId": params["sessionId"],
+                "event": {
+                    "type": "tool/ptc-dispatch",
+                    "data": {
+                        "rootCallId": "run-code-call",
+                        "parentCallId": "run-code-call",
+                        "subCallId": "run-code-call:ptc:1",
+                        "name": "bash",
+                        "arguments": {"command": "git push --force"},
+                        "isError": True,
+                        "content": [{"type": "text", "text": "Error: blocked by policy"}],
+                        "error": {
+                            "name": "AutoReviewDeniedError",
+                            "code": "AUTO_REVIEW_DENIED",
+                            "reason": " ptc raw\\nreason ",
+                        },
+                    },
+                },
+            },
+        }), flush=True)
         print(json.dumps({
             "jsonrpc": "2.0",
             "method": "session.event",
@@ -92,12 +164,12 @@ for line in sys.stdin:
     )
 
     with CortexHarness(
-        model="cortex-v4-flash",
+        provider="litellm",
+        model="configured-model",
+        reasoning_effort="max",
         max_tokens=4096,
         cwd=str(tmp_path),
-        cordis=str(tmp_path / "cordis.yml"),
-        session_root=str(tmp_path / "sessions"),
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         env={
             "ENV_DUMP": str(env_dump),
             "INIT_DUMP": str(init_dump),
@@ -110,16 +182,38 @@ for line in sys.stdin:
     assert result.final_response == "hello from runtime"
     assert result.finish_reason == "max-tokens"
     assert result.events[-1]["type"] == "turn/end"
+    projected_errors = [
+        event["data"]["error"]
+        for event in result.events
+        if event["type"] in {"tool/result", "tool/ptc-dispatch"}
+    ]
+    assert projected_errors == [
+        {
+            "name": "AutoReviewDeniedError",
+            "code": "AUTO_REVIEW_DENIED",
+            "reason": " native raw\nreason ",
+        },
+        {
+            "name": "AutoReviewDeniedError",
+            "code": "AUTO_REVIEW_DENIED",
+            "reason": " ptc raw\nreason ",
+        },
+    ]
+    ptc_events = [event for event in result.events if event["type"].startswith("tool/ptc-dispatch")]
+    assert [event["type"] for event in ptc_events] == ["tool/ptc-dispatch-start", "tool/ptc-dispatch"]
+    for event in ptc_events:
+        assert not {"description", "parameters", "schema"}.intersection(event["data"])
     dumped_env = json.loads(env_dump.read_text())
     assert dumped_env["CORTEX_API_KEY"] == "env-key"
     assert dumped_env["CORTEX_BASE_URL"] == "http://127.0.0.1:4321"
-    assert dumped_env["CORTEX_CWD"] == str(tmp_path)
-    assert dumped_env["CORTEX_SESSION_ROOT"] == str(tmp_path / "sessions")
-    assert dumped_env["CORTEX_CORDIS_CONFIG"] == str(tmp_path / "cordis.yml")
+    assert dumped_env["CORTEX_CWD"] is None
+    assert dumped_env["CORTEX_SESSION_ROOT"] is None
+    assert dumped_env["CORTEX_CORDIS_CONFIG"] is None
     assert json.loads(init_dump.read_text()) == {
         "cwd": str(tmp_path),
-        "provider": "cortex-official",
-        "model": "cortex-v4-flash",
+        "provider": "litellm",
+        "model": "configured-model",
+        "reasoningEffort": "max",
         "maxTokens": 4096,
     }
 
@@ -150,7 +244,7 @@ for line in sys.stdin:
 
     seen: list[str] = []
     with CortexHarness(
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
         session = harness.start_session("main")
@@ -188,7 +282,7 @@ for line in sys.stdin:
     )
 
     with CortexHarness(
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
         with pytest.raises(
@@ -224,7 +318,7 @@ for line in sys.stdin:
     with CortexHarness(
         cwd=".",
         runtime_cwd=".",
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         env={"CAPTURE": str(capture)},
     ):
         pass
@@ -232,7 +326,7 @@ for line in sys.stdin:
     expected = str(tmp_path.resolve())
     assert json.loads(capture.read_text()) == {
         "process": expected,
-        "environment": expected,
+        "environment": None,
         "wire": expected,
     }
 
@@ -263,7 +357,7 @@ for line in sys.stdin:
     )
 
     with CortexHarness(
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
         result = harness.run("spawn a helper", session_id="main")
@@ -312,7 +406,7 @@ for line in sys.stdin:
 
     seen: list[str] = []
     with CortexHarness(
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
         result = harness.run(
@@ -367,7 +461,7 @@ for line in sys.stdin:
     )
 
     with CortexHarness(
-        launch_args_override=(sys.executable, str(script)),
+        _launch_args=(sys.executable, str(script)),
         cwd=str(tmp_path),
     ) as harness:
         result = harness.run("stay in your lane", session_id="main")
@@ -401,7 +495,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with CortexHarness(launch_args_override=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
+    with CortexHarness(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
         result = harness.run("one turn", session_id="main")
         assert harness.client._notifications.qsize() == 0
 
@@ -441,7 +535,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with CortexHarness(launch_args_override=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
+    with CortexHarness(_launch_args=(sys.executable, str(script)), cwd=str(tmp_path)) as harness:
         first = harness.run("first turn", session_id="main")
         second = harness.run("second turn", session_id="main")
 
@@ -472,10 +566,8 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(launch_args_override=(sys.executable, str(script)))
-    ) as client:
-        init = client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
+    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+        init = client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         assert init.serverInfo.name == "fake-cortex"
 
         client.session_prompt("main", [{"type": "text", "text": "fix it"}])
@@ -504,6 +596,15 @@ def test_client_keeps_unmatched_notifications_available_globally_while_subscribe
 def test_session_subscription_keeps_descendant_relationships_across_subscriptions() -> None:
     client = HarnessClient()
     with client.subscribe_session_notifications("main") as first:
+        unknown_child = {
+            "type": "subagent/catalog", "seq": 0, "time": 1,
+            "data": {"version": 1, "childId": "unreadable-child", "childCreatedAt": 1, "mode": "unknown"},
+        }
+        client._handle_message({
+            "jsonrpc": "2.0", "method": "session.event",
+            "params": {"sessionId": "main", "event": unknown_child},
+        })
+        assert first.next().payload == {"sessionId": "main", "event": unknown_child}
         client._handle_message({
             "jsonrpc": "2.0",
             "method": "subagent.started",
@@ -612,8 +713,8 @@ for line in sys.stdin:
     def broken_filter(_notification: object) -> bool:
         raise RuntimeError("bad notification filter")
 
-    with HarnessClient(HarnessConfig(launch_args_override=(sys.executable, str(script)))) as client:
-        client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
+    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         with (
             client.subscribe_notifications(broken_filter) as broken,
             client.subscribe_notifications(lambda notification: notification.method == "tick") as healthy,
@@ -649,8 +750,8 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(HarnessConfig(launch_args_override=(sys.executable, str(script)))) as client:
-        client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
+    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         with pytest.raises(ValueError):
             client.session_prompt("main", [{"type": "text", "text": "fix it"}])
 
@@ -676,10 +777,8 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(launch_args_override=(sys.executable, str(script)))
-    ) as client:
-        client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
+    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+        client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
 
         request = client.next_request()
         assert request.id == "bridge-req-1"
@@ -710,10 +809,8 @@ for line in sys.stdin:
 """.strip()
     )
 
-    with HarnessClient(
-        HarnessConfig(launch_args_override=(sys.executable, str(script)))
-    ) as client:
-        init = client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
+    with HarnessClient(_launch_args=(sys.executable, str(script))) as client:
+        init = client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
         assert init.serverInfo.name == "fake-cortex"
 
 
@@ -731,16 +828,23 @@ time.sleep(60)
 
     with HarnessClient(
         HarnessConfig(
-            launch_args_override=(sys.executable, str(script)),
-            request_timeout_seconds=0.1,
-        )
+            profile="web",
+            initialize_timeout_seconds=0.1,
+        ),
+        _launch_args=(sys.executable, str(script)),
     ) as client:
+        # Start the request timer after the fixture has actually launched.
+        ready_deadline = time.monotonic() + 5
+        while not client._stderr_lines and time.monotonic() < ready_deadline:
+            time.sleep(0.01)
+        assert "bridge is still starting" in client._stderr_lines
         start = time.monotonic()
         try:
             client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
         except TimeoutError as exc:
             assert time.monotonic() - start < 2
             assert "bridge is still starting" in str(exc)
+            assert "profile 'web'" in str(exc)
         else:
             raise AssertionError("initialize should time out")
 
@@ -767,9 +871,9 @@ for line in sys.stdin:
 
     client = HarnessClient(
         HarnessConfig(
-            launch_args_override=(sys.executable, str(script)),
             shutdown_timeout_seconds=0.1,
-        )
+        ),
+        _launch_args=(sys.executable, str(script)),
     )
     client.start()
     proc = client._proc
@@ -782,6 +886,43 @@ for line in sys.stdin:
     assert client._proc is None
 
 
+def test_client_close_allows_eof_quiescence_after_shutdown_response(tmp_path: Path) -> None:
+    script = tmp_path / "fake_runtime.py"
+    marker = tmp_path / "quiesced.txt"
+    script.write_text(
+        """
+import json
+import os
+from pathlib import Path
+import sys
+import time
+
+for line in sys.stdin:
+    msg = json.loads(line)
+    if msg.get("method") == "initialize":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {"serverInfo": {"name": "fake-cortex"}}}), flush=True)
+    elif msg.get("method") == "shutdown":
+        print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
+
+time.sleep(0.05)
+Path(os.environ["QUIESCED_MARKER"]).write_text("quiesced")
+""".strip()
+    )
+
+    client = HarnessClient(
+        HarnessConfig(
+            env={"QUIESCED_MARKER": str(marker)},
+            shutdown_timeout_seconds=1,
+        ),
+        _launch_args=(sys.executable, str(script)),
+    )
+    client.start()
+    client.initialize(provider="deepseek-official", cwd="/workspace", model="dsagent")
+    client.close()
+
+    assert marker.read_text() == "quiesced"
+
+
 def test_initialize_failure_reaps_started_runtime(tmp_path: Path) -> None:
     script = tmp_path / "rejecting_runtime.py"
     script.write_text(
@@ -792,6 +933,7 @@ import sys
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
+        print("initialize diagnostic", file=sys.stderr, flush=True)
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "error": {"code": -32000, "message": "bad initialize"}}), flush=True)
     elif msg.get("method") == "shutdown":
         print(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": {}}), flush=True)
@@ -799,14 +941,16 @@ for line in sys.stdin:
 """.strip()
     )
 
-    client = HarnessClient(HarnessConfig(launch_args_override=(sys.executable, str(script))))
+    client = HarnessClient(_launch_args=(sys.executable, str(script)))
     client.start()
     proc = client._proc
     assert proc is not None
 
-    with pytest.raises(Exception, match="bad initialize"):
-        client.initialize(provider="cortex-official", cwd=".", model="dsagent")
+    with pytest.raises(JsonRpcError, match="bad initialize") as excinfo:
+        client.initialize(provider="deepseek-official", cwd=".", model="dsagent")
 
+    assert excinfo.value.code == -32000
+    assert "initialize diagnostic" in str(excinfo.value)
     assert proc.wait(timeout=1) is not None
     assert client._proc is None
 
@@ -821,9 +965,26 @@ def test_public_signatures_omit_unsupported_wire_parameters() -> None:
     assert "profile" not in inspect.signature(Session.run).parameters
     assert "system_prompt" not in CortexHarnessConfig.__dataclass_fields__
     assert "max_tokens" in CortexHarnessConfig.__dataclass_fields__
+    assert "reasoning_effort" in CortexHarnessConfig.__dataclass_fields__
     assert "max_tokens" in inspect.signature(HarnessClient.initialize).parameters
+    assert "reasoning_effort" in inspect.signature(HarnessClient.initialize).parameters
     assert "client_name" not in HarnessConfig.__dataclass_fields__
     assert "client_version" not in HarnessConfig.__dataclass_fields__
+    assert {"cortex_bin", "profile", "patches", "cortex_home"} <= set(
+        CortexHarnessConfig.__dataclass_fields__
+    )
+    assert {"cortex_bin", "profile", "patches", "cortex_home"} <= set(
+        HarnessConfig.__dataclass_fields__
+    )
+    assert "initialize_timeout_seconds" in CortexHarnessConfig.__dataclass_fields__
+    assert "initialize_timeout_seconds" in HarnessConfig.__dataclass_fields__
+    assert CortexHarnessConfig().initialize_timeout_seconds == 30.0
+    assert HarnessConfig().initialize_timeout_seconds == 30.0
+    for removed in ("cordis", "session_root", "runtime_bin", "bridge_bin", "launch_args_override"):
+        assert removed not in CortexHarnessConfig.__dataclass_fields__
+        assert removed not in HarnessConfig.__dataclass_fields__
+    assert "_launch_args" not in HarnessConfig.__dataclass_fields__
+    assert "session_root" not in RunResult.__dataclass_fields__
 
 
 def test_client_close_is_idempotent_before_and_after_start(tmp_path: Path) -> None:
@@ -845,7 +1006,7 @@ for line in sys.stdin:
 """.strip()
     )
 
-    client = HarnessClient(HarnessConfig(launch_args_override=(sys.executable, str(script))))
+    client = HarnessClient(_launch_args=(sys.executable, str(script)))
     client.start()
     client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
     client.close()
@@ -865,9 +1026,9 @@ sys.exit(42)
 
     with HarnessClient(
         HarnessConfig(
-            launch_args_override=(sys.executable, str(script)),
             request_timeout_seconds=2,
-        )
+        ),
+        _launch_args=(sys.executable, str(script)),
     ) as client:
         with pytest.raises(Exception, match="fatal bridge exploded"):
             client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
@@ -897,9 +1058,9 @@ with open(os.environ["SEEN"], "w") as seen:
 
     with HarnessClient(
         HarnessConfig(
-            launch_args_override=(sys.executable, str(script)),
             env={"SEEN": str(output)},
-        )
+        ),
+        _launch_args=(sys.executable, str(script)),
     ) as client:
         client.initialize(provider="cortex-official", cwd="/workspace", model="dsagent")
         threads = [
@@ -915,21 +1076,22 @@ with open(os.environ["SEEN"], "w") as seen:
         json.loads(line)
 
 
-def _install_fake_bundled_runtime(
+def _install_fake_bundled_cortex(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> Path:
-    """Install a fake runtime package that records config and serves lifecycle calls.
-
-    Returns the fake bundled default config path.
-    """
-    runtime = tmp_path / "cortex-jsonrpc-agent"
+) -> None:
+    """Install a fake runtime package that records cortex argv and serves lifecycle calls."""
+    runtime = tmp_path / "cortex.py"
     runtime.write_text(
-        """#!/usr/bin/env python3
+        """
 import json
 import os
 import sys
 
-json.dump({"CORTEX_CORDIS_CONFIG": os.environ.get("CORTEX_CORDIS_CONFIG")}, open(os.environ["ENV_DUMP"], "w"))
+json.dump({
+    "argv": sys.argv[1:],
+    "CORTEX_HOME": os.environ.get("CORTEX_HOME"),
+    "CORTEX_CORDIS_CONFIG": os.environ.get("CORTEX_CORDIS_CONFIG"),
+}, open(os.environ["ENV_DUMP"], "w"))
 for line in sys.stdin:
     msg = json.loads(line)
     if msg.get("method") == "initialize":
@@ -939,58 +1101,75 @@ for line in sys.stdin:
         break
 """.strip()
     )
-    runtime.chmod(0o755)
 
-    default_config = tmp_path / "default-cordis.yml"
     module_dir = tmp_path / "cortex_harness_runtime"
     module_dir.mkdir()
     (module_dir / "__init__.py").write_text(
         f"""
 def resolve_bundled_launch_args(mode=None):
-    return ({str(runtime)!r},)
-
-
-def bundled_default_config_path():
-    return {str(default_config)!r}
+    return ({sys.executable!r}, {str(runtime)!r})
 """.strip()
     )
 
     monkeypatch.syspath_prepend(str(tmp_path))
     monkeypatch.delitem(sys.modules, "cortex_harness_runtime", raising=False)
-    return default_config
 
 
-@pytest.mark.parametrize("ambient_config", [None, ""], ids=["unset", "empty-counts-as-absent"])
-def test_client_default_launch_uses_bundled_runtime_and_injects_default_config(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ambient_config: str | None
-) -> None:
-    env_dump = tmp_path / "env.json"
-    default_config = _install_fake_bundled_runtime(tmp_path, monkeypatch)
-    if ambient_config is None:
-        monkeypatch.delenv("CORTEX_CORDIS_CONFIG", raising=False)
-    else:
-        monkeypatch.setenv("CORTEX_CORDIS_CONFIG", ambient_config)
-
-    with HarnessClient(HarnessConfig(env={"ENV_DUMP": str(env_dump)})) as client:
-        init = client.initialize(provider="cortex-official", cwd="/workspace", model="cortex-v4-pro")
-
-    assert init.serverInfo.name == "bundled-runtime"
-    assert json.loads(env_dump.read_text())["CORTEX_CORDIS_CONFIG"] == str(default_config)
-
-
-def test_client_respects_explicit_config_over_bundled_default(
+def test_client_default_launch_uses_bundled_cortex_sdk_profile_and_explicit_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     env_dump = tmp_path / "env.json"
-    _install_fake_bundled_runtime(tmp_path, monkeypatch)
+    home = tmp_path / "home"
+    patch = tmp_path / "sdk.patch.yml"
+    patch.write_text("[]\n")
+    _install_fake_bundled_cortex(tmp_path, monkeypatch)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("CORTEX_HOME", str(tmp_path / "ambient-home"))
     monkeypatch.delenv("CORTEX_CORDIS_CONFIG", raising=False)
 
+    with HarnessClient(HarnessConfig(
+        profile="sdk",
+        patches=("sdk.patch.yml",),
+        cortex_home=str(home),
+        env={"ENV_DUMP": str(env_dump), "CORTEX_HOME": str(tmp_path / "env-home")},
+    )) as client:
+        init = client.initialize(provider="deepseek-official", cwd="/workspace", model="deepseek-v4-pro")
+
+    assert init.serverInfo.name == "bundled-runtime"
+    assert json.loads(env_dump.read_text()) == {
+        "argv": ["--profile", "sdk", "--patch", str(patch)],
+        "CORTEX_HOME": str(home),
+        "CORTEX_CORDIS_CONFIG": None,
+    }
+
+
+def test_client_accepts_explicit_environment_cortex_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    env_dump = tmp_path / "env.json"
+    home = tmp_path / "environment-home"
+    _install_fake_bundled_cortex(tmp_path, monkeypatch)
+
     with HarnessClient(
-        HarnessConfig(env={"ENV_DUMP": str(env_dump), "CORTEX_CORDIS_CONFIG": "./explicit.yml"})
+        HarnessConfig(profile="custom", env={"ENV_DUMP": str(env_dump), "CORTEX_HOME": str(home)})
     ) as client:
         client.initialize(provider="cortex-official", cwd="/workspace", model="cortex-v4-pro")
 
-    assert json.loads(env_dump.read_text())["CORTEX_CORDIS_CONFIG"] == "./explicit.yml"
+    assert json.loads(env_dump.read_text()) == {
+        "argv": ["--profile", "custom"],
+        "CORTEX_HOME": str(home),
+        "CORTEX_CORDIS_CONFIG": None,
+    }
+
+
+def test_client_rejects_an_implicit_default_cortex_home(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _install_fake_bundled_cortex(tmp_path, monkeypatch)
+    monkeypatch.delenv("CORTEX_HOME", raising=False)
+
+    with pytest.raises(ValueError, match="explicit cortex_home or non-empty CORTEX_HOME"):
+        HarnessClient(HarnessConfig(env={})).start()
 
 
 def test_client_reports_missing_bundled_runtime_dependency(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -998,4 +1177,12 @@ def test_client_reports_missing_bundled_runtime_dependency(monkeypatch: pytest.M
     monkeypatch.setattr(sys, "path", [])
 
     with pytest.raises(FileNotFoundError, match="Install cortex-runtime-bin"):
-        HarnessClient().start()
+        HarnessClient(HarnessConfig(cortex_home="/explicit/home")).start()
+
+
+def test_high_level_sdk_has_no_implicit_model_provider() -> None:
+    from cortex_harness import CortexHarnessConfig
+
+    config = CortexHarnessConfig()
+    assert config.provider == ""
+    assert config.model == ""

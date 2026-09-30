@@ -4,7 +4,7 @@
  * see registerSource alone, the conversation wiring layer resolves its
  * per-session controller through sessionOf.
  */
-import type { ClientContext } from '@cortex/client-runtime/client'
+import type { Context as ClientContext } from '@cortex/cordis'
 import type { InputTriggerSource } from '../types.ts'
 import type { InputTriggerController } from './controller.ts'
 

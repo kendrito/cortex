@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Testy.Core/Testy.Core.csproj" />
+    <ProjectReference Include="../../src/Testy.Cli/Testy.Cli.csproj" />
+    <ProjectReference Include="../../src/Testy.Studio/Testy.Studio.csproj" />
+    <!-- Built with the tests and started by the MCP checks as a program; its assembly is not referenced. -->
+    <ProjectReference Include="../Testy.IdleFixture/Testy.IdleFixture.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

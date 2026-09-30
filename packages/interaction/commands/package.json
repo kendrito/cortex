@@ -1,7 +1,7 @@
 {
   "name": "@cortex/commands",
   "description": "Plugin-owned human command registry for Cortex UIs",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -53,24 +53,29 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/typert-protocol": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
+    "@cortex/util-crypto": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/typert-protocol": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

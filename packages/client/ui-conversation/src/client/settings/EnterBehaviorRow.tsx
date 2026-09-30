@@ -1,8 +1,8 @@
 /** General Settings row for the Composer's busy-state Enter preference. */
 import { useState } from 'react'
-import type { SnapshotStore } from '@cortex/client-runtime/client'
+import type { SnapshotStore } from '@cortex/client-store'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@cortex/client-ui-slots'
-import { IconChevronDownOutline14, Menu } from '@cortex/client-ui-primitives'
+import { IconChevronDownOutlineRegular, Menu } from '@cortex/client-ui-primitives'
 import type { BusyEnterBehavior } from '../contract/composer-submission.ts'
 import type { ConversationKey } from '../locales.ts'
 import css from './EnterBehaviorRow.module.css'
@@ -67,7 +67,7 @@ export function EnterBehaviorRow({ useBusyEnter, setBusyEnter, t }: EnterBehavio
             onClick={() => { setOpen(value => !value) }}
           >
             {t(selectedLabel)}
-            <IconChevronDownOutline14 className={css.chevron} />
+            <IconChevronDownOutlineRegular className={css.chevron} />
           </button>
         )}
       />

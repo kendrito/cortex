@@ -1,7 +1,7 @@
 {
   "name": "@cortex/session-title",
   "description": "Log-backed session title service and provider registry for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -41,25 +41,28 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence-jsonl": "workspace:^",
-    "@cortex/session-persistence-sqlite": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*"
   }
 }

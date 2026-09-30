@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><AssemblyName>Testy.WpfLab</AssemblyName><AssemblyTitle>WPF Control Lab</AssemblyTitle></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../Testy.WpfProbe/Testy.WpfProbe.csproj" /></ItemGroup>
+</Project>

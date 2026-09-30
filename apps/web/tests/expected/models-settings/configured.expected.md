@@ -1,0 +1,23 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General"
+    - button "Models"
+    - button "Built-in plugins"
+    - button "Agent presets"
+  - button "Open configuration file"
+  - button "Close"
+  - heading "Models" [level=2]
+  - paragraph: Enter your API keys to use models from the following providers.
+  - paragraph: Provider configuration is limited to a local LiteLLM gateway. Administrator-provisioned external routes are read-only.
+  - list:
+    - listitem:
+      - text: LiteLLM Custom
+      - img "API key configured"
+      - button "Edit LiteLLM (litellm)": Edit
+      - button "Delete LiteLLM (litellm)": Delete
+    - listitem:
+      - text: Administrator route Custom
+      - button "Edit Administrator route (cortex-admin-fixture)" [disabled]: Edit
+      - button "Delete Administrator route (cortex-admin-fixture)" [disabled]: Delete
+  - button "Add model provider"

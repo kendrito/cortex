@@ -1,6 +1,6 @@
 import { Context } from '@cortex/cordis'
 import Timer from '@cortex/cordis-plugin-timer'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import SystemPrompt from '@cortex/system-prompt'
 import ToolRegistry from '@cortex/tools'
 import type { ToolDefinition, ToolExecutionResult } from '@cortex/tools'
@@ -48,7 +48,7 @@ interface Harness {
 
 /**
  * Build a real tree with the runner mounted and a recording gateway provided.
- * @param config - runner config overrides (the vm bound).
+ * @param config - runner configuration overrides.
  * @returns the context, the runner service, and the gateway recorder.
  */
 export async function setup(config?: Config): Promise<Harness> {
@@ -147,7 +147,7 @@ let callCounter = 0
 export function call(ctx: Context, name: string, args: unknown): Promise<ToolExecutionResult> {
   return ctx.tools.execute({
     signal: new AbortController().signal,
-    callId: CallId(`call-${++callCounter}`),
+    callId: ToolCallId(`call-${++callCounter}`),
     name,
     arguments: args,
   })

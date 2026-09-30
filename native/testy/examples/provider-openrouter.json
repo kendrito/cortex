@@ -1,0 +1,10 @@
+{
+  "kind": "compatible",
+  "model": "openai/gpt-4.1-mini",
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "apiKeyEnvironmentVariable": "OPENROUTER_API_KEY",
+  "aiDirectedExecution": true,
+  "nativeComputerUse": false,
+  "supportsImages": true,
+  "maximumAgentTurns": 12
+}

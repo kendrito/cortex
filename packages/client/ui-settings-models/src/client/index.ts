@@ -1,18 +1,17 @@
 /**
  * Models settings and product-onboarding plugin, browser half. It registers
- * the Models page plus the internal-testing onboarding notice, rendered in
- * this package's modal wrapper. The Host settings and credential contracts
- * stay behind their existing wire APIs.
+ * the Models page plus the ordered preview-notice and official-DeepSeek
+ * onboarding dialogs, whose UI shares this package's modal wrapper. The Host
+ * settings and credential contracts stay behind their existing wire APIs.
  * Export discipline:
  * packages/client/AGENTS.md.
  */
-import type { ClientContext } from '@cortex/client-runtime/client'
-import type { ConnectionHandle } from '@cortex/api-remotes/client'
-import { bindSnapshotSelector } from '@cortex/client-web-react'
+import type { Context as ClientContext } from '@cortex/cordis'
 // Type-only: pulls the shell's SlotMap merge (the 'settings.section' entry).
 import type {} from '@cortex/client-ui-settings/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@cortex/client-locale/client'
+import type {} from '@cortex/client-ui-renderer/client'
 // Type-only: pulls the ctx.remote merge and the forwarded-event key face
 // (settings/credentials invalidations ride the allowlist) into this program.
 import type {} from '@cortex/api-remotes/client'
@@ -20,12 +19,15 @@ import { ModelsSection } from './ModelsSection.tsx'
 import type { ModelsSectionInjected } from './ModelsSection.tsx'
 import { WelcomeNotice } from './WelcomeNotice.tsx'
 import type { WelcomeNoticeInjected } from './WelcomeNotice.tsx'
-import { refreshWelcomeIfLoaded, WelcomeNoticeStore } from './welcome-store.ts'
+import { WelcomeNoticeStore } from './welcome-store.ts'
 import { ModelsSettingsStore } from './store.ts'
-import { en, type ModelsKey } from './locales.ts'
+import { createModelsOperations } from './operations.ts'
+import { createSettingsSchemaOperations } from './schema-operations.ts'
+import { en, zh, type ModelsKey } from './locales.ts'
 import { WELCOME_NOTICE_SETTINGS_NAMESPACE } from '../onboarding-copy.ts'
 
 export type { ModelsSectionInjected, ModelsSectionProps } from './ModelsSection.tsx'
+export type { ModelsFooterOwnerProps, ProviderCardExtrasOwnerProps } from './slot-contract.ts'
 export type { ModelsKey } from './locales.ts'
 
 declare module '@cortex/client-ui-slots' {
@@ -37,7 +39,11 @@ declare module '@cortex/client-ui-slots' {
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'settings.models'
-export type { ModelsSettingsState, ProviderRow } from './store.ts'
+
+export type {
+  ModelsSettingsState, ProviderDirectoryEntry, ProviderRow,
+} from './store.ts'
+export type { ModelDiscoveryOutcome, ModelsOperations, SettingsWriteOutcome } from './operations.ts'
 
 /**
  * Refetch the page snapshot only after its first load: an unopened Models
@@ -54,7 +60,10 @@ export function refreshIfLoaded(controller: ModelsSettingsStore): void {
  * ui-settings' apply, whose activation order relative to this one is NOT
  * constrained; registration depends on each slot through `slots.inject()`.
  */
-export const inject = ['slots', 'locale', 'connection', 'remote']
+export const inject = [
+  'slots', 'locale', 'remote', 'remote.credentials', 'remote.llm', 'remote.settings', 'remote.session',
+  'configForms', 'settingsSchema',
+]
 
 /**
  * Register the Models section once the `settings.section` declaration is on
@@ -63,48 +72,50 @@ export const inject = ['slots', 'locale', 'connection', 'remote']
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { en }), 'ui-settings-models: copy dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-settings-models: copy dictionaries')
 
-  const connection = ctx.get('connection') as ConnectionHandle
-  const controller = new ModelsSettingsStore(connection.api)
-  const useSnapshot = bindSnapshotSelector(controller.store)
+  const schema = createSettingsSchemaOperations(ctx.settingsSchema)
+  // Bound once here, where the Remote namespaces are declared in this plugin's
+  // own `inject`; the cards receive callbacks and never a context.
+  const operations = createModelsOperations(ctx)
+  const controller = new ModelsSettingsStore(ctx, schema, ctx.configForms.describe())
   // Registration-time text (the nav label thunk) and the inject faces share
   // one bound translate; copy freshness rides the locale revision.
   const t = ctx.locale.bind(NS) as ModelsSectionInjected['t']
   const injected = (): ModelsSectionInjected => ({
     controller,
-    useSnapshot,
-    api: connection.api,
+    hooks: { snapshot: controller.store },
+    operations,
+    schema,
     t,
   })
-  const welcomeController = new WelcomeNoticeStore(
-    connection.api,
-    connection.isLoopback ? 'host' : 'memory',
-  )
+  // The scope's own memory mode is what keeps a remote browser process-local,
+  // so the store needs no isLoopback branch of its own.
+  const welcomeController = new WelcomeNoticeStore(ctx.configForms.get<Record<string, unknown>>(WELCOME_NOTICE_SETTINGS_NAMESPACE))
   const welcomeInjected = (): WelcomeNoticeInjected => ({
     controller: welcomeController,
     hooks: { welcome: welcomeController.store },
     t,
   })
 
-  // Pushed invalidations converge every open surface without polling: any
-  // settings/credentials/topology change refetches once the page loaded.
+  // Pushed invalidations converge every open surface without polling. The
+  // configForms injection makes ui-settings activate first, and remote
+  // dispatch preserves listener order; its listener therefore starts the
+  // mirror refresh before this store joins that refresh. The welcome notice
+  // follows its settings scope, so it needs no subscription here.
   ctx.effect(() => {
     const refreshModels = (): void => { refreshIfLoaded(controller) }
-    const refreshAll = (): void => {
-      refreshModels()
-      refreshWelcomeIfLoaded(welcomeController)
-    }
     const disposers = [
-      ctx.remote.$on('settings/document-updated', (ns) => {
-        refreshModels()
-        if (ns === WELCOME_NOTICE_SETTINGS_NAMESPACE) refreshWelcomeIfLoaded(welcomeController)
-      }),
-      ctx.remote.$on('credentials/updated', refreshModels),
+      ctx.remote.$on('settings/document-updated', () => { refreshModels() }),
+      ctx.remote.$on('credentials/record-updated', refreshModels),
+      ctx.remote.$on('credentials/reference-updated', refreshModels),
       ctx.remote.$on('llm/adapters-updated', refreshModels),
-      ctx.on('connection/reset', refreshAll),
+      ctx.on('connection/reset', refreshModels),
     ]
-    return () => { for (const dispose of disposers) dispose() }
+    return () => {
+      welcomeController.dispose()
+      for (const dispose of disposers) dispose()
+    }
   }, 'ui-settings-models: pushed invalidations')
 
   ctx.slots.inject('settings.section', () => ctx.slots.register({
@@ -113,8 +124,12 @@ export function apply(ctx: ClientContext): void {
     order: 10,
     label: () => t('nav'),
     inject: injected,
+    children: {
+      'settings.models.provider-card': { kind: 'keyed', scope: 'root' },
+      'settings.models.footer': { kind: 'list', scope: 'root' },
+    },
   }, ModelsSection))
-  ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
+  if (!('cortexDesktop' in globalThis)) ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
     name: 'settings.onboarding',
     id: 'welcome-notice',
     order: -100,

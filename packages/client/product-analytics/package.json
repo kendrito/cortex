@@ -1,0 +1,32 @@
+{
+  "name": "@cortex/client-product-analytics",
+  "version": "0.2.0-rc.2",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Type-only upstream UI compatibility; no analytics implementation or exporter",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/events.d.ts",
+      "default": "./lib/events.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session": "workspace:*",
+    "@cortex/llm": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session": "workspace:*",
+    "@cortex/llm": "workspace:*"
+  }
+}

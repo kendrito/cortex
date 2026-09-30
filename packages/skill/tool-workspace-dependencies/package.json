@@ -1,0 +1,44 @@
+{
+  "name": "@cortex/tool-workspace-dependencies",
+  "description": "The load_workspace_dependencies tool: absolute paths into a bundled Python, Node.js, and pnpm payload",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/skill/tool-workspace-dependencies"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/system-prompt": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~"
+  }
+}

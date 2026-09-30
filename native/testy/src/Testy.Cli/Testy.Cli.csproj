@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Testy.Core/Testy.Core.csproj" />
+    <ProjectReference Include="../Testy.Windows/Testy.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HyperV\Scripts\*.ps1" Link="hyperv\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Testy.Tests" />
+  </ItemGroup>
+</Project>

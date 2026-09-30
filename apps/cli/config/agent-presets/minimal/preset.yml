@@ -1,3 +1,0 @@
-name: Minimal mode
-description: A two-tool coding agent offering only persistent bash and str_replace_editor.
-order: 3

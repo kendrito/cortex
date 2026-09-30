@@ -1,7 +1,7 @@
 {
   "name": "@cortex/permission-presets",
   "description": "User-facing permission presets (ctx.permissionPresets) for the Cortex: one product-level Permissions select bundling the sandbox-mode and approval-policy knobs, written through to their own session events",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -30,6 +30,14 @@
       "types": "./lib/types/client.d.ts",
       "default": "./lib/types/client.js"
     },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
@@ -37,35 +45,40 @@
     "lib/index.js",
     "lib/invariant.js",
     "lib/types/**/*.js",
-    "lib/types/**/*.d.ts"
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/shell": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/settings": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/shell": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^",
+    "@cortex/schemastery": "workspace:~",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/shell": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/sandbox-policy": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/settings": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/shell": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/settings": "workspace:*"
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/web-frontend",
   "description": "Web application entry: vite build over the @cortex/client-web shell library; dist/ served by apps/cli's cortex web",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -17,35 +17,55 @@
   },
   "files": [
     "dist",
-    "!dist/**/*.map"
+    "!dist/**/*.map",
+    "!dist/preview.html",
+    "!dist/preview"
   ],
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "watch": "vite build --watch"
+    "watch": "vite build --watch --no-emptyOutDir",
+    "build:preview": "pnpm --filter @cortex/experimental-webworker-runtime exec tsdown && pnpm --filter @cortex/experimental-webworker-packer exec tsdown && vite build && cortex-pack-vfs-image --out dist/preview/vfs-image.tar.gz",
+    "serve:preview": "http-server dist -a 0.0.0.0 -p 4173 -c-1"
   },
   "license": "MIT",
-  "dependencies": {
-    "@cortex/client-web": "workspace:^",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
   "devDependencies": {
-    "@cortex/cordis-plugin-group": "workspace:^",
-    "@cortex/client-modules": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/client-web-react": "workspace:^",
-    "@cortex/cmdline": "workspace:^",
-    "@cortex/pwsh-local": "workspace:^",
+    "@cortex/cordis-plugin-group": "workspace:~",
+    "@cortex/client-modules": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/llm-mock-server": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-deliverables": "workspace:*",
+    "@cortex/client-ui-dockkit": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/client-web": "workspace:*",
+    "@cortex/cmdline": "workspace:*",
+    "@cortex/pwsh-local": "workspace:*",
+    "@cortex/experimental-agent-team": "workspace:*",
+    "@cortex/experimental-webworker-packer": "workspace:*",
+    "@cortex/experimental-webworker-runtime": "workspace:*",
+    "@cortex/remote-mock": "workspace:*",
     "@types/node": "^22.0.0",
     "@types/react": "~18.3.1",
     "@types/react-dom": "~18.3.0",
+    "@types/ws": "8.18.1",
     "@vitejs/plugin-react": "^4.0.0",
+    "http-server": "^14.1.1",
+    "fflate": "^0.8.2",
     "playwright": "^1.49.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "typescript": "^6.0.3",
     "vite": "^6.0.0",
     "vitest": "^4.1.8",
-    "fflate": "^0.8.2"
+    "ws": "8.21.0",
+    "@cortex/client-ui-theme": "workspace:*",
+    "@cortex/launch-environment": "workspace:*",
+    "@cortex/workspace-changes": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/experimental-auto-review": "workspace:*",
+    "@cortex/experimental-speech-to-text": "workspace:*",
+    "@cortex/experimental-voice-input-bundle": "workspace:*"
   }
 }

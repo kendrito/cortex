@@ -1,7 +1,7 @@
 {
   "name": "@cortex/agent-loop",
   "description": "The concrete agent loop plugin for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -31,31 +31,35 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^",
-    "@cortex/settings": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/session-persistence-jsonl": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^",
-    "@cortex/settings": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/llm-pi-ai": "workspace:*",
+    "@cortex/agent": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*"
   }
 }

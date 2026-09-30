@@ -1,7 +1,0 @@
-- dialog "Delete LiteLLM Relay (litellm)?":
-  - heading "Delete LiteLLM Relay (litellm)?" [level=2]
-  - button "Close":
-    - img
-  - paragraph: Deleting LiteLLM Relay (litellm) removes its configuration and stored API key.
-  - button "Cancel"
-  - button "Delete LiteLLM Relay (litellm)"

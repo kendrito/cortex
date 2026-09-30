@@ -10,6 +10,13 @@ import type { Context } from '@cortex/cordis'
 import z from '@cortex/schemastery'
 import type { Agent, PreStepDecision } from '@cortex/agent'
 import { createUserMessage } from '@cortex/llm'
+import type { ContextFormed } from '@cortex/llm'
+declare module '@cortex/llm' {
+  interface MessageSourceMap {
+    'repeat-tool-reminder': { kind: 'repeat-tool-reminder' } & ContextFormed
+  }
+}
+
 import type { MessageSource } from '@cortex/llm'
 import type { UserMessage } from '@cortex/session'
 import type { PostToolDecision, ToolExecution } from '@cortex/tools'
@@ -50,11 +57,11 @@ export const Config: z<Config> = z.object({
 })
 
 /**
- * The `{kind:'plugin'}` source stamped on every reminder this guard injects —
- * the label is load-bearing (an unlabeled context would render as a user
- * prompt in derived history).
+ * The `{kind:'repeat-tool-reminder'}` producer source stamped on every reminder
+ * this guard injects — the label is load-bearing (an unlabeled context would
+ * render as a user prompt in derived history).
  */
-const PLUGIN_SOURCE: MessageSource = { kind: 'plugin', plugin: 'repeat-tool-reminder' }
+const REMINDER_SOURCE = { kind: 'repeat-tool-reminder' } satisfies MessageSource
 
 /**
  * The gentle first-threshold reminder. Keyed to `thresholds[0]`, not a literal
@@ -202,7 +209,7 @@ export function apply(ctx: Context, config: Config): void {
       : detailedReminder(exec.name, count, previewArguments(canonical, argumentsPreviewChars))
     return createUserMessage({
       content: [{ type: 'text', text }],
-      source: { ...PLUGIN_SOURCE, form: 'notice', summary: `${exec.name} × ${count}` },
+      source: { ...REMINDER_SOURCE, form: 'notice', summary: `${exec.name} × ${count}` },
     })
   }
 

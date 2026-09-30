@@ -1,4 +1,4 @@
-# The cortex-base bundle patch: the shared core of every cortex profile, applied as
+# The cortex-base bundle patch: the shared core of each base-backed profile, applied as
 # ONE insert over the empty profile root. Later bundle patches and the user's
 # profile cordis.patch.yml address these rows by id, with the last write
 # winning per row.
@@ -13,13 +13,23 @@
 # driven); the grouping is for readers.
 
 - insert:
+    - id: tool-plugin-manager
+      name: '@cortex/plugin-manager/tools'
+      disabled: true
+
+    - id: plugin-manager
+      name: '@cortex/plugin-manager'
+      disabled: !!js "!ctx.get('profileContext')"
+
     - id: timer
       name: '@cortex/cordis-plugin-timer'
 
+    # Profile configuration reloads by default; module roots are opt-in.
     - id: hmr
-      name: '@cortex/cordis-plugin-hmr'
+      name: '@cortex/hmr'
+      disabled: !!js "!ctx.get('profileContext')"
       config:
-        root: ['.']
+        root: []
 
     - id: llm
       name: '@cortex/llm'
@@ -47,6 +57,7 @@
       name: '@cortex/session-title-first-prompt-llm'
       config:
         targetWords: 5
+        targetCjkCharacters: 10
         maxInputBytes: 4096
         maxOutputTokens: 64
         timeoutMs: 60000
@@ -58,12 +69,13 @@
       name: '@cortex/agent'
 
     # The transport-independent default for Agents created by entry points.
+    # No model is configured until the user selects a local gateway model.
     # Settings may supply a saved selection; consumers read it at creation time.
     - id: agent-default-model
       name: '@cortex/agent-default-model'
       config:
-        provider: cortex-official
-        model: cortex-v4-flash
+        provider: ''
+        model: ''
 
     - id: jobs
       name: '@cortex/jobs-local'
@@ -71,21 +83,29 @@
     - id: llm-retry
       name: '@cortex/llm-retry'
 
-    # User-settings document (`$CORTEX_HOME/settings.yaml`, hot-reloaded): a
-    # an `llm-pi-ai:` section there overrides the adapter entries
-    # below without a restart, and is what the web Models page writes.
+    # Live Config forms persist through the active profile patch.
+
+    # Live configuration forms persist through the launcher's profile.
+    - id: config-editor
+      name: '@cortex/config-editor'
+      disabled: !!js "!ctx.get('profileContext')"
+
     - id: settings
-      name: '@cortex/settings-file'
+      name: '@cortex/settings'
+      disabled: !!js "!ctx.get('profileContext')"
 
     # Credential sources: inherited environment over the managed
     # `$CORTEX_HOME/.credentials.yaml`, with project and user `.env` fallbacks.
     # Adapters resolve references per request; the Models page writes only the
     # managed document, which is never materialized into the process environment.
+    - id: authorization
+      name: '@cortex/authorization'
+
     - id: credentials
       name: '@cortex/credentials-local'
 
     # The pi-ai multi-provider twin, mounted dormant: zero routes (and no extra
-    # models in the picker) until a `llm-pi-ai:` settings section supplies provider
+    # models in the picker) until the profile configures local gateway provider
     # profiles — then those routes register live, keys resolving per request
     # through their apiKeyEnv references, and drop again when the section empties.
     # Supplying those profiles is exactly what the web Models page does. Which
@@ -109,8 +129,8 @@
     # ctx.sessionQuery mounted — exact reads, titles, and lineage traces
     # (session export, subagent-fork Workspace inheritance) stay available —
     # while search calls fail with SESSION_QUERY_SEARCH_DISABLED and SQLite is
-    # never opened; the Web sidebar search matches titles and workspace names
-    # only. Deployments enabling content search override `openAt` to
+    # never opened. The Web bundle enables content search on first use.
+    # Other deployments enabling content search override `openAt` to
     # `first-search` or `startup` in a later patch layer (profile
     # cordis.patch.yml or a --patch overlay), typically with a durable `path`.
     - id: session-query-sqlite
@@ -124,6 +144,33 @@
     # loud without it; web layers reuse this same mount for list rows.
     - id: session-projection
       name: '@cortex/session-projection'
+
+    # Durable KV storage: the storage hub, the json backend, and the
+    # schema-validated domain form over them. Session-layer persistence (the
+    # projection cache below; workspace in web layers)
+    # routes through this stack, so it belongs to the shared base.
+    - id: storage
+      name: '@cortex/storage'
+
+    - id: storage-json
+      name: '@cortex/storage-json'
+      config:
+        root: !!js cortexHomePath('storages')
+
+    - id: storage-domain
+      name: '@cortex/storage-domain'
+      config:
+        backend: json
+
+    # Persisted projection cache: throttled write-behind over the
+    # session_projcache domain (per-record layout — one version-stamped
+    # checkpoint document per session), serving the session listing's
+    # projection column.
+    - id: session-projection-cache
+      name: '@cortex/session-projection-cache'
+      config:
+        writeEveryEvents: 200
+        writeIntervalMs: 5000
 
     - id: subprocess
       name: '@cortex/subprocess-local'
@@ -205,7 +252,6 @@
     - id: skill-filesystem
       name: '@cortex/skill-filesystem'
 
-
     - id: tool-skill
       name: '@cortex/tool-skill'
 
@@ -261,14 +307,15 @@
 
     - id: subagent-fork-in-process
       name: '@cortex/subagent-fork-in-process'
-
-    # The native Codex product provider: each accepted run drives the host's
-    # own `codex app-server --stdio` with the user's native ~/.codex model
-    # configuration and authentication.
-    - id: subagent-codex
-      name: '@cortex/subagent-codex'
       config:
         providerName: fork
+
+    # Product delegates use their own locally configured authentication and model.
+    - id: subagent-codex
+      name: '@cortex/subagent-codex'
+
+    - id: subagent-claude-code
+      name: '@cortex/subagent-claude-code'
 
     # Continuable background children are selected per delegation tool. The
     # separately loaded follow-up tool registers the one global `send_message`.
@@ -285,10 +332,12 @@
         toolName: subagent
         backgroundMode: continuable
 
-    # Fork stays one-shot: a continuable child's `report` tool and prompt
-    # section precede the inherited history a fork exists to reuse; one-shot
-    # fork children install neither, keeping the parent's request prefix.
-    # See .agents/notes/implemented/architecture/2026-08-10-fork-children-stay-one-shot.md.
+    # Fork omits model selection so provider/model stay equal to the parent and
+    # the inherited history remains eligible for KV Cache reuse. This base row
+    # stays one-shot; preset layers may select continuable mode without adding a
+    # child-only system-prompt section or tool schema ahead of that history.
+    # See .agents/notes/implemented/feature/2026-08-18-model-selected-subagent-routes.md
+    # and .agents/notes/implemented/architecture/2026-08-10-fork-children-stay-one-shot.md.
     - id: tool-subagent-fork
       name: '@cortex/tool-subagent'
       config:
@@ -296,12 +345,11 @@
         toolName: subagent_fork
         backgroundMode: one-shot
 
-    # Optional direct-child return channel; absent from roots and one-shot agents.
-    - id: tool-subagent-report
-      name: '@cortex/tool-subagent-report'
+    - id: ptc-runtime
+      name: '@cortex/ptc-runtime-node'
 
-    - id: workflow-worker-thread
-      name: '@cortex/workflow-worker-thread'
+    - id: workflow-ptc
+      name: '@cortex/workflow-ptc'
       config:
         provider: spawn
 
@@ -317,7 +365,7 @@
     - id: spill-policy
       name: '@cortex/spill-policy'
       config:
-        maxInlineBytes: 50000
+        maxInlineTokens: 12500
 
     # Durability checkpoints before each model request and top-level dispatch.
     - id: session-checkpoint-policy
@@ -332,6 +380,11 @@
         headChars: 4096
         tailChars: 1024
 
+    # When an image-capable route rejects a request as over its image budget,
+    # replace the oldest images with placeholders on the surface and retry.
+    - id: image-offload
+      name: '@cortex/compaction-image-offload'
+
     - id: tool-todo
       name: '@cortex/tool-todo'
       config:
@@ -342,17 +395,19 @@
     - id: tool-goal
       name: '@cortex/tool-goal'
 
-    # Fresh-agent Ralph iteration over a build-time-fixed script.
+    # Fresh-agent Ralph iteration over a build-time-fixed script. Off by
+    # default: the tool description restricts `ralph` to runs the human
+    # explicitly asked for, and completion is a worker self-report, not an
+    # independent evaluation. An overlay row restores it for a base-backed
+    # profile (`$CORTEX_HOME/cordis.patch.yml`, or a `--patch <file>`):
+    #   - id: tool-ralph
+    #     disabled: false
     - id: tool-ralph
       name: '@cortex/tool-ralph'
+      disabled: true
       config:
         subagentProvider: spawn
         maxRounds: 64
-
-    - id: tool-str-replace-editor
-      name: '@cortex/tool-str-replace-editor'
-      config:
-        maxOutputChars: 16000
 
     # Consecutive-repeat reminders on the tool chain.
     - id: repeat-tool-reminder
@@ -360,6 +415,9 @@
       config:
         thresholds: [3, 5, 8]
         argumentsPreviewChars: 500
+
+    - id: mcp-resources
+      name: '@cortex/mcp-resources'
 
     # ── rows every mode mounts, whose values each overlay may state ──────────────
 
@@ -373,7 +431,7 @@
     - id: system-prompt
       name: '@cortex/system-prompt'
       config:
-        persona: ''
+        personaPrefix: ''
 
     # Agents created at startup. The base stays empty; raw overlays may create
     # agents, while Web creates sessions on client request.

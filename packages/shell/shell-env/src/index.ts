@@ -14,7 +14,8 @@ import { CORTEX_ENV_PREFIX } from '@cortex/shell'
 import type { CortexEnvironment, CortexEnvironmentKey } from '@cortex/shell'
 import { CORTEX_HOME_ENV, resolveCortexHome } from '@cortex/home-paths'
 import type { ToolExecution } from '@cortex/tools'
-import type {} from '@cortex/session-persistence'
+// Declares `Context.profileContext`, the launcher-provided profile the built-ins read.
+import type {} from '@cortex/app-boot'
 
 declare module '@cortex/cordis' {
   interface Context {
@@ -70,11 +71,14 @@ export interface BashEnvVariableInfo extends BashEnvVariable {
 
 const CORTEX_SHELL_KEY = `${CORTEX_ENV_PREFIX}SHELL` as const
 const CORTEX_SESSION_ID_KEY = `${CORTEX_ENV_PREFIX}SESSION_ID` as const
-const CORTEX_SESSION_JSONL_KEY = `${CORTEX_ENV_PREFIX}SESSION_JSONL` as const
+const CORTEX_PROFILE_KEY = `${CORTEX_ENV_PREFIX}PROFILE` as const
+const CORTEX_PROFILE_DIR_KEY = `${CORTEX_ENV_PREFIX}PROFILE_DIR` as const
 const RESERVED_BASH_ENV_KEYS = new Set<CortexEnvironmentKey>([
   CORTEX_HOME_ENV,
   CORTEX_SHELL_KEY,
   CORTEX_SESSION_ID_KEY,
+  CORTEX_PROFILE_KEY,
+  CORTEX_PROFILE_DIR_KEY,
 ])
 const BASH_ENV_KEY_SUFFIX = /^[A-Z][A-Z0-9_]*$/
 
@@ -157,6 +161,11 @@ export class ShellEnvRegistry extends Service {
     if (execution.agent !== undefined) {
       values[CORTEX_SESSION_ID_KEY] = execution.agent.session.header.id
     }
+    const profile = this.ctx.get('profileContext')
+    if (profile !== undefined) {
+      values[CORTEX_PROFILE_KEY] = profile.name
+      values[CORTEX_PROFILE_DIR_KEY] = profile.dir
+    }
 
     for (const contributor of [...this.contributors.values()].sort((left, right) => left.name.localeCompare(right.name))) {
       const resolved = contributor.resolve(execution)
@@ -193,25 +202,10 @@ export class ShellEnvRegistry extends Service {
 }
 
 /**
- * Load the shell-env plugin: register the `ctx.shellEnv` service and the
- * shell-agnostic persistence contributor (`CORTEX_SESSION_JSONL`).
+ * Load the shell-env plugin: register the `ctx.shellEnv` registry service.
  * @param ctx - Cordis context that owns the service and registrations.
  * @param config - home-directory configuration for the built-in variables.
  */
 export function apply(ctx: Context, config: Config = {}): void {
-  const registry = new ShellEnvRegistry(ctx, config)
-  registry.register({
-    name: 'session-persistence',
-    variables: {
-      [CORTEX_SESSION_JSONL_KEY]: {
-        description: 'Absolute target path of the current session JSONL when the active persistence backend provides one.',
-      },
-    },
-    resolve(execution) {
-      const agent = execution.agent
-      if (agent === undefined) return {}
-      const location = ctx.get('sessionPersistence')?.locate(agent.session.header)
-      return location?.kind === 'jsonl' ? { [CORTEX_SESSION_JSONL_KEY]: location.path } : {}
-    },
-  })
+  new ShellEnvRegistry(ctx, config)
 }

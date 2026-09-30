@@ -1,6 +1,6 @@
 import { Context } from '@cortex/cordis'
 import { describe, expect, it, vi } from 'vitest'
-import LlmRuntime, { createUserMessage, CallId, isAgentLoopRequest, LlmAdapter  } from '@cortex/llm'
+import LlmRuntime, { createUserMessage, ToolCallId, isAgentLoopRequest, LlmAdapter  } from '@cortex/llm'
 import type { FinishReason, GenerateOptions, StreamChunk } from '@cortex/llm'
 import SessionStore, { SessionId } from '@cortex/session'
 import { SessionTitleProviderId } from '@cortex/session-title'
@@ -61,12 +61,13 @@ class DelayedSuccessAdapter extends LlmAdapter {
 
 const SCRIPT: StreamChunk[] = [
   { type: 'block-start', index: 0, blockType: 'text' },
-  { type: 'text-delta', index: 0, text: '  Five word title  ' },
+  { type: 'text-delta', index: 0, text: '  五个字标题  ' },
   { type: 'finish', reason: { kind: 'stop' } },
 ]
 
 const CONFIG = {
   targetWords: 5,
+  targetCjkCharacters: 10,
   maxInputBytes: 1_000,
   maxOutputTokens: 32,
   timeoutMs: 1_000,
@@ -85,7 +86,7 @@ function request(ctx: Context, signal = new AbortController().signal): SessionTi
     source: { kind: 'user' },
   }), { surfaceOp: 'append' })
   const second = session.append('user/message', createUserMessage({
-    content: [{ type: 'text', text: 'second question' }],
+    content: [{ type: 'text', text: '第二个问题' }],
     source: { kind: 'user' },
   }), { surfaceOp: 'append' })
   session.append('turn/end', { turn: 1, reason: { kind: 'completed' } })
@@ -93,7 +94,7 @@ function request(ctx: Context, signal = new AbortController().signal): SessionTi
     session,
     messages: [
       { seq: first.seq, text: 'first prompt' },
-      { seq: second.seq, text: 'second question' },
+      { seq: second.seq, text: '第二个问题' },
     ],
     route: { provider: 'current-route', model: 'current-model' },
     signal,
@@ -125,7 +126,7 @@ describe('generateSessionTitleWithLlm', () => {
     const providerRequest = request(ctx)
     let requestWasLoggedAtDispatch = false
     const adapter = new RecordingAdapter(SCRIPT, () => {
-      requestWasLoggedAtDispatch = providerRequest.session.events
+      requestWasLoggedAtDispatch = providerRequest.session.snapshotEvents()
         .some(event => event.type === 'session/title-llm-request')
     })
     ctx.llm.registerAdapter(['current-route'], adapter)
@@ -139,7 +140,7 @@ describe('generateSessionTitleWithLlm', () => {
     )
 
     expect(result).toEqual({
-      title: 'Five word title',
+      title: '五个字标题',
       messageSeqs: providerRequest.messages.map(message => message.seq),
       model: { provider: 'current-route', model: 'current-model' },
     })
@@ -157,10 +158,11 @@ describe('generateSessionTitleWithLlm', () => {
       purpose: 'session-title',
     })
     expect(options.system).toContain('5 words')
+    expect(options.system).toContain('10 CJK characters')
     const prompt = options.messages[0]?.content[0]
     expect(prompt?.type === 'text' && prompt.text).toContain('first prompt')
-    expect(prompt?.type === 'text' && prompt.text).toContain('second question')
-    expect(providerRequest.session.events.findLast(event => event.type === 'session/title-llm-request')?.data)
+    expect(prompt?.type === 'text' && prompt.text).toContain('第二个问题')
+    expect(providerRequest.session.snapshotEvents().findLast(event => event.type === 'session/title-llm-request')?.data)
       .toEqual({
         titleProvider: TITLE_PROVIDER,
         messageSeqs: providerRequest.messages.map(message => message.seq),
@@ -191,7 +193,7 @@ describe('generateSessionTitleWithLlm', () => {
     await expect(generateSessionTitleWithLlm(ctx, config, oversized, [selected], TITLE_PROVIDER))
       .rejects.toThrow(/input.*bytes.*maxInputBytes/i)
     expect(adapter.requests).toEqual([])
-    expect(oversized.session.events.some(event => event.type === 'session/title-llm-request')).toBe(false)
+    expect(oversized.session.snapshotEvents().some(event => event.type === 'session/title-llm-request')).toBe(false)
 
     const withinLimit = resolveSessionTitleLlmConfig({ ...config, maxInputBytes: 1_000 })
     const within = request(ctx)
@@ -259,7 +261,7 @@ describe('generateSessionTitleWithLlm', () => {
       providerRequest.messages,
       TITLE_PROVIDER,
     )).rejects.toMatchObject({ message, code })
-    expect(providerRequest.session.events.some(event => event.type === 'session/title-llm-request')).toBe(true)
+    expect(providerRequest.session.snapshotEvents().some(event => event.type === 'session/title-llm-request')).toBe(true)
   })
 
   it.each([
@@ -281,7 +283,7 @@ describe('generateSessionTitleWithLlm', () => {
   it('rejects tool-call blocks and a successful response with no text', async () => {
     const toolScript: StreamChunk[] = [
       { type: 'block-start', index: 0, blockType: 'tool-call' },
-      { type: 'tool-call-delta', index: 0, id: CallId('title-tool'), name: 'unexpected', argumentsDelta: '{}' },
+      { type: 'tool-call-delta', index: 0, id: ToolCallId('title-tool'), name: 'unexpected', argumentsDelta: '{}' },
       { type: 'finish', reason: { kind: 'stop' } },
     ]
     const tool = await withScript(toolScript)

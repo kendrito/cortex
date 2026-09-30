@@ -2,8 +2,8 @@
 import { Context } from '@cortex/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { SlotRegistry } from '@cortex/client-runtime/client'
-import type { DirectoryListing } from '@cortex/client-runtime/client'
+import type { DirectoryListing } from '@cortex/api-remotes/client'
+import { SlotRegistry } from '@cortex/client-ui-renderer/client'
 import { LocaleRuntime } from '@cortex/client-locale/client'
 import { usePinnedBrowserLanguages } from '@cortex/client-test-runtime'
 import type { DirectoryFlowOwnerProps } from '@cortex/client-ui-workspace/client'
@@ -12,8 +12,8 @@ import { BrowseDirectoryFlow } from '../src/client/flow.ts'
 import { apply as nodeApply } from '../src/index.ts'
 
 // The service reads its initial locale from the browser; these specs assert
-// the shipped copy, so they state the browser they assume.
-usePinnedBrowserLanguages('en-US')
+// the shipped Chinese copy, so they state the browser they assume.
+usePinnedBrowserLanguages('zh-CN')
 
 afterEach(cleanup)
 
@@ -34,7 +34,7 @@ async function bench() {
   ctx.provide('locale', new LocaleRuntime(ctx))
   const listDirectory = vi.fn(async (): Promise<DirectoryListing> => homeListing)
   const createDirectory = vi.fn(async (path: string, name: string) => `${path}/${name}`)
-  ctx.provide('workspaces', { listDirectory, createDirectory } as never)
+  ctx.provide('uiWorkspace', { listDirectory, createDirectory } as never)
   const slots = ctx.get('slots') as SlotRegistry
   const declare = () => slots.register({
     name: 'root',
@@ -53,7 +53,7 @@ function owner(overrides: Partial<DirectoryFlowOwnerProps> = {}): DirectoryFlowO
 
 describe('directory-picker-browse client half', () => {
   it('declares the services it drives', () => {
-    expect(inject).toEqual(['slots', 'workspaces', 'locale'])
+    expect(inject).toEqual(['slots', 'uiWorkspace', 'locale'])
   })
 
   it('fills both directory-flow holes for declarations before or after apply, and leaves with its fiber', async () => {
@@ -138,7 +138,7 @@ describe('directory-picker-browse client half', () => {
     }
   })
 
-  it('rolls back the en dictionary when a rival already owns the namespace en slot', async () => {
+  it('rolls back the zh dictionary when a rival already owns the namespace en slot', async () => {
     const b = await bench()
     b.declare()
     const locale = b.ctx.get('locale') as LocaleRuntime
@@ -150,11 +150,11 @@ describe('directory-picker-browse client half', () => {
     try {
       const fiber = b.ctx.plugin({ inject: [...inject], apply })
       await expect(fiber.await()).rejects.toThrow(/already has locale/)
-      // The failed activation squats nothing: once the rival leaves, a fresh
-      // registrant owns the whole namespace again.
+      // The zh registration rolled back with the failure: once the rival
+      // leaves, a fresh registrant owns the whole namespace again.
       disposeRival()
-      const disposeFresh = locale.register('directory-browser', 'en', { 'browser.title': 'fresh' })
-      disposeFresh()
+      const disposeZh = locale.register('directory-browser', 'zh', { 'browser.title': '空闲' })
+      disposeZh()
     } finally {
       await new Promise(resolve => setTimeout(resolve, 0))
       process.off('unhandledRejection', onUnhandled)
@@ -167,10 +167,10 @@ describe('directory-picker-browse client half', () => {
     await b.ctx.plugin({ inject: [...inject], apply }).await()
     const entry = b.slots.entries(HOLES[0])[0]!
     const injected = (entry.inject as () => { t: (key: string) => string })()
-    // en is the shipped default locale.
-    expect(injected.t('browser.title')).toBe('Select Workspace Directory')
-    expect(injected.t('browser.newFolder')).toBe('New folder')
-    expect(injected.t('browser.showHidden')).toBe('Show hidden files')
+    // zh is the shipped default locale.
+    expect(injected.t('browser.title')).toBe('选择工作区目录')
+    expect(injected.t('browser.newFolder')).toBe('新建文件夹')
+    expect(injected.t('browser.showHidden')).toBe('显示隐藏文件')
   })
 
   it('drives the injected browse calls through the hole entry', async () => {
@@ -224,8 +224,6 @@ describe('directory-picker-browse client half', () => {
 })
 
 describe('directory-picker-browse node half', () => {
-  // The invariant companion is mounted by the vitest-wide invariant host on
-  // every Context this suite creates; its registration is covered there.
   it('the node apply is an inert loader seat', () => {
     expect(() => { nodeApply() }).not.toThrow()
   })

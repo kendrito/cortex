@@ -1,0 +1,15 @@
+{
+  "id": "example-create-customer",
+  "name": "Create a customer",
+  "intent": "Reset Customer Desk, add Ada Lovelace, and verify the exact confirmation and customer count.",
+  "category": "Customer Desk",
+  "targetPath": "",
+  "steps": [
+    { "id": "reset", "title": "Reset the test lab", "action": "click", "selector": "id:ResetButton", "value": "", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "name", "title": "Enter the customer name", "action": "typeText", "selector": "id:CustomerName", "value": "Ada Lovelace", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "email", "title": "Enter the email", "action": "typeText", "selector": "id:CustomerEmail", "value": "ada@example.test", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "add", "title": "Create the customer", "action": "click", "selector": "id:AddCustomer", "value": "", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "confirmation", "title": "Verify confirmation", "action": "assertText", "selector": "id:StatusMessage", "value": "Customer added: Ada Lovelace", "timeoutMs": 5000, "x": 0, "y": 0 },
+    { "id": "count", "title": "Verify one customer", "action": "assertText", "selector": "id:ResultCount", "value": "1 customer", "timeoutMs": 5000, "x": 0, "y": 0 }
+  ]
+}

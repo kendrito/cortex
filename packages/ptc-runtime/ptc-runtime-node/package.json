@@ -1,0 +1,61 @@
+{
+  "name": "@cortex/ptc-runtime-node",
+  "description": "Sandboxed Node process implementation of the Cortex PTC execution capability",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/ptc-runtime/ptc-runtime-node"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json",
+    "./process": {
+      "types": "./lib/types/process-entry.d.ts",
+      "default": "./lib/process.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/process.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*"
+  }
+}

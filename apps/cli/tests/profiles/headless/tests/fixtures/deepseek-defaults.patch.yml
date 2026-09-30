@@ -1,0 +1,43 @@
+# Local endpoint and isolated-path patch over the shipped headless profile.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+# Historical fixture labels; the complete route is explicitly local.
+- id: llm-pi-ai
+  config:
+    providers:
+      deepseek-official:
+        api: openai-completions
+        apiKeyEnv: DEEPSEEK_API_KEY
+        baseURL: !!js process.env.CORTEX_SNAPSHOT_BASE_URL
+        reasoning: low
+        compat:
+          maxTokensField: max_tokens
+          supportsReasoningEffort: true
+        models:
+          - id: deepseek-v4-flash
+            contextWindow: 1000000
+            maxTokens: 256000
+            reasoningEfforts:
+              off:
+              low: low
+        streamIdleTimeoutMs: 1000
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: deepseek-official
+        model: deepseek-v4-flash
+        cwd: !!js process.cwd()
+
+- id: agent-instructions
+  disabled: true
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none

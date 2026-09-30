@@ -24,6 +24,9 @@
       "path": "../../core/session"
     },
     {
+      "path": "../../session/session-projection"
+    },
+    {
       "path": "../../core/system-prompt"
     },
     {
@@ -31,6 +34,9 @@
     },
     {
       "path": "../../typert/protocol"
+    },
+    {
+      "path": "../../workspace/workspace"
     }
   ]
 }

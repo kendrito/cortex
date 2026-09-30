@@ -1,7 +1,7 @@
 {
   "name": "@cortex/schedule",
-  "description": "Agent-scoped durable after, at, and fixed-rate reminders over the session event log",
-  "version": "0.1.0-rc.5",
+  "description": "Host-wide durable reminders with shared management and original-Session delivery",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -22,38 +22,74 @@
       "types": "./lib/types/invariant.d.ts",
       "default": "./lib/invariant.js"
     },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    }
   },
   "files": [
+    "locale/*.json",
     "lib/index.js",
     "lib/invariant.js",
-    "lib/types/**/*.d.ts"
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/storage-domain": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/workspace": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~",
+    "@js-temporal/polyfill": "0.5.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/agent-loop": "workspace:^",
-    "@cortex/agent-loop-testkit": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/session-persistence-jsonl": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/storage": "workspace:*",
+    "@cortex/storage-domain": "workspace:*",
+    "@cortex/storage-json": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/workspace": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

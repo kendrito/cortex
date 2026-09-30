@@ -1,0 +1,42 @@
+{
+  "name": "@cortex/benchmarks",
+  "version": "0.1.3-alpha.1",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.49.0",
+    "@xterm/headless": "^6.0.0",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/llm-replay": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/agent-preset-registry": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-ui-chat": "workspace:*",
+    "@cortex/deque": "workspace:*",
+    "@cortex/lazy-require": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sdk-client": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/session-stats": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/session-turn-outline": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/token-meter": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/util-values": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  }
+}

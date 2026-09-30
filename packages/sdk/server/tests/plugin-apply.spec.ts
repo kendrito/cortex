@@ -1,3 +1,4 @@
+import { MESSAGES_RESPONSE } from './messages-response.ts'
 import { createServer } from 'node:http'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import { mkdtemp, rm } from 'node:fs/promises'
@@ -6,8 +7,12 @@ import { tmpdir } from 'node:os'
 import { PassThrough, Writable } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
-import * as agentCore from '@cortex/agent-spine-demo'
-import * as LlmPiAi from '@cortex/llm-pi-ai'
+import Loader from '@cortex/cordis-plugin-loader'
+import AgentLoop from '@cortex/agent-loop'
+import { mountAgentLoopTestDependencies } from '@cortex/agent-loop-testkit'
+import { LlmAdapter } from '@cortex/llm'
+import * as PiAi from '@cortex/llm-pi-ai'
+import type { GenerateOptions, StreamChunk } from '@cortex/llm'
 import JsonlSessionPersistence from '@cortex/session-persistence-jsonl'
 import * as jsonrpc from '../src/index.ts'
 
@@ -39,6 +44,13 @@ interface ApplyHarness {
   dispose(): Promise<void>
 }
 
+/** Adapter whose route registration is the delayed Loader entry's readiness fact. */
+class DelayedAdapter extends LlmAdapter {
+  async * stream(_options: GenerateOptions): AsyncIterable<StreamChunk> {
+    throw new Error('not exercised')
+  }
+}
+
 /** Poll asynchronous output for up to five seconds. */
 async function waitFor<T>(get: () => T | undefined, description: string): Promise<T> {
   const deadline = Date.now() + 5000
@@ -58,27 +70,29 @@ async function settle(): Promise<void> {
 /** Mount the real plugin on a minimal harness with in-memory stdio and exit. */
 async function mountPlugin(
   storageDir: string,
-  options: { writeDelayMs?: number; failFlush?: boolean; baseURL?: string } = {},
+  options: {
+    baseURL?: string
+    writeDelayMs?: number
+    failFlush?: boolean
+    beforeServer?: (ctx: Context) => Promise<void> | void
+  } = {},
 ): Promise<ApplyHarness> {
   const ctx = new Context()
-  await ctx.plugin(agentCore, { workspaceContext: false })
-  // A hand-declared route on the generic adapter: the SDK server owns no
-  // adapter of its own, so the composition supplies one.
-  await ctx.plugin(LlmPiAi, {
-    providers: {
+  await mountAgentLoopTestDependencies(ctx)
+  await ctx.plugin(AgentLoop, { agents: [] })
+  if (options.baseURL === undefined) {
+    ctx.llm.registerAdapter(['cortex-official'], new DelayedAdapter())
+  } else {
+    await ctx.plugin(PiAi, { providers: {
       'cortex-official': {
-        displayName: 'Cortex',
-        apiKeyEnv: 'CORTEX_API_KEY',
-        api: 'openai-completions',
-        baseURL: options.baseURL ?? 'http://127.0.0.1:9',
-        defaultContextWindow: 128_000,
-        defaultMaxTokens: 4096,
-        models: [{ id: 'apply-model' }, { id: 'sdk-model' }, { id: 'x' }],
+        api: 'anthropic-messages', baseURL: options.baseURL, apiKeyEnv: 'CORTEX_API_KEY',
+        models: [{ id: 'sdk-model', contextWindow: 32768, maxTokens: 4096 }],
       },
-    },
-  })
+    } })
+  }
   await ctx.plugin(JsonlSessionPersistence, { root: storageDir })
   await new Promise(resolve => setTimeout(resolve, 50))
+  await options.beforeServer?.(ctx)
 
   const input = new PassThrough()
   const events: WireEvent[] = []
@@ -117,7 +131,11 @@ async function mountPlugin(
   const exit = (code: number): void => { events.push({ kind: 'exit', code }) }
 
   ctx.effect(() => () => { events.push({ kind: 'root-disposed' }) }, 'jsonrpc test root-disposal witness')
-  const fiber = await ctx.plugin(jsonrpc, { input, output, exit })
+  const fiber = await ctx.plugin(jsonrpc, {
+    input,
+    output,
+    exit,
+  })
 
   const frames = (): Record<string, unknown>[] =>
     events.flatMap(event => event.kind === 'frame' ? [event.frame] : [])
@@ -151,11 +169,7 @@ async function mockCompletionServer(): Promise<{ url: string; requests: unknown[
     request.on('end', () => {
       requests.push(JSON.parse(body))
       response.writeHead(200, { 'content-type': 'text/event-stream' })
-      response.write('data: {"choices":[{"delta":{"role":"assistant","content":null,"reasoning_content":""}}]}\n\n')
-      response.write('data: {"choices":[{"delta":{"content":"done"}}]}\n\n')
-      response.write('data: {"choices":[{"delta":{"content":""},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":1}}\n\n')
-      response.write('data: [DONE]\n\n')
-      response.end()
+      response.end(MESSAGES_RESPONSE)
     })
   })
   servers.push(server)
@@ -166,6 +180,24 @@ async function mockCompletionServer(): Promise<{ url: string; requests: unknown[
 }
 
 describe('cortex-sdk-jsonrpc-server plugin apply', () => {
+  it('refuses an unconfigured official provider without loading an adapter', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'cortex-jsonrpc-no-fallback-'))
+    const harness = await mountPlugin(storageDir)
+    try {
+      const plugin = vi.spyOn(harness.ctx, 'plugin')
+      harness.send({ jsonrpc: '2.0', id: 'unconfigured', method: 'initialize', params: {
+        cwd: storageDir, provider: 'deepseek-official', model: 'model',
+      } })
+      const response = await harness.waitForFrame(frame => frame.id === 'unconfigured', 'unconfigured provider response')
+      expect(response).toMatchObject({ error: { message: expect.stringContaining('no adapter registered') as unknown } })
+      expect(plugin).not.toHaveBeenCalled()
+      expect(harness.ctx.llm.listProviders().some(provider => provider.id === 'deepseek-official')).toBe(false)
+    } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
   it('serves initialize over the injected stdio pair', async () => {
     const storageDir = await mkdtemp(join(tmpdir(), 'cortex-jsonrpc-apply-init-'))
     vi.stubEnv('CORTEX_API_KEY', 'test-key')
@@ -181,6 +213,61 @@ describe('cortex-sdk-jsonrpc-server plugin apply', () => {
       })
       expect(harness.exits()).toEqual([])
     } finally {
+      await harness.dispose()
+      await rm(storageDir, { recursive: true, force: true })
+    }
+  })
+
+  it('waits for Loader-owned adapter registration before initialize', async () => {
+    const storageDir = await mkdtemp(join(tmpdir(), 'cortex-jsonrpc-apply-readiness-'))
+    vi.stubEnv('DEEPSEEK_API_KEY', 'test-key')
+    let markStarted!: () => void
+    let release!: () => void
+    const started = new Promise<void>((resolve) => { markStarted = resolve })
+    const ready = new Promise<void>((resolve) => { release = resolve })
+    let delayedEntry: Promise<string> | undefined
+    const harness = await mountPlugin(storageDir, {
+      beforeServer: async (ctx) => {
+        await ctx.plugin(Loader)
+        ctx.loader.builtins['delayed-readiness'] = {
+          inject: ['llm'],
+          async apply(entryCtx: Context) {
+            markStarted()
+            await ready
+            entryCtx.llm.registerAdapter(['delayed-private'], new DelayedAdapter())
+          },
+        }
+        delayedEntry = ctx.loader.create({ name: 'cordis:delayed-readiness' })
+        await started
+      },
+    })
+    try {
+      const initialize = {
+        jsonrpc: '2.0',
+        id: 'init-delayed',
+        method: 'initialize',
+        params: { cwd: storageDir, provider: 'delayed-private', model: 'apply-model' },
+      }
+      const probe = { jsonrpc: '2.0', id: 'probe-during-delay', method: 'nope/unknown' }
+      harness.sendRaw(`${JSON.stringify(initialize)}\n${JSON.stringify(probe)}\n`)
+
+      // The transport processes independent requests concurrently. Receiving
+      // this later probe proves the preceding initialize handler has reached
+      // its Loader wait, without relying on a scheduler delay.
+      await harness.waitForFrame(frame => frame.id === 'probe-during-delay', 'probe while initialize waits')
+      expect(harness.frames().some(frame => frame.id === 'init-delayed')).toBe(false)
+
+      release()
+      await delayedEntry
+      const response = await harness.waitForFrame(frame => frame.id === 'init-delayed', 'initialize response after Loader settlement')
+      expect(response).toMatchObject({
+        id: 'init-delayed',
+        result: { serverInfo: { name: 'cortex-sdk-runtime' } },
+      })
+      expect(harness.ctx.llm.listProviders()).toContainEqual({ id: 'delayed-private', name: 'delayed-private' })
+    } finally {
+      release()
+      await Promise.allSettled(delayedEntry === undefined ? [] : [delayedEntry])
       await harness.dispose()
       await rm(storageDir, { recursive: true, force: true })
     }

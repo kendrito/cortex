@@ -8,22 +8,22 @@
   height: 38px;
   padding: 0 8px 0 20px;
   gap: 24px;
-  border-radius: 8px;
-  border: 1px solid var(--cortex-alias-border-l2);
-  background: var(--cortex-alias-bg-layer-3);
+  border-radius: var(--dsw-radius-md);
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  background: var(--dsw-alias-bg-layer-3);
   min-width: 0;
 }
 
 .selected {
   border-color: transparent;
-  box-shadow: inset 0 0 0 2px var(--cortex-alias-brand-primary-new-colorprimary-new-color);
+  box-shadow: inset 0 0 0 2px var(--dsw-alias-state-business-primary);
 }
 
 .index {
   flex: none;
   width: 24px;
-  font: var(--cortex-font-xs-13);
-  color: var(--cortex-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 .tagSlot {
@@ -41,50 +41,50 @@
   height: 22px;
   max-width: 100%;
   padding: 0 4px;
-  border-radius: 6px;
-  font: var(--cortex-font-xs-strong-13);
+  border-radius: var(--dsw-radius-xs);
+  font: var(--dsw-font-xs-strong-13);
   white-space: nowrap;
 }
 
 .tagSystem {
-  color: var(--cortex-alias-label-secondary);
-  background: var(--cortex-alias-bg-module-platform);
+  color: var(--dsw-alias-label-secondary);
+  background: var(--dsw-alias-bg-module-platform);
 }
 
 .tagUser {
-  color: var(--cortex-alias-state-success-primary);
-  background: var(--cortex-alias-state-success-tertiary);
+  color: var(--dsw-alias-state-success-primary);
+  background: var(--dsw-alias-state-success-tertiary);
 }
 
 .tagContext {
   color: color-mix(
     in srgb,
-    var(--cortex-alias-state-success-primary) 68%,
-    var(--cortex-alias-label-secondary)
+    var(--dsw-alias-state-success-primary) 68%,
+    var(--dsw-alias-label-secondary)
   );
-  background: var(--cortex-alias-state-success-tertiary);
+  background: var(--dsw-alias-state-success-tertiary);
 }
 
 .tagMessage {
   color: color-mix(
     in srgb,
-    var(--cortex-alias-brand-primary-new-colorprimary-new-color) 60%,
-    var(--cortex-alias-state-error-secondary)
+    var(--dsw-alias-brand-primary-new-colorprimary-new-color) 60%,
+    var(--dsw-alias-state-error-secondary)
   );
   background: color-mix(
     in srgb,
     color-mix(
       in srgb,
-      var(--cortex-alias-brand-primary-new-colorprimary-new-color) 55%,
-      var(--cortex-alias-state-error-secondary)
+      var(--dsw-alias-brand-primary-new-colorprimary-new-color) 55%,
+      var(--dsw-alias-state-error-secondary)
     ) 15%,
-    var(--cortex-alias-bg-layer-1)
+    var(--dsw-alias-bg-layer-1)
   );
 }
 
 .tagTool {
-  color: var(--cortex-alias-state-warn-label);
-  background: var(--cortex-alias-state-warn-tertiary);
+  color: var(--dsw-alias-state-warn-label);
+  background: var(--dsw-alias-state-warn-tertiary);
 }
 
 /* run_code sub-dispatch cells: the business tint plus an indent so the
@@ -92,13 +92,13 @@
 .tagSubtool {
   color: color-mix(
     in srgb,
-    var(--cortex-alias-state-warn-label) 62%,
-    var(--cortex-alias-label-tertiary)
+    var(--dsw-alias-state-warn-label) 62%,
+    var(--dsw-alias-label-tertiary)
   );
   background: color-mix(
     in srgb,
-    var(--cortex-alias-state-warn-tertiary) 58%,
-    var(--cortex-alias-bg-layer-1)
+    var(--dsw-alias-state-warn-tertiary) 58%,
+    var(--dsw-alias-bg-layer-1)
   );
 }
 
@@ -112,8 +112,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: var(--cortex-font-xs-13);
-  color: var(--cortex-alias-label-primary);
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-primary);
 }
 
 /* Same column geometry as TrajectoryTurnHeader: 4×71 + 3×12 = 320. */
@@ -132,7 +132,7 @@
   flex: none;
   width: 71px;
   text-align: left;
-  font: var(--cortex-font-xs-13);
-  color: var(--cortex-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-tertiary);
   white-space: nowrap;
 }

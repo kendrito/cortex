@@ -1,0 +1,6 @@
+- dialog "Delete LiteLLM (litellm)?":
+  - heading "Delete LiteLLM (litellm)?" [level=2]
+  - button "Close"
+  - paragraph: Deleting LiteLLM (litellm) removes its configuration and stored API key.
+  - button "Cancel"
+  - button "Delete LiteLLM (litellm)"

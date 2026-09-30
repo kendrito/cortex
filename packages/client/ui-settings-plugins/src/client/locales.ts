@@ -1,54 +1,22 @@
-/** Locale bundles for the plugin configuration section and its plugin cards. */
+/** Locale bundles for the built-in plugins settings section. */
 
-/** Locale keys these surfaces render. */
-export type PluginsSettingsLocaleKey =
-  | 'nav' | 'title' | 'intro' | 'tabs' | 'configurableTab' | 'empty'
-  | 'overridden' | 'reset' | 'readOnly' | 'expand' | 'collapse'
-  | 'save' | 'saving' | 'discard' | 'unsaved' | 'saveFailed' | 'invalidNumber'
-  | 'bashTitle' | 'bashDescription' | 'bashTimeoutMs' | 'bashTimeoutMsHint'
-  | 'bashMaxOutputBytes' | 'bashMaxOutputBytesHint'
-  | 'agentLoopTitle' | 'agentLoopDescription' | 'agentLoopMaxParallel' | 'agentLoopMaxParallelHint'
-  | 'webSearchTitle' | 'webSearchDescription'
-  | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
-  | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
+/** Locale keys the section renders. */
+export type PluginsSettingsLocaleKey = 'nav' | 'title' | 'intro' | 'tabs' | 'empty'
 
 /** English copy. */
-export const en = {
-  nav: 'Plugins',
-  title: 'Plugins',
-  intro: 'Configure and inspect the plugins installed in this deployment.',
+export const en: Record<PluginsSettingsLocaleKey, string> = {
+  nav: 'Built-in plugins',
+  title: 'Built-in plugins',
+  intro: 'Inspect the plugins this deployment ships.',
   tabs: 'Plugin views',
-  configurableTab: 'Plugin configuration',
-  empty: 'This deployment exposes no plugin settings.',
-  overridden: 'Overridden',
-  reset: 'Reset to default',
-  readOnly: 'This deployment stores settings read-only.',
-  expand: 'Show settings',
-  collapse: 'Hide settings',
-  save: 'Save',
-  saving: 'Saving…',
-  discard: 'Discard',
-  unsaved: 'Unsaved',
-  saveFailed: 'The deployment did not accept these values; they were left for you to correct.',
-  invalidNumber: 'Enter a number, or leave blank to use the default.',
-  bashTitle: 'Shell',
-  bashDescription: 'Limits every command the agent runs.',
-  bashTimeoutMs: 'Command timeout (ms)',
-  bashTimeoutMsHint: 'How long one command may run before it is terminated.',
-  bashMaxOutputBytes: 'Output cap per stream (bytes)',
-  bashMaxOutputBytesHint: 'Output beyond this spills to a temporary file rather than being lost.',
-  agentLoopTitle: 'Agent loop',
-  agentLoopDescription: 'How the agent dispatches tool calls.',
-  agentLoopMaxParallel: 'Parallel tool calls',
-  agentLoopMaxParallelHint: 'Upper bound on parallel-safe calls running at once within one step.',
-  webSearchTitle: 'Web search',
-  webSearchDescription: 'The Cortex search provider.',
-  webSearchApiKey: 'API key',
-  webSearchApiKeyHint: 'Stored outside the settings file. Leave blank to keep the current key.',
-  webSearchApiKeySet: 'A key is configured.',
-  webSearchApiKeyUnset: 'No key is configured; search is unavailable until one is.',
-  webSearchBaseUrl: 'Endpoint',
-  webSearchBaseUrlHint: 'Leave blank to use the provider default.',
-  webSearchMaxUses: 'Max searches per request',
-  webSearchMaxUsesHint: 'How many times one request may search before it must answer.',
+  empty: 'This deployment exposes no plugin views.',
+}
+
+/** Simplified Chinese copy. */
+export const zh: Record<PluginsSettingsLocaleKey, string> = {
+  nav: '内置插件',
+  title: '内置插件',
+  intro: '查看内置部署的插件列表',
+  tabs: '插件视图',
+  empty: '本部署没有开放任何插件视图。',
 }

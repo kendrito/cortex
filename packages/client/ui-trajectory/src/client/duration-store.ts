@@ -1,6 +1,6 @@
 import {
   createSnapshotStore, type SnapshotStore,
-} from '@cortex/client-runtime/client'
+} from '@cortex/client-store'
 
 /**
  * Create the browser-wide trajectory duration preference source.

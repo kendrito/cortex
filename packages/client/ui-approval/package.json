@@ -1,0 +1,71 @@
+{
+  "name": "@cortex/client-ui-approval",
+  "description": "Approval composer takeover over the scoped Remote Event waterfall",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-approval"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/api-session-controller",
+        "@cortex/client-locale",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-renderer",
+        "@cortex/client-ui-session"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0",
+    "@cortex/client-shortcuts": "workspace:*"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

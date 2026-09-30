@@ -1,0 +1,90 @@
+{
+  "name": "@cortex/client-ui-schedule",
+  "description": "Host task management page and Session reminder catalog",
+  "version": "0.2.0-rc.2",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/api-session-controller",
+        "@cortex/api-workspace-controller",
+        "@cortex/client-connection",
+        "@cortex/client-locale",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-layout",
+        "@cortex/client-ui-sidebar",
+        "@cortex/client-ui-sidebar-right",
+        "@cortex/client-ui-tool",
+        "@cortex/client-ui-workspace",
+        "@cortex/client-ui-primitives"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-schedule"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/api-workspace-controller": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-layout": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-sidebar": "workspace:*",
+    "@cortex/client-ui-sidebar-right": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/client-ui-tool": "workspace:*",
+    "@cortex/client-ui-workspace": "workspace:*",
+    "@cortex/schedule": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "clsx": "^2.1.1",
+    "@cortex/cordis": "workspace:~",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

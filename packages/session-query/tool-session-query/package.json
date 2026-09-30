@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-session-query",
   "description": "Workspace-authorized model-facing session history search, trace, and event read tools",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,46 +18,44 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-query": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tools": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence": "workspace:^",
-    "@cortex/session-persistence-jsonl": "workspace:^",
-    "@cortex/session-query": "workspace:^",
-    "@cortex/session-query-sqlite": "workspace:^",
-    "@cortex/session-title": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@cortex/tool-call-timeout-policy": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/session-query-sqlite": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tool-call-timeout-policy": "workspace:*",
+    "@cortex/tools": "workspace:*"
   }
 }

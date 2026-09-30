@@ -1,0 +1,128 @@
+{
+  "id": "editable-invoice-and-recovery",
+  "name": "Commit invoice by business key and use an approved selector alternative",
+  "intent": "Execute every saved step once in order. After ChangeSelector, OriginalApply is absent; explicitly choose its authored renamed-apply alternative. Do not attempt the missing original selector first. Verify the exact saved quantity and recovery count.",
+  "steps": [
+    {
+      "id": "reset",
+      "title": "reset",
+      "action": "click",
+      "selector": "id:EditReset",
+      "value": "",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "sort",
+      "title": "sort",
+      "action": "click",
+      "selector": "id:EditSortDescending",
+      "value": "",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "filter",
+      "title": "filter",
+      "action": "click",
+      "selector": "id:EditFilterHigh",
+      "value": "",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "reorder",
+      "title": "reorder",
+      "action": "click",
+      "selector": "id:EditReorderColumns",
+      "value": "",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "edit",
+      "title": "edit",
+      "action": "gridEditCell",
+      "selector": "id:EditableOrders",
+      "value": "{\"rowKey\":\"INV-0999\",\"columnKey\":\"Quantity\",\"text\":\"31\"}",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "pending",
+      "title": "pending",
+      "action": "assertProperty",
+      "selector": "id:EditableOrders",
+      "value": "{\"property\":\"wpf.gridIsEditing\",\"equals\":true}",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "commit",
+      "title": "commit",
+      "action": "gridCommitRow",
+      "selector": "id:EditableOrders",
+      "value": "{\"rowKey\":\"INV-0999\"}",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "persisted",
+      "title": "persisted",
+      "action": "assertText",
+      "selector": "id:PersistedState",
+      "value": "INV-0999=31",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "saved-key",
+      "title": "saved-key",
+      "action": "assertText",
+      "selector": "id:LastSavedKey",
+      "value": "INV-0999",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "saved-value",
+      "title": "saved-value",
+      "action": "assertText",
+      "selector": "id:LastSavedQuantity",
+      "value": "31",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "rename",
+      "title": "rename",
+      "action": "click",
+      "selector": "id:ChangeSelector",
+      "value": "",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "approved-recovery",
+      "title": "approved-recovery",
+      "action": "click",
+      "selector": "query:{\"id\":\"OriginalApply\",\"ancestor\":{\"id\":\"RecoveryArea\"}}",
+      "value": "",
+      "timeoutMs": 5000,
+      "selectorAlternatives": [
+        {
+          "expectedName": "Apply recovery fixture",
+          "expectedAutomationId": "UpdatedApply",
+          "selector": "query:{\"id\":\"UpdatedApply\",\"ancestor\":{\"id\":\"RecoveryArea\"}}",
+          "id": "renamed-apply",
+          "expectedControlType": "Button"
+        }
+      ]
+    },
+    {
+      "id": "recovery-count",
+      "title": "recovery-count",
+      "action": "assertText",
+      "selector": "id:RecoveryCount",
+      "value": "1",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "finished-edit",
+      "title": "finished-edit",
+      "action": "assertProperty",
+      "selector": "id:EditableOrders",
+      "value": "{\"property\":\"wpf.gridIsEditing\",\"equals\":false}",
+      "timeoutMs": 5000
+    }
+  ]
+}

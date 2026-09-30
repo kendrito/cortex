@@ -1,7 +1,7 @@
 {
   "name": "@cortex/cordis-plugin-loader",
   "description": "Plugin loader for cordis",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "publishConfig": {
     "access": "public"
   },
@@ -30,8 +30,8 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "node-addon-require-builtin": "^0.1.4"
+    "@cortex/cordis": "workspace:~",
+    "node-addon-require-builtin": "^0.1.6"
   },
   "peerDependenciesMeta": {
     "node-addon-require-builtin": {
@@ -39,6 +39,7 @@
     }
   },
   "dependencies": {
-    "@cortex/cosmokit": "workspace:^"
+    "@cortex/cosmokit": "workspace:~",
+    "@cortex/schemastery": "workspace:~"
   }
 }

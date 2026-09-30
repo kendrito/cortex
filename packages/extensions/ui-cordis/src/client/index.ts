@@ -1,11 +1,13 @@
-/** Cordis dynamic-plugin cards, inventory panel, business-view host, and `@pluginId` source. */
+/** Cordis dynamic-plugin cards, inventory panel, business-view host. */
 
-import type { ClientContext, SessionId } from '@cortex/client-runtime/client'
+import type { Context as ClientContext } from '@cortex/cordis'
+import type { SessionId } from '@cortex/session/types'
 import type {} from '@cortex/client-ui-tool/client'
 import type {} from '@cortex/client-locale/client'
 import type {} from '@cortex/client-ui-sidebar/client'
 import type {} from '@cortex/api-remotes/client'
-import type { InputTriggerService, InputTriggerSource } from '@cortex/client-ui-input-trigger/client'
+import type {} from '@cortex/client-ui-renderer/client'
+import type {} from '@cortex/client-ui-session/client'
 import type {} from './events.ts'
 import { CordisActionRow } from './CordisActionRow.tsx'
 import { CordisDefineRow } from './CordisDefineRow.tsx'
@@ -31,14 +33,14 @@ export type {
 } from './events.ts'
 export type { CordisKey } from './locales.ts'
 
-/** Required services for the two Tool cards, panel, Remote lifecycle, and Slash source. */
+/** Required services for historical cards, the panel, and Remote lifecycle actions. */
 export const inject = [
-  'slots', 'locale', 'inputTriggers', 'remote', 'remote.dynamicCordisRunner', 'dynamicCordisRunner',
+  'slots', 'locale', 'remote', 'remote.dynamicCordisRunner', 'dynamicCordisRunner',
 ]
 
 /** Mount every Cordis browser surface over the shared Host inventory. */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { en }), 'ui-cordis: dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, { en, zh: en }), 'ui-cordis: dictionaries')
 
   const port: CordisDynamicPort = {
     stop: async (sessionId, pluginId) => {
@@ -141,31 +143,6 @@ export function apply(ctx: ClientContext): void {
       name: 'tool.call.toolview', key: 'cordis_undefine', locale: NS,
     }, CordisActionRow)
   })
-
-  const rowsOf = (sessionId: SessionId, query: string) => inventory.getSnapshot().rows
-    .filter(row => row.agentId === sessionId && String(row.pluginId).includes(query))
-  const source: InputTriggerSource = {
-    trigger: '@',
-    name: 'cordis',
-    order: 1,
-    candidates(session, { query }) {
-      const rows = rowsOf(session.sessionId, query)
-      return Promise.resolve(rows.map((row) => {
-        const packageId = row.nextPackageId ?? row.currentPackageId ?? row.packages.at(-1)?.packageId
-        const pkg = packageId === undefined ? undefined : row.packages.find(candidate => candidate.packageId === packageId)
-        return {
-          name: String(row.pluginId),
-          ...pkg === undefined ? {} : { description: pkg.purpose },
-        }
-      }))
-    },
-    warm() { inventory.refresh() },
-    lexicon(session) { return rowsOf(session.sessionId, '').map(row => String(row.pluginId)) },
-    subscribeLexicon(_session, listener) { return inventory.subscribe(listener) },
-    onPick({ candidate }) { return { text: `@${candidate.name} ` } },
-  }
-  const slash = ctx.get('inputTriggers') as InputTriggerService
-  ctx.effect(() => slash.registerSource(source), 'ui-cordis: @pluginId source')
 
   inventory.refresh()
 }

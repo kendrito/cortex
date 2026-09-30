@@ -1,0 +1,88 @@
+# Minimal keyless composition: real app, bash, and search tool; replayed model.
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@cortex/llm-replay'
+      config:
+        providers:
+          - id: deepseek-official
+            name: DeepSeek
+            models:
+              - id: deepseek-v4-pro
+
+- id: subprocess
+  name: '@cortex/subprocess-local'
+
+- id: agent-default-model
+  name: '@cortex/agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  disabled: true
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: You are a concise snapshot agent working in {{cwd}}.
+
+- id: tool-jobs
+  name: '@cortex/tool-jobs'
+  disabled: true
+
+- id: goal
+  name: '@cortex/goal'
+  disabled: true
+
+- id: goal-round-driver
+  name: '@cortex/goal-round-driver'
+  disabled: true
+
+- id: command-goal
+  name: '@cortex/command-goal'
+  disabled: true
+
+- id: tool-goal
+  name: '@cortex/tool-goal'
+  disabled: true
+
+- id: skill
+  name: '@cortex/skill'
+  disabled: true
+
+- id: skill-filesystem
+  name: '@cortex/skill-filesystem'
+  disabled: true
+
+- id: tool-skill
+  name: '@cortex/tool-skill'
+  disabled: true
+
+- id: tool-fs-search
+  name: '@cortex/tool-fs-search'
+  config:
+    sampleOverCapGlobResults: true
+    globMaxResults: 4
+
+- id: spill-local
+  name: '@cortex/spill-local'
+  config:
+    root: !!js process.env.CORTEX_SNAPSHOT_SPILL_ROOT ?? './.spill'
+
+- insert:
+    - id: snapshot-spill-locators
+      name: ../../../scripts/snapshot-spill-locators.ts
+      config:
+        root: !!js process.env.CORTEX_SNAPSHOT_SPILL_ROOT
+        locatorRoot: !!js process.env.CORTEX_SNAPSHOT_SPILL_LOCATOR_ROOT

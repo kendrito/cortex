@@ -6,7 +6,8 @@
 /**
  * Twin of `normalizeApiKey` in `@cortex/llm`: printable ASCII, space
  * excluded. Client packages reference only client packages, so the charset
- * rule is mirrored here rather than imported; keep the two in step.
+ * rule is mirrored here rather than imported; keep the two in step, as
+ * `validateDeepSeekModels` is kept in step with the host's `catalogModel`.
  */
 const LEGAL_API_KEY = /^[\x21-\x7E]+$/
 

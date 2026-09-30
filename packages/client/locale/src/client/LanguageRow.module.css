@@ -6,7 +6,7 @@
   align-items: center;
   gap: 8px;
   padding: 16px 0;
-  border-bottom: 1px solid var(--cortex-alias-border-l2);
+  border-bottom: 0.5px solid var(--dsw-alias-border-l2);
 }
 
 .rowText {
@@ -22,10 +22,10 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 22px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
-/* Selector pill (figma 'Selector': h36 r18, fill #F5F6F7, pad 0/14, gap 12). */
+/* Language selector uses the standard control size. */
 .selector {
   display: inline-flex;
   align-items: center;
@@ -33,17 +33,17 @@
   height: 36px;
   padding: 0 14px;
   border: none;
-  border-radius: 18px;
-  background: var(--cortex-alias-bg-module-platform);
+  border-radius: var(--dsw-radius-md);
+  background: var(--dsw-alias-bg-module-platform);
   font: inherit;
   font-size: 14px;
   line-height: 22px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
   cursor: pointer;
 }
 
 .selector:hover {
-  background: var(--cortex-alias-interactive-bg-hover);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 .chevron {

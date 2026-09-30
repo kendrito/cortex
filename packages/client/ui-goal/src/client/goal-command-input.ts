@@ -3,7 +3,10 @@ import type { CommandId } from '@cortex/commands/brand'
 import type {} from '@cortex/commands/types'
 import type {
   ConversationNodeDefinition,
-} from '@cortex/client-runtime/client'
+} from '@cortex/client-ui-conversation/client'
+
+/** The command name whose runs this projection owns. */
+export const GOAL_COMMAND = 'goal'
 
 /** Goal-owned human command input projected independently of model messages. */
 export interface GoalCommandInputData {
@@ -12,7 +15,7 @@ export interface GoalCommandInputData {
   readonly time: number
 }
 
-declare module '@cortex/client-ui-conversation/client' {
+declare module '@cortex/client-ui-chat/client' {
   interface ChatNodeDataMap {
     /** Human-entered `/goal` command input. */
     'command-input': GoalCommandInputData
@@ -36,7 +39,7 @@ export function goalCommandText(event: SessionEvent<'command/run'>): string {
 export const goalCommandInputDefinition: ConversationNodeDefinition<GoalCommandInputState> = {
   kind: 'goal-command-input',
   target: 'chat',
-  match: event => event.type === 'command/run' && event.data.name === 'goal'
+  match: event => event.type === 'command/run' && event.data.name === GOAL_COMMAND
     ? { id: String(event.data.commandId), role: 'start' }
     : null,
   start: (_context, match) => {

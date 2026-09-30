@@ -1,0 +1,58 @@
+{
+  "name": "@cortex/session-snapshot",
+  "description": "Session-log snapshot core with an ACP protocol adapter, expected-output normalization, and fixture invariants",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/test-support/session-snapshot"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/llm-replay": "workspace:*",
+    "@cortex/loader-smoke": "workspace:*",
+    "@cortex/session-format": "workspace:*",
+    "js-yaml": "^4.2.0",
+    "vitest": "^4.1.8"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session": "workspace:*",
+    "@cortex/http-proxy": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/compaction": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/user-questions": "workspace:*",
+    "@types/js-yaml": "^4.0.9",
+    "@cortex/http-proxy": "workspace:*"
+  }
+}

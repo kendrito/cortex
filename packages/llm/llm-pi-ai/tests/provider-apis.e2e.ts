@@ -1,17 +1,19 @@
 import { readFile } from 'node:fs/promises'
 import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
-import { AttachmentId, AttachmentStore } from '@cortex/attachment'
+import { AttachmentId, AttachmentStore, ImageVariantId } from '@cortex/attachment'
 import type {
   ImageAttachmentLimits,
   ImageAttachmentRef,
+  ImageRequestTarget,
+  RequestImageAttachment,
   SaveImageAttachment,
   StoredImageAttachment,
 } from '@cortex/attachment'
-import LlmRuntime, { createUserMessage, CallId } from '@cortex/llm'
+import LlmRuntime, { createToolResultMessage, createUserMessage, ToolCallId } from '@cortex/llm'
 import type { Message, ToolSchema } from '@cortex/llm'
 import * as LlmPiAi from '@cortex/llm-pi-ai'
-import type { PiAiReplayState } from '../src/replay.ts'
+import type { PiAiReplayResponse } from '../src/replay.ts'
 import { assemble, type AssembledResult } from './assemble.ts'
 
 interface ProviderCase {
@@ -25,8 +27,8 @@ interface ProviderCase {
 
 const openAIBaseURL = process.env.CORTEX_PI_AI_OPENAI_BASE_URL
 const azureOpenAIKey = process.env.AZURE_OPENAI_API_KEY
-// Strictly ANTHROPIC_*: the Cortex endpoint does not serve the anthropic-messages
-// protocol, so falling back to CORTEX_API_KEY turns the keyless skip into a 404.
+// Strictly ANTHROPIC_*: the DeepSeek endpoint does not serve the anthropic-messages
+// protocol, so falling back to DEEPSEEK_API_KEY turns the keyless skip into a 404.
 const anthropicApiKey = process.env.ANTHROPIC_API_KEY
 const anthropicBaseURL = process.env.CORTEX_PI_AI_ANTHROPIC_BASE_URL
 
@@ -70,6 +72,7 @@ async function harness(image?: StoredImageAttachment): Promise<Context> {
         maxImagesPerMessage: 1,
         maxMessageImageBytes: fixture.data.byteLength,
         maxImagePixels: fixture.ref.width * fixture.ref.height,
+        maxImageDimension: Math.max(fixture.ref.width, fixture.ref.height),
         mediaTypes: [fixture.ref.mediaType],
       }
 
@@ -87,6 +90,24 @@ async function harness(image?: StoredImageAttachment): Promise<Context> {
         }
         return Promise.resolve(fixture)
       }
+
+      override readImageRequest(ref: ImageAttachmentRef, _target: ImageRequestTarget): Promise<RequestImageAttachment> {
+        if (ref.attachmentId !== fixture.ref.attachmentId) {
+          return Promise.reject(new Error('unknown e2e attachment fixture'))
+        }
+        return Promise.resolve({
+          variantId: ImageVariantId(`sha256:${'f'.repeat(64)}`),
+          attachment: fixture.ref,
+          data: fixture.data,
+          mediaType: fixture.ref.mediaType,
+          bytes: fixture.data.byteLength,
+          width: fixture.ref.width,
+          height: fixture.ref.height,
+          depth: 'uchar',
+          space: 'srgb',
+          hasAlpha: fixture.ref.mediaType === 'image/png',
+        })
+      }
     }
     await ctx.plugin(E2eAttachmentStore)
   }
@@ -100,7 +121,7 @@ afterEach(async () => {
 function ask(text: string): Message[] {
   return [createUserMessage({
     content: [{ type: 'text', text }],
-    source: { kind: 'plugin', plugin: 'test' },
+    source: { kind: 'model', provider: 'deepseek-official', model: 'deepseek-v4-flash' },
   })]
 }
 
@@ -118,18 +139,20 @@ function expectFinish(result: AssembledResult, expected: 'stop' | 'tool-calls'):
   expect(result.finish.kind).toBe(expected)
 }
 
-function expectNativeReplay(result: AssembledResult, profile: ProviderCase): PiAiReplayState {
+function expectNativeReplay(result: AssembledResult, profile: ProviderCase): PiAiReplayResponse {
   const replayState = result.message.source.kind === 'model'
     ? result.message.source.replayState
     : undefined
   expect(replayState).toMatchObject({
-    kind: 'pi-ai',
-    version: 1,
-    api: profile.api,
-    provider: profile.provider,
-    model: profile.model,
+    response: {
+      kind: 'pi-ai',
+      version: 2,
+      api: profile.api,
+      provider: profile.provider,
+      model: profile.model,
+    },
   })
-  return replayState as PiAiReplayState
+  return (replayState as { response: PiAiReplayResponse }).response
 }
 
 const lookupTool: ToolSchema = {
@@ -186,13 +209,10 @@ for (const profile of providerCases) {
           messages: [
             ...prompt,
             first.message,
-            createUserMessage({
-              content: [{
-                type: 'tool-result',
-                toolCallId: CallId(call!.id),
-                content: [{ type: 'text', text: 'The code blue means ocean.' }],
-              }],
-              source: { kind: 'plugin', plugin: 'test' },
+            createToolResultMessage({
+              callId: ToolCallId(call!.id),
+              content: [{ type: 'text', text: 'The code blue means ocean.' }],
+              isError: false,
             }),
           ],
           tools: [lookupTool],
@@ -207,7 +227,7 @@ for (const profile of providerCases) {
       if (profile.provider === 'anthropic') {
         it('sends a real image through the authenticated Anthropic visual path', async () => {
           const data = new Uint8Array(await readFile(
-            new URL('../../../../assets/community-wecom-survey.png', import.meta.url),
+            new URL('./fixtures/qr-code.png', import.meta.url),
           ))
           const ref: ImageAttachmentRef = {
             attachmentId: AttachmentId(`sha256:${'a'.repeat(64)}`),
@@ -229,7 +249,7 @@ for (const profile of providerCases) {
                 },
                 { type: 'image', attachment: ref },
               ],
-              source: { kind: 'plugin', plugin: 'test' },
+              source: { kind: 'model', provider: 'deepseek-official', model: 'deepseek-v4-flash' },
             })],
             maxTokens: 256,
           })

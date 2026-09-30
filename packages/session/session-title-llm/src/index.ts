@@ -6,16 +6,26 @@
 
 import type { Context } from '@cortex/cordis'
 import z from '@cortex/schemastery'
-import { createUserMessage, BlockAssembler, deepFreeze } from '@cortex/llm'
+import { createUserMessage, BlockAssembler } from '@cortex/llm'
+import type { ContextFormed } from '@cortex/llm'
+declare module '@cortex/llm' {
+  interface MessageSourceMap {
+    /** Stable persisted source tag, independent of the product's display name. */
+    'dsh-session-title-llm': { kind: 'dsh-session-title-llm' } & ContextFormed
+  }
+}
+
 import type { FinishReason, GenerateOptions, Message } from '@cortex/llm'
 import { deadline, MAX_TIMER_DELAY_MS } from '@cortex/timeout'
+import { deepFreeze } from '@cortex/util-values'
+import type { SessionSeq } from '@cortex/session'
 import {
   normalizeSessionTitle,
   SessionTitleProviderId,
 } from '@cortex/session-title'
 import type {
   SessionTitleAutomaticMode,
-  SessionTitleModelProvenance,
+  SessionTitleModelIdentity,
   SessionTitleProviderRequest,
   SessionTitleProviderResult,
   SessionTitleUserMessage,
@@ -26,9 +36,9 @@ export interface SessionTitleLlmRequestEventData {
   /** Registered title-provider identity responsible for the request. */
   readonly titleProvider: SessionTitleProviderId
   /** Exact human `user/message` seqs represented in `messages`. */
-  readonly messageSeqs: number[]
+  readonly messageSeqs: SessionSeq[]
   /** Exact auxiliary LLM route. */
-  readonly route: SessionTitleModelProvenance
+  readonly route: SessionTitleModelIdentity
   /** Exact auxiliary system prompt. */
   readonly system: string
   /** Exact auxiliary message list. */
@@ -49,8 +59,10 @@ export const SESSION_TITLE_TIMEOUT_CODE = 'SESSION_TITLE_TIMEOUT'
 
 /** Required deployment policy for one model-backed title plugin. */
 export interface SessionTitleLlmConfig {
-  /** Target word count for titles. */
+  /** Target word count for non-CJK titles. */
   readonly targetWords: number
+  /** Target character count for Chinese, Japanese, or Korean titles. */
+  readonly targetCjkCharacters: number
   /** Maximum UTF-8 bytes in the final JSON-framed user prompt. */
   readonly maxInputBytes: number
   /** Auxiliary generation output-token cap. */
@@ -69,6 +81,7 @@ export interface ResolvedSessionTitleLlmConfig extends SessionTitleLlmConfig {}
 /** Shared Loader field schemas with no library defaults. */
 export const SessionTitleLlmConfigFields = {
   targetWords: z.number().step(1).min(1).required(),
+  targetCjkCharacters: z.number().step(1).min(1).required(),
   maxInputBytes: z.number().step(1).min(1).required(),
   maxOutputTokens: z.number().step(1).min(1).required(),
   timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).required(),
@@ -82,6 +95,7 @@ export const SessionTitleLlmConfigSchema: z<SessionTitleLlmConfig> = z.object(Se
 /** Complete configuration key set for direct construction validation. */
 const CONFIG_KEYS: ReadonlySet<string> = new Set([
   'targetWords',
+  'targetCjkCharacters',
   'maxInputBytes',
   'maxOutputTokens',
   'timeoutMs',
@@ -113,6 +127,7 @@ export function resolveSessionTitleLlmConfig(
     if (!CONFIG_KEYS.has(key)) throw new Error(`session-title-llm: unknown config key "${key}"`)
   }
   assertPositiveInteger('targetWords', value.targetWords)
+  assertPositiveInteger('targetCjkCharacters', value.targetCjkCharacters)
   assertPositiveInteger('maxInputBytes', value.maxInputBytes)
   assertPositiveInteger('maxOutputTokens', value.maxOutputTokens)
   assertPositiveInteger('timeoutMs', value.timeoutMs)
@@ -167,7 +182,7 @@ export function registerSessionTitleLlmProvider(
 function resolveRoute(
   config: ResolvedSessionTitleLlmConfig,
   request: SessionTitleProviderRequest,
-): SessionTitleModelProvenance {
+): SessionTitleModelIdentity {
   if (config.provider !== undefined && config.model !== undefined) {
     return { provider: config.provider, model: config.model }
   }
@@ -183,7 +198,7 @@ function systemPrompt(config: ResolvedSessionTitleLlmConfig): string {
     'Create a concise title for an AI coding-assistant session from the supplied human messages.',
     'Return only the title on one line, **in plain text of natural language**, with no quotes, prefix, explanation, Markdown, XML, or terminal control codes. No code is allowed.',
     'Use the language of the messages.',
-    `Aim for about ${config.targetWords} words.`,
+    `Aim for about ${config.targetWords} words in non-CJK languages or ${config.targetCjkCharacters} CJK characters.`,
   ].join('\n')
 }
 
@@ -240,7 +255,7 @@ export async function generateSessionTitleWithLlm(
   const route = resolveRoute(config, request)
   const messages: Message[] = [createUserMessage({
     content: [{ type: 'text', text: framedInput }],
-    source: { kind: 'plugin', plugin: 'cortex-session-title-llm' },
+    source: { kind: 'dsh-session-title-llm' },
   })]
   const system = systemPrompt(config)
   using callDeadline = deadline(request.signal, config.timeoutMs, SESSION_TITLE_TIMEOUT_CODE)

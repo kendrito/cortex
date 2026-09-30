@@ -1,0 +1,41 @@
+- id: agent-default-model
+  name: '@cortex/agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-pro
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js 'process.env.CORTEX_SNAPSHOT === undefined ? ''zstd'' : ''none'''
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tools
+  name: '@cortex/tools'
+  config:
+    mode: both
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- insert:
+    - id: cordis-host-runner
+      name: '@cortex/cordis-host-runner'
+      config:
+        clientInspectTimeoutMs: 100
+    - id: cordis-inspect-providers
+      name: '@cortex/tool-cordis/host'
+    - id: tool-cordis
+      name: '@cortex/tool-cordis'
+    - id: client-inspect-liveness-fixture
+      name: ./client-fixture.mjs

@@ -6,14 +6,14 @@
  * registers the view tab into a real SlotRegistry ring. Skips when dist/ is
  * not built (`pnpm --filter @cortex/client-ui-trajectory bundle`).
  */
+import { createSnapshotStore } from '@cortex/client-store'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { Context } from '@cortex/cordis'
-import { stubSettingsScope } from '@cortex/client-test-runtime'
+import { stubConfigForm } from '@cortex/client-test-runtime'
 import { afterEach, describe, expect, it } from 'vitest'
-import {
-  ConversationEventRegistry, ConversationViewRegistry, SlotRegistry,
-} from '@cortex/client-runtime/client'
+import { UiConversation } from '@cortex/client-ui-conversation/client'
+import { SlotRegistry } from '@cortex/client-ui-renderer/client'
 
 const PLUGIN_ID = '@cortex/client-ui-trajectory'
 
@@ -50,7 +50,8 @@ describe('tsdown client artifact', () => {
       ['react', await import('react')],
       ['react/jsx-runtime', await import('react/jsx-runtime')],
       ['react-dom', await import('react-dom')],
-      ['@cortex/client-runtime/client', await import('@cortex/client-runtime/client')],
+      ['@cortex/client-store', await import('@cortex/client-store')],
+      ['@cortex/client-ui-conversation/client', await import('@cortex/client-ui-conversation/client')],
       ['@cortex/client-ui-primitives', await import('@cortex/client-ui-primitives')],
     ])
     const exports = handoff!.factory((spec) => {
@@ -65,7 +66,7 @@ describe('tsdown client artifact', () => {
     expect(handoff.id).toBe(PLUGIN_ID)
     expect(exports.apply).toBeTypeOf('function')
     expect(exports.inject).toEqual([
-      'slots', 'conversationEvents', 'conversationViews', 'sessions', 'locale',
+      'slots', 'sessions', 'uiSession', 'uiConversation', 'locale',
     ])
   })
 
@@ -73,8 +74,7 @@ describe('tsdown client artifact', () => {
     const { exports } = await loadArtifact()
     const ctx = new Context()
     const slots = new SlotRegistry(ctx)
-    await ctx.plugin(ConversationEventRegistry).await()
-    await ctx.plugin(ConversationViewRegistry).await()
+    ctx.provide('uiSession', { provide: () => () => {} } as never)
     // The conversation entry's role: the ring must be declared before riders land.
     slots.register({
       name: 'root',
@@ -84,16 +84,17 @@ describe('tsdown client artifact', () => {
     // entry, so the binding stays deliberately empty. The locale plugin backs
     // the locale-aware view tab label (its settings scope needs a connection
     // handle and the Host-facing settings/remote seams).
-    ctx.provide('sessions', { binding: () => undefined })
+    const sessions = { binding: () => undefined }
+    ctx.provide('sessions', sessions)
+    const uiConversation = new UiConversation(ctx, sessions as never)
+    const { events, views } = uiConversation
     ctx.provide('connection', { api: { settings: {} }, isLoopback: false } as never)
     ctx.provide('remote', { $on: () => () => {} } as never)
-    ctx.provide('settingsScope', { bind: () => stubSettingsScope().scope } as never)
+    ctx.provide('configForms', { developerTools: { enabled: createSnapshotStore(true) }, get: () => stubConfigForm().scope } as never)
     const locale = await import('@cortex/client-locale/client')
     ctx.plugin({ inject: [...locale.inject], apply: locale.apply })
     const fiber = ctx.plugin(exports as { apply: (ctx: Context) => void })
     await fiber.await()
-    const events = ctx.get('conversationEvents') as ConversationEventRegistry
-    const views = ctx.get('conversationViews') as ConversationViewRegistry
     expect(slots.entries('conversation.view').map(e => e.options.id)).toEqual(['trajectory'])
     expect(events.entries().length).toBeGreaterThan(0)
     expect(views.entries()).toHaveLength(1)

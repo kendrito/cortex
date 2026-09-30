@@ -1,0 +1,129 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1768,7 +1768,7 @@
+ 	apiUrl: z.url().refine((value) => !value.includes("?") && !value.includes("#"), "Stagehand apiUrl must not include a query string or fragment").refine((value) => !new URL(value).pathname.replace(/\/+$/, "").endsWith("/v1"), { message: "Stagehand apiUrl must be a service origin without /v1" }).optional().meta({ description: "Stagehand API base URL override for managed services such as Model Gateway and server-side caching" }),
+ 	browser: BrowserSessionMetadataSchema.optional(),
+ 	model: z.union([ModelConfigSchema, ClientModelReferenceSchema]).optional().meta({ description: "Default model configuration; when omitted and a Browserbase Model Gateway session is available, Browserbase selects a model automatically for inference calls" }),
+-	telemetry: TelemetryConfigSchema.default(DEFAULT_TELEMETRY_CONFIG),
++	telemetry: z.null().default(null),
+ 	logLevel: z.enum([
+ 		"off",
+ 		"error",
+diff --git a/dist/index.d.mts b/dist/index.d.mts
+--- a/dist/index.d.mts
++++ b/dist/index.d.mts
+@@ -94,12 +94,7 @@
+       }, z.core.$strict>, z.ZodObject<{
+         source: z.ZodLiteral<"client">;
+       }, z.core.$strict>]>>;
+-      telemetry: z.ZodDefault<z.ZodObject<{
+-        traces: z.ZodObject<{
+-          endpoint: z.ZodURL;
+-          headers: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodString>>;
+-        }, z.core.$strict>;
+-      }, z.core.$strict>>;
++      telemetry: z.ZodDefault<z.ZodNull>;
+       logLevel: z.ZodDefault<z.ZodEnum<{
+         error: "error";
+         off: "off";
+@@ -3523,12 +3518,7 @@
+     threshold: z.ZodOptional<z.ZodNumber>;
+   }, z.core.$strict>]>>;
+   apiUrl: z.ZodOptional<z.ZodURL>;
+-  telemetry: z.ZodDefault<z.ZodObject<{
+-    traces: z.ZodObject<{
+-      endpoint: z.ZodURL;
+-      headers: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodString>>;
+-    }, z.core.$strict>;
+-  }, z.core.$strict>>;
++  telemetry: z.ZodDefault<z.ZodNull>;
+   selfHeal: z.ZodOptional<z.ZodBoolean>;
+   domSettleTimeoutMs: z.ZodOptional<z.ZodNumber>;
+   model: z.ZodOptional<z.ZodUnion<readonly [z.ZodObject<{
+@@ -4125,12 +4115,7 @@
+     threshold: z.ZodOptional<z.ZodNumber>;
+   }, z.core.$strict>]>>;
+   apiUrl: z.ZodOptional<z.ZodURL>;
+-  telemetry: z.ZodDefault<z.ZodObject<{
+-    traces: z.ZodObject<{
+-      endpoint: z.ZodURL;
+-      headers: z.ZodDefault<z.ZodRecord<z.ZodString, z.ZodString>>;
+-    }, z.core.$strict>;
+-  }, z.core.$strict>>;
++  telemetry: z.ZodDefault<z.ZodNull>;
+   selfHeal: z.ZodOptional<z.ZodBoolean>;
+   domSettleTimeoutMs: z.ZodOptional<z.ZodNumber>;
+   model: z.ZodOptional<z.ZodUnion<readonly [z.ZodObject<{
+diff --git a/dist/extension/service-worker.js b/dist/extension/service-worker.js
+--- a/dist/extension/service-worker.js
++++ b/dist/extension/service-worker.js
+@@ -8440,7 +8440,7 @@
+ 	apiUrl: url().refine((value) => !value.includes("?") && !value.includes("#"), "Stagehand apiUrl must not include a query string or fragment").refine((value) => !new URL(value).pathname.replace(/\/+$/, "").endsWith("/v1"), { message: "Stagehand apiUrl must be a service origin without /v1" }).optional().meta({ description: "Stagehand API base URL override for managed services such as Model Gateway and server-side caching" }),
+ 	browser: BrowserSessionMetadataSchema.optional(),
+ 	model: union([ModelConfigSchema, ClientModelReferenceSchema]).optional().meta({ description: "Default model configuration; when omitted and a Browserbase Model Gateway session is available, Browserbase selects a model automatically for inference calls" }),
+-	telemetry: TelemetryConfigSchema.default(DEFAULT_TELEMETRY_CONFIG),
++	telemetry: _null().default(null),
+ 	logLevel: _enum([
+ 		"off",
+ 		"error",
+@@ -53566,53 +53566,13 @@
+ 		}
+ 	};
+ }
+-function createStagehandTracing(options = {}, dependencies = DEFAULT_TRACING_RUNTIME_DEPENDENCIES) {
+-	const pendingTracer = trace.getTracer(STAGEHAND_TRACER_NAME);
+-	let runtime;
+-	let shutDown = false;
+-	let globalsRegistered = false;
+-	let lifecycleTail = Promise.resolve();
+-	let activeTelemetry;
+-	let activeClientInfo;
+-	function enqueueLifecycle(run) {
+-		const result = lifecycleTail.then(run, run);
+-		lifecycleTail = result.catch(() => void 0);
+-		return result;
+-	}
++function createStagehandTracing() {
++	// Cortex: disable collection and exporting, including SDK default telemetry.
+ 	return {
+-		get tracer() {
+-			return runtime?.tracer ?? pendingTracer;
+-		},
+-		configure(telemetry, clientInfo) {
+-			return enqueueLifecycle(async () => {
+-				if (shutDown) return;
+-				if (runtime && telemetry === activeTelemetry && clientInfo === activeClientInfo) return;
+-				const previousRuntime = runtime;
+-				runtime = void 0;
+-				await previousRuntime?.shutdown();
+-				const registerGlobals = options.registerGlobals !== false && !globalsRegistered;
+-				runtime = createStagehandTracingRuntime({
+-					...options,
+-					clientName: clientInfo.name,
+-					clientVersion: clientInfo.version,
+-					registerGlobals
+-				}, { spanProcessors: [...dependencies.spanProcessors, createOtlpSpanProcessor(telemetry.traces)] });
+-				activeTelemetry = telemetry;
+-				activeClientInfo = clientInfo;
+-				globalsRegistered ||= registerGlobals;
+-			});
+-		},
+-		forceFlush: () => enqueueLifecycle(() => runtime?.forceFlush() ?? Promise.resolve()),
+-		shutdown: () => {
+-			shutDown = true;
+-			return enqueueLifecycle(async () => {
+-				const activeRuntime = runtime;
+-				runtime = void 0;
+-				activeTelemetry = void 0;
+-				activeClientInfo = void 0;
+-				await activeRuntime?.shutdown();
+-			});
+-		}
++		tracer: new NoopTracer(),
++		configure: async () => {},
++		forceFlush: async () => {},
++		shutdown: async () => {}
+ 	};
+ }
+ function createOtlpSpanProcessor(traces) {

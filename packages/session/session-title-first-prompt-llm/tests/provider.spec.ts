@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest'
 import LlmRuntime, { createUserMessage, LlmAdapter  } from '@cortex/llm'
 import type { GenerateOptions, StreamChunk } from '@cortex/llm'
 import SessionStore, { Session, SessionId } from '@cortex/session'
+import SessionProjectionRegistry from '@cortex/session-projection'
+import { turnBoundaryProjectionDefinition } from '@cortex/agent-loop'
 import SessionTitleService, { type SessionTitleProvider } from '@cortex/session-title'
 import * as providerPlugin from '@cortex/session-title-first-prompt-llm'
 
@@ -19,6 +21,7 @@ class RecordingAdapter extends LlmAdapter {
 const TITLE_CONFIG = { fallbackMaxWords: 5, fallbackMaxBytes: 40, maxTitleBytes: 80 } as const
 const LLM_CONFIG = {
   targetWords: 5,
+  targetCjkCharacters: 10,
   maxInputBytes: 1_000,
   maxOutputTokens: 32,
   timeoutMs: 1_000,
@@ -35,6 +38,8 @@ describe('first-prompt LLM title provider', () => {
     const ctx = new Context()
     await ctx.plugin(LlmRuntime)
     await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    ctx.sessionProjections.register(turnBoundaryProjectionDefinition)
     await ctx.plugin(SessionTitleService, TITLE_CONFIG)
     let registered: SessionTitleProvider | undefined
     vi.spyOn(ctx.sessionTitle, 'register').mockImplementation((provider) => {
@@ -54,6 +59,8 @@ describe('first-prompt LLM title provider', () => {
     const ctx = new Context()
     await ctx.plugin(LlmRuntime)
     await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    ctx.sessionProjections.register(turnBoundaryProjectionDefinition)
     await ctx.plugin(SessionTitleService, TITLE_CONFIG)
     const adapter = new RecordingAdapter()
     ctx.llm.registerAdapter(['title-route'], adapter)

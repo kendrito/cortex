@@ -6,10 +6,10 @@
  */
 
 import type { Context } from '@cortex/cordis'
-import { assertNever } from '@cortex/llm'
-import type { CallId } from '@cortex/llm'
+import type { ToolCallId } from '@cortex/llm'
 import type { InvariantFailure, InvariantInstaller } from '@cortex/invariants'
-import type { Session, SessionEvent } from '@cortex/session'
+import type { Session, SessionEvent, SessionSeqCursor } from '@cortex/session'
+import { assertNever } from '@cortex/util-values'
 import { TOOL_NOT_STARTED } from './repair.ts'
 
 const PACKAGE_NAME = '@cortex/session'
@@ -21,12 +21,12 @@ export const inject = ['invariants']
 
 /** Per-session bookkeeping for relational log checks. */
 interface SessionTrace {
-  lastSeq: number
+  lastSeq: SessionSeqCursor
   openTurn: number | null
   openStep: number | null
   nextTurn: number
   nextStep: number
-  pendingCalls: Set<CallId>
+  pendingCalls: Set<ToolCallId>
 }
 
 /** One accepted event's deferred mutation of a committed session trace. */
@@ -34,7 +34,7 @@ interface SessionTraceTransition {
   scalars: Pick<SessionTrace, 'lastSeq' | 'openTurn' | 'openStep' | 'nextTurn' | 'nextStep'>
   pendingCalls:
     | { kind: 'none' }
-    | { kind: 'add' | 'delete'; callId: CallId }
+    | { kind: 'add' | 'delete'; callId: ToolCallId }
     | { kind: 'clear' }
 }
 
@@ -104,6 +104,10 @@ function validateEvent(
       openStep = event.data.step
       break
     }
+    case 'developer/message': {
+      requireOpenStep(trace, 'developer/message', event.data.turn, event.data.step, fail)
+      break
+    }
     case 'step/end': {
       requireOpenStep(trace, 'step/end', event.data.turn, event.data.step, fail)
       pendingCalls = { kind: 'clear' }
@@ -111,8 +115,8 @@ function validateEvent(
       nextStep += 1
       break
     }
-    case 'assistant/chunk': {
-      requireOpenStep(trace, 'assistant/chunk', event.data.turn, event.data.step, fail)
+    case 'assistant/attempt': {
+      requireOpenStep(trace, 'assistant/attempt', event.data.turn, event.data.step, fail)
       break
     }
     case 'assistant/message': {
@@ -135,11 +139,15 @@ function validateEvent(
       }
       requireOpenStep(trace, 'tool/result', event.data.turn, event.data.step, fail)
       const callId = event.data.message.source.callId
-      const syntheticNotStarted = event.data.message.content[0].isError === true && event.data.error?.code === TOOL_NOT_STARTED
+      const syntheticNotStarted = event.data.message.isError === true && event.data.error?.code === TOOL_NOT_STARTED
       if (!trace.pendingCalls.has(callId) && !syntheticNotStarted) {
         fail(`tool/result for ${callId} with no prior tool/call in this step`)
       }
       pendingCalls = { kind: 'delete', callId }
+      break
+    }
+    case 'system/message': {
+      requireOpenStep(trace, 'system/message', event.data.turn, event.data.step, fail)
       break
     }
     case 'user/message':
@@ -147,7 +155,6 @@ function validateEvent(
     case 'session/end-seed':
       // Unconstrained: an unbalanced seed legally puts it inside an open turn.
       break
-    case 'todo/write':
     case 'request/header':
     case 'request/context': {
       if (trace.openTurn === null) {
@@ -207,7 +214,8 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
   const seedSession = (session: Session): SessionTrace => {
     const trace = freshTrace()
     traces.set(session, trace)
-    for (const event of session.events) {
+    // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
+    for (const event of session.snapshotEvents()) {
       applyTransition(trace, validateEvent(trace, event, fail))
     }
     return trace

@@ -1,0 +1,44 @@
+# Keyless inline-image request fixture. Historical model labels are retained;
+# the endpoint is an explicit loopback server and no Files API is used.
+- id: llm-pi-ai
+  name: '@cortex/llm-pi-ai'
+  config:
+    providers:
+      deepseek-official:
+        api: anthropic-messages
+        apiKeyEnv: CORTEX_SNAPSHOT_API_KEY
+        baseURL: !!js process.env.CORTEX_SNAPSHOT_BASE_URL
+        maxRequestImageBytes: 92
+        models:
+          - id: deepseek-v4-flash-vision-exp
+            contextWindow: 32768
+            maxTokens: 1024
+            input: [text, image]
+
+- id: acp
+  name: '@cortex/acp'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-flash-vision-exp
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+    compression: none
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Keep answers brief and factual.
+
+- id: attachment-local
+  name: '@cortex/attachment-local'

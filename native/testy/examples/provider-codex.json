@@ -1,0 +1,8 @@
+{
+  "kind": "codex",
+  "model": "",
+  "codexExecutable": "codex.exe",
+  "aiDirectedExecution": true,
+  "nativeComputerUse": true,
+  "maximumAgentTurns": 30
+}

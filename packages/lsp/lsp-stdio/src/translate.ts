@@ -12,7 +12,7 @@ import type {
   LspRange,
 } from '@cortex/lsp'
 import { LspError } from '@cortex/lsp'
-import { assertNever } from '@cortex/llm'
+import { assertNever } from '@cortex/util-values'
 import type {
   WireHover,
   WireLocation,
@@ -184,7 +184,7 @@ export function normalizeHover(payload: unknown): LspHover | null {
   if (payload === null) return null
   if (payload === undefined) throw malformedResponse('LSP hover result was missing')
   if (typeof payload !== 'object') throw malformedResponse('LSP hover result was not an object')
-  const hover = payload as unknown as WireHover
+  const hover = payload as WireHover
   const contents = renderHoverContents(hover.contents)
   if (contents === '') return null
   const range = hover.range

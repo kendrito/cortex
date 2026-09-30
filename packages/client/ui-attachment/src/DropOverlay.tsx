@@ -11,7 +11,7 @@ export interface DropOverlayLabels {
 
 /**
  * Full-viewport invitation shown while a file drag is over the page
- * (Cortex Chat's DragMask). Decoration only: `pointer-events: none` keeps
+ * (DeepSeek Chat's DragMask). Decoration only: `pointer-events: none` keeps
  * drag targeting on the page below, so the owner's document-level listeners
  * keep an accurate enter/leave count and own accept/reject. Rendered through
  * a body portal for the same transformed-ancestor reason as the lightbox.
@@ -39,7 +39,7 @@ export function DropOverlay({ disabled, labels }: {
   )
 }
 
-/** Tilted photo-and-note cards (Cortex Chat upload illustration). */
+/** Tilted photo-and-note cards (DeepSeek Chat upload illustration). */
 const UploadIllustration = () => (
   <svg width="115" height="84" viewBox="0 0 115 84" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#cortexDropOverlayClip)">
@@ -61,7 +61,7 @@ const UploadIllustration = () => (
   </svg>
 )
 
-/** Greyed cards with a blocked badge (Cortex Chat disabled illustration). */
+/** Greyed cards with a blocked badge (DeepSeek Chat disabled illustration). */
 const UploadDisabledIllustration = () => (
   <svg width="115" height="84" viewBox="0 0 115 84" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M29.6829 4.63701L11.0677 12.4368C4.95519 14.998 2.07624 22.0294 4.6374 28.1419L12.2285 46.259C14.7896 52.3715 21.8211 55.2505 27.9336 52.6893L46.5488 44.8895C52.6613 42.3283 55.5403 35.2969 52.9791 29.1844L45.388 11.0673C42.8269 4.9548 35.7954 2.07585 29.6829 4.63701Z" fill="#979DA6" />

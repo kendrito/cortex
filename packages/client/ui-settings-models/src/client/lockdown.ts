@@ -86,6 +86,8 @@ export function lockedProtocolChoices(all: readonly string[]): string[] {
 export function rowLocked(profile: unknown): boolean {
   if (!PROVIDER_UI_LOCKDOWN) return false
   if (typeof profile !== 'object' || profile === null) return true
+  const protocol = (profile as { api?: unknown }).api
+  if (protocol !== undefined && (typeof protocol !== 'string' || !UI_PROTOCOLS.has(protocol))) return true
   const baseURL = (profile as { baseURL?: unknown }).baseURL
   if (typeof baseURL !== 'string' || baseURL.length === 0) return true
   return !isApprovedLocalEndpoint(baseURL)

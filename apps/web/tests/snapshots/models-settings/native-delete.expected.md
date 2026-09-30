@@ -1,7 +1,0 @@
-- dialog "Delete LiteLLM (litellm)?":
-  - heading "Delete LiteLLM (litellm)?" [level=2]
-  - button "Close":
-    - img
-  - paragraph: Deleting LiteLLM (litellm) removes its configuration. Any credential it uses is managed elsewhere and will be kept.
-  - button "Cancel"
-  - button "Delete LiteLLM (litellm)"

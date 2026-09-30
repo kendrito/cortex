@@ -9,6 +9,7 @@ import { pathToFileURL } from 'node:url'
 import LlmRuntime, { createUserMessage, LlmAdapter  } from '@cortex/llm'
 import type { GenerateOptions, StreamChunk } from '@cortex/llm'
 import SessionStore, { SessionId } from '@cortex/session'
+import SessionProjectionRegistry from '@cortex/session-projection'
 import SessionTitleService from '@cortex/session-title'
 import * as providerPlugin from '@cortex/session-title-first-prompt-llm'
 
@@ -38,6 +39,7 @@ async function loadComposition(): Promise<Context> {
   await writeFile(configPath, [
     "- name: '@cortex/llm'",
     "- name: '@cortex/session'",
+    "- name: '@cortex/session-projection'",
     "- name: '@cortex/session-title'",
     '  config:',
     '    fallbackMaxWords: 5',
@@ -46,6 +48,7 @@ async function loadComposition(): Promise<Context> {
     "- name: '@cortex/session-title-first-prompt-llm'",
     '  config:',
     '    targetWords: 5',
+    '    targetCjkCharacters: 10',
     '    maxInputBytes: 1000',
     '    maxOutputTokens: 32',
     '    timeoutMs: 1000',
@@ -61,6 +64,7 @@ async function loadComposition(): Promise<Context> {
   const modules = new Map<string, unknown>([
     ['@cortex/llm', LlmRuntime],
     ['@cortex/session', SessionStore],
+    ['@cortex/session-projection', SessionProjectionRegistry],
     ['@cortex/session-title', SessionTitleService],
     ['@cortex/session-title-first-prompt-llm', providerPlugin],
   ])

@@ -1,34 +1,35 @@
-/* Scrollbar skin: the sole consumer of the four --cortex-alias-scrollbar-*
+/* Scrollbar skin: the sole consumer of the four --dsw-alias-scrollbar-*
  * tokens. Without it every scrolling region renders the UA scrollbar, which
  * ignores the theme — a light native bar over the dark palette.
  *
  * The rules sit on `body`, not `html`: design-platform.css declares the
- * --cortex-alias-* tokens on `body` (and the dark overrides on
+ * --dsw-alias-* tokens on `body` (and the dark overrides on
  * `body[data-ds-dark-theme]`), and custom properties only inherit downward,
  * so an `html` rule resolves them to the guaranteed-invalid value and
  * `scrollbar-color` falls back to `auto`.
  *
  * Surfaces pick their elevation by rebinding --cortex-scrollbar-thumb{,-hover}:
  * the l1 pair here is the base-surface default, and an elevated surface
- * (menu, popover, dialog) rebinds to the l2 pair on its own container. Both
- * rendering paths below read the indirection, so one rebind reaches whichever
- * path the engine took. */
+ * (menu, popover, dialog) rebinds to the l2 pair on its own container. A
+ * scroll container may also rebind the three geometry variables below. */
 
 body {
-  --cortex-scrollbar-thumb: var(--cortex-alias-scrollbar-bg-l1);
-  --cortex-scrollbar-thumb-hover: var(--cortex-alias-scrollbar-hover-l1);
+  --cortex-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l1);
+  --cortex-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l1);
+  --cortex-scrollbar-thumb-border: 0px;
+  --cortex-scrollbar-track-margin: 0px;
   /* The WebKit bar's layout width, mirrored by the ::-webkit-scrollbar rule
      below. A surface that must align itself beside a space-consuming bar
      (ConversationRoot's overlay composer seat) reads this instead of
      hardcoding the number. */
-  --cortex-scrollbar-width: 8px;
+  --cortex-scrollbar-width: 5px;
 }
 
 /* The two paths are mutually exclusive, and the gate is load-bearing rather
    than defensive. A non-`auto` `scrollbar-width` or `scrollbar-color` makes
    Chromium and Safari drop every `::-webkit-scrollbar*` rule for that
    element, including `::-webkit-scrollbar-thumb:hover` — measured in chromium
-   as an 8px `::-webkit-scrollbar` width taking effect on its own and being
+   as a `::-webkit-scrollbar` width taking effect on its own and being
    ignored as soon as `scrollbar-width: thin` is added. Declaring both
    unconditionally therefore leaves the hover tokens with no rendering at all,
    because the engines that implement the hover pseudo-element are exactly the
@@ -64,23 +65,27 @@ body {
    selector matching already does. Not inherited either, hence the unscoped
    selectors. */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: var(--cortex-scrollbar-width);
+  height: var(--cortex-scrollbar-width);
 }
 
 /* Track stays transparent so the thumb reads against whatever surface scrolls
    under it; only the thumb carries a token colour. */
 ::-webkit-scrollbar-track {
+  margin-block: var(--cortex-scrollbar-track-margin);
   background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border-radius: 4px;
+  border: var(--cortex-scrollbar-thumb-border) solid transparent;
+  border-radius: 999px;
+  corner-shape: round;
   background: var(--cortex-scrollbar-thumb);
+  background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cortex-scrollbar-thumb-hover);
+  background-color: var(--cortex-scrollbar-thumb-hover);
 }
 
 /* Both scrollbars meeting in a corner: no separate token, so the corner

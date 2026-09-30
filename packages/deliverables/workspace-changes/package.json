@@ -1,0 +1,56 @@
+{
+  "name": "@cortex/workspace-changes",
+  "description": "Per-turn workspace file changes recorded from git working-tree snapshots and whole-file captures, with per-file comparisons, for the Cortex",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/deliverables/workspace-changes"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~",
+    "diff": "^9.0.0"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/llm": "workspace:*"
+  }
+}

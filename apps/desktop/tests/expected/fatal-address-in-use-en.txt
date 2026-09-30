@@ -1,0 +1,5 @@
+Cortex is unavailable
+The application could not start or stopped unexpectedly.
+Another CORTEX instance (such as cortex web or the desktop app) is running. They cannot start at the same time. Quit the other running CORTEX instance, then restart.
+Exit
+Restart

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "cortex-runtime-bin"
 version = "0.0.0.dev0"
-description = "Pinned Cortex runtime for the Python SDK"
+description = "Bundled cortex CLI runtime for the Cortex Python SDK"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -17,10 +17,18 @@ Documentation = "https://github.com/local/cortex/blob/master/python/sdk-runtime/
 Issues = "https://github.com/local/cortex/issues"
 Source = "https://github.com/local/cortex"
 
-# Include the injected executable and default config; exclude the dev-only node
-# closure from wheels and sdists.
+[project.scripts]
+cortex = "cortex_harness_runtime:main"
+
+# Include the injected cortex executable and sidecars; exclude the dev-only node closure.
 [tool.hatch.build]
-artifacts = ["src/cortex_harness_runtime/runtime/cortex-jsonrpc-agent-*"]
+artifacts = [
+  "src/cortex_harness_runtime/runtime/cortex-sdk-runtime-*",
+  "src/cortex_harness_runtime/runtime/cortex-sdk-runtime-*/**",
+  "src/cortex_harness_runtime/runtime/linux-*/**",
+  "src/cortex_harness_runtime/runtime/macos-*/**",
+  "src/cortex_harness_runtime/runtime/win-*/**",
+]
 exclude = ["src/cortex_harness_runtime/runtime/node"]
 
 [tool.hatch.build.targets.wheel]

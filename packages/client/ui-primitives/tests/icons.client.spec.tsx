@@ -3,7 +3,8 @@ import { cleanup, render } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import * as primitives from '@cortex/client-ui-primitives'
 import {
-  IconApiOutline14, IconArchiveOutline20, IconFolderClose16, IconGoalOutline16, IconSendOutline16,
+  IconAlarmClockOutlineRegular, IconApiOutlineRegular, IconArchiveOutlineRegular, IconFolderCloseRegular,
+  IconGoalOutlineRegular, IconSendOutlineRegular,
 } from '@cortex/client-ui-primitives'
 
 afterEach(cleanup)
@@ -15,9 +16,39 @@ const icons = Object.fromEntries(
 ) as Record<string, (p: primitives.IconProps) => React.JSX.Element>
 const iconNames = Object.keys(icons)
 
-describe('ic_ds_ icon set', () => {
-  it('exports the full icon set (46 design-system + 20 figma extracts + four product glyphs outside those sets)', () => {
-    expect(iconNames.length).toBe(70)
+describe('product icon set', () => {
+  it('exports regular and medium variants for all 94 public glyphs', () => {
+    expect(iconNames.length).toBe(188)
+    expect(iconNames.some(name => /\d+$/.test(name))).toBe(false)
+    const regular = iconNames.filter(name => name.endsWith('Regular')).map(name => name.slice(0, -'Regular'.length))
+    const medium = iconNames.filter(name => name.endsWith('Medium')).map(name => name.slice(0, -'Medium'.length))
+    expect(medium.sort()).toEqual(regular.sort())
+    expect(iconNames).toEqual(expect.arrayContaining([
+      'IconMicrophoneOutlineRegular',
+      'IconPlanOutlineRegular', 'IconCompactOutlineRegular', 'IconShieldOutlineRegular', 'IconDeliverDocRegular',
+      'IconWarningTriangleOutlineRegular', 'IconCompareSplitOutlineRegular', 'IconCloseCircleFillRegular',
+    ]))
+  })
+
+  it('draws the circled close as one currentColor knockout path in both weights', () => {
+    // A filled disc with the cross cut out of it (even-odd), so the cross shows
+    // the surface behind the glyph on any background instead of a second color.
+    for (const Icon of [primitives.IconCloseCircleFillRegular, primitives.IconCloseCircleFillMedium]) {
+      const { container, unmount } = render(<Icon />)
+      const paths = container.querySelectorAll('path')
+      expect(paths).toHaveLength(1)
+      expect(paths[0]!.getAttribute('fill')).toBe('currentColor')
+      expect(paths[0]!.getAttribute('fill-rule')).toBe('evenodd')
+      expect(paths[0]!.getAttribute('stroke')).toBeNull()
+      expect(container.querySelector('svg')!.getAttribute('width')).toBe('16')
+      unmount()
+    }
+  })
+
+  it('exports the shield contour and regular stroke for composite glyphs', () => {
+    const { container } = render(<primitives.IconShieldOutlineRegular />)
+    expect(container.querySelector('path')?.getAttribute('d')).toBe(primitives.SHIELD_OUTLINE_PATH)
+    expect(container.querySelector('svg')?.getAttribute('stroke-width')).toBe(String(primitives.ICON_REGULAR_STROKE))
   })
 
   it.each(iconNames)('%s renders an svg with currentColor fills and no hardcoded palette', (name) => {
@@ -25,55 +56,115 @@ describe('ic_ds_ icon set', () => {
     const { container } = render(<Icon />)
     const svg = container.querySelector('svg')
     expect(svg).not.toBeNull()
+    expect(svg?.getAttribute('aria-hidden')).toBe('true')
     const markup = container.innerHTML
     expect(markup).not.toMatch(/#[0-9a-fA-F]{3,8}"/)
     expect(markup).toContain('currentColor')
   })
 
   it('size and className props land on the root svg', () => {
-    const { container } = render(<IconSendOutline16 size={20} className="x" />)
+    const { container } = render(<IconSendOutlineRegular size={20} className="x" />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('20')
     expect(svg.getAttribute('height')).toBe('20')
     expect(svg.classList.contains('x')).toBe(true)
   })
 
+  it('uses 1px regular and 1.3px medium strokes', () => {
+    const regular = render(<primitives.IconSearchOutlineRegular />)
+    expect(regular.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1')
+    const medium = render(<primitives.IconSearchOutlineMedium />)
+    expect(medium.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1.3')
+  })
+
+  it('exports regular and medium permission glyphs', () => {
+    const pairs = [
+      [primitives.PermissionIconReadOnlyRegular, primitives.PermissionIconReadOnlyMedium],
+      [primitives.PermissionIconWorkspaceWriteRegular, primitives.PermissionIconWorkspaceWriteMedium],
+      [primitives.PermissionIconFullAccessRegular, primitives.PermissionIconFullAccessMedium],
+    ] as const
+    for (const [Regular, Medium] of pairs) {
+      const regular = render(<Regular />)
+      expect(regular.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1')
+      regular.unmount()
+      const medium = render(<Medium />)
+      expect(medium.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1.3')
+      medium.unmount()
+    }
+  })
+
+  it('exports both weights for every reference kind', () => {
+    for (const kind of ['session', 'file', 'folder'] as const) {
+      const regular = render(<primitives.ReferenceIconRegular kind={kind} />)
+      expect(regular.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1')
+      regular.unmount()
+      const medium = render(<primitives.ReferenceIconMedium kind={kind} />)
+      expect(medium.container.querySelector('svg')?.getAttribute('stroke-width')).toBe('1.3')
+      medium.unmount()
+    }
+  })
+
   it('each glyph defaults to its own drawn size, not one set-wide default', () => {
-    const api = render(<IconApiOutline14 />)
+    const api = render(<IconApiOutlineRegular />)
     expect(api.container.querySelector('svg')!.getAttribute('width')).toBe('14')
-    const folder = render(<IconFolderClose16 />)
+    const folder = render(<IconFolderCloseRegular />)
     expect(folder.container.querySelector('svg')!.getAttribute('width')).toBe('16')
-    const archive = render(<IconArchiveOutline20 />)
+    const archive = render(<IconArchiveOutlineRegular />)
     expect(archive.container.querySelector('svg')!.getAttribute('width')).toBe('20')
+    const alarm = render(<IconAlarmClockOutlineRegular />)
+    expect(alarm.container.querySelector('svg')!.getAttribute('width')).toBe('16')
   })
 
   it('renders reusable goal glyphs without document-global ids', () => {
-    const { container } = render(<><IconGoalOutline16 /><IconGoalOutline16 /></>)
+    const { container } = render(<><IconGoalOutlineRegular /><IconGoalOutlineRegular /></>)
     expect(container.querySelector('[id]')).toBeNull()
     expect(container.querySelector('[clip-path]')).toBeNull()
   })
 })
 
-describe('CortexMark', () => {
-  it('renders the hub-and-satellites mark in currentColor on its square grid', () => {
-    const { container } = render(<primitives.CortexMark />)
+describe('FishLogo', () => {
+  it('renders the fish path in currentColor at the native ratio', () => {
+    const { container } = render(<primitives.FishLogo />)
     const svg = container.querySelector('svg')!
     expect(svg.getAttribute('width')).toBe('24')
-    expect(svg.getAttribute('height')).toBe('24')
-    expect(svg.getAttribute('viewBox')).toBe('0 0 24 24')
-    expect(svg.getAttribute('aria-hidden')).toBe('true')
-    // One hub, three satellites, and the spokes joining them.
-    expect(container.querySelectorAll('circle')).toHaveLength(4)
+    expect(Number(svg.getAttribute('height'))).toBeCloseTo(17.66, 1)
+    expect(svg.getAttribute('viewBox')).toBe('0 0 23.16 17.04')
     expect(container.querySelectorAll('path')).toHaveLength(1)
     expect(container.innerHTML).toContain('currentColor')
-    expect(container.innerHTML).not.toMatch(/#[0-9a-fA-F]{3,8}"/)
+    expect(container.innerHTML).not.toContain('M0 0L23.16')
   })
+})
 
-  it('scales with the size prop while keeping the square ratio', () => {
-    const { container } = render(<primitives.CortexMark size={34} className="hero" />)
-    const svg = container.querySelector('svg')!
+describe('CortexMark', () => {
+  it('keeps the Cortex hub and three satellites at both shell sizes', () => {
+    const view = render(<primitives.CortexMark size={34} className="hero-mark" />)
+    const svg = view.container.querySelector('svg')!
+    expect(svg.getAttribute('viewBox')).toBe('0 0 24 24')
     expect(svg.getAttribute('width')).toBe('34')
     expect(svg.getAttribute('height')).toBe('34')
-    expect(svg.classList.contains('hero')).toBe(true)
+    expect(svg.classList.contains('hero-mark')).toBe(true)
+    expect(view.container.querySelectorAll('circle')).toHaveLength(4)
+    expect(view.container.querySelector('path')?.getAttribute('stroke')).toBe('currentColor')
+    view.rerender(<primitives.CortexMark />)
+    expect(svg.getAttribute('width')).toBe('24')
+    expect(svg.getAttribute('height')).toBe('24')
+  })
+})
+
+describe('BrandWordmark', () => {
+  it('can render the name artwork with or without its leading mark', () => {
+    const view = render(<primitives.BrandWordmark />)
+    const svg = view.container.querySelector('svg')!
+    expect(svg.getAttribute('width')).toBe('116')
+    expect(svg.getAttribute('viewBox')).toBe('0 0 116 24')
+    expect(view.container.textContent).toBe('cortex')
+    expect(view.container.querySelectorAll('circle')).toHaveLength(4)
+
+    view.rerender(<primitives.BrandWordmark includeMark={false} />)
+    expect(svg.getAttribute('width')).toBe('87')
+    expect(svg.getAttribute('viewBox')).toBe('29 0 87 24')
+    expect(view.container.textContent).toBe('cortex')
+    expect(view.container.querySelector('circle')).toBeNull()
+    expect(view.container.querySelector('[id]')).toBeNull()
   })
 })

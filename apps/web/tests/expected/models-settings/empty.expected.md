@@ -1,0 +1,38 @@
+- dialog "Settings":
+  - navigation:
+    - text: Settings
+    - button "General"
+    - button "Models"
+    - button "Built-in plugins"
+    - button "Agent presets"
+  - button "Open configuration file"
+  - button "Close"
+  - heading "Models" [level=2]
+  - paragraph: Enter your API keys to use models from the following providers.
+  - paragraph: Provider configuration is limited to a local LiteLLM gateway. Administrator-provisioned external routes are read-only.
+  - list
+  - text: Custom model API
+  - paragraph: Connect a relay, a self-hosted server, or any other OpenAI- or Anthropic-compatible endpoint by its base URL, protocol, and models.
+  - text: Provider ID
+  - textbox "Provider ID":
+    - /placeholder: acme-gateway
+  - paragraph: Lowercase identifier, starting with a letter, that uniquely names this provider in requests and as its credential name.
+  - text: Display name
+  - textbox "Display name"
+  - text: Base URL
+  - textbox "Base URL":
+    - /placeholder: http://127.0.0.1:4000/v1
+  - text: API protocol
+  - combobox "API protocol":
+    - option "OpenAI Chat Completions" [selected]
+    - option "OpenAI Responses"
+  - text: API key
+  - textbox "API key":
+    - /placeholder: Enter your API key
+  - region "Models":
+    - text: Models
+    - button "Fetch available models" [disabled]
+    - paragraph: No models will be shown in the selector. Unlisted IDs can still be sent directly.
+    - button "Add model"
+  - button "Cancel"
+  - button "Create provider" [disabled]

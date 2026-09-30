@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- A Windows GUI-subsystem program that never shows a window: what launch_app must keep waiting for, cancel and clean up in the unit checks. -->
+  <PropertyGroup><OutputType>WinExe</OutputType><AssemblyName>Testy.IdleFixture</AssemblyName></PropertyGroup>
+</Project>

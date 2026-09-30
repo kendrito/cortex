@@ -1,11 +1,22 @@
+import type { CommonKey } from './zh.ts'
 
-/** Base dictionary for the common namespace (the key-set source of truth). */
+/** en base dictionary for the common namespace, checked complete against the zh key set. */
 export const en = {
   'ok': 'OK',
   'cancel': 'Cancel',
   'close': 'Close',
   'copy': 'Copy',
   'copied': 'Copied',
+  'codeBlock.title': 'Code block',
+  'codeBlock.wrap': 'Wrap lines',
+  'codeBlock.unwrap': 'Do not wrap lines',
+  'copy.failed': 'Copy failed',
+  'copy.value': 'Copy value',
+  'copy.json': 'Copy JSON',
+  'copy.path': 'Copy property path',
+  'copy.prettyJson': 'Copy pretty JSON',
+  'copy.compactJson': 'Copy compact JSON',
+  'copy.optionsHint': '{action}; right-click for copy options',
   'retry': 'Retry',
   'loading': 'Loading…',
   'load.failed': 'Failed to load',
@@ -22,10 +33,14 @@ export const en = {
   'collapse': 'Collapse',
   'expand': 'Expand',
   'back': 'Back',
+  'brand.localBuild': 'CORTEX Local Build',
+  'workspace.defaultName': 'Default workspace',
   'unknown': 'Unknown',
   'none': 'None',
   'truncated': 'Truncated',
-} satisfies Record<string, string>
-
-/** The common vocabulary key union. */
-export type CommonKey = keyof typeof en
+  'json.label': 'JSON',
+  'markdown.footnotes': 'Footnotes',
+  'markdown.truncatedCharacters': '… truncated at {total} characters',
+  'number.thousand': '{value}K',
+  'number.million': '{value}M',
+} satisfies Record<CommonKey, string>

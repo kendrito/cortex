@@ -1,0 +1,65 @@
+{
+  "name": "@cortex/client-ui-session",
+  "description": "Session Controller adapter for React and session-scoped slots",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-session"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/api-session-controller",
+        "@cortex/client-ui-renderer"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/remote-mock": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

@@ -1,7 +1,7 @@
 /** Trajectory toolbar: timeline and ledger fold controls. */
 
 import type { TranslateNS } from '@cortex/client-ui-slots'
-import { IconSearchOutline16 } from '@cortex/client-ui-primitives'
+import { IconSearchOutlineRegular } from '@cortex/client-ui-primitives'
 import type { NS } from './locales.ts'
 import css from './TrajectoryToolbar.module.css'
 
@@ -112,7 +112,7 @@ export function TrajectoryToolbar({
           </button>
         </div>
         <div className={css.search}>
-          <IconSearchOutline16 size={11} className={css.searchIcon} />
+          <IconSearchOutlineRegular size={11} className={css.searchIcon} />
           <input
             type="search"
             className={css.searchInput}

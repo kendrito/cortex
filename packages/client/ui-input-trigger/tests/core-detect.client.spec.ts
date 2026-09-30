@@ -67,7 +67,7 @@ describe('detectTrigger position', () => {
   })
 
   it('treats a token after non-whitespace text as inline', () => {
-    expect(atEnd('first line\n/goal')).toMatchObject({ position: 'inline' })
+    expect(atEnd('第一行\n/goal')).toMatchObject({ position: 'inline' })
     expect(atEnd('a /goal')).toMatchObject({ position: 'inline' })
   })
 })
@@ -91,6 +91,17 @@ describe('detectTrigger guard tiers', () => {
 })
 
 describe('detectTrigger span and query', () => {
+  it('keeps an open quoted @file token active across spaces', () => {
+    const draft = 'read @"docs/design notes'
+    expect(atEnd(draft)).toMatchObject({
+      trigger: '@',
+      query: 'docs/design notes',
+      quoted: true,
+      position: 'inline',
+      span: { start: 5, end: draft.length },
+    })
+  })
+
   it('spans trigger char to caret with a placeholder draftRev', () => {
     const hit = detectTrigger('say /goal', 9, plain)
     expect(hit?.span).toEqual({ start: 4, end: 9, draftRev: 0 })

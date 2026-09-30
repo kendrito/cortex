@@ -1,0 +1,70 @@
+{
+  "name": "@cortex/sdk-minimal",
+  "description": "The standalone minimal SDK profile bundle: JSON-RPC, configurable model routes, persistent shell, and JSONL sessions",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/bundle/sdk-minimal"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@cortex/cordis-plugin-timer": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/jobs-local": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/llm-retry": "workspace:*",
+    "@cortex/mcp-resources": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/sdk-app": "workspace:*",
+    "@cortex/sdk-jsonrpc-server": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/terminal-bash": "workspace:*",
+    "@cortex/tool-bash-persistent": "workspace:*",
+    "@cortex/tool-pwsh-persistent": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/llm-pi-ai": "workspace:*",
+    "@cortex/credentials-local": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~"
+  }
+}

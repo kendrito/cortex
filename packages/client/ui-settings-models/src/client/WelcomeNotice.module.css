@@ -1,7 +1,7 @@
 .copy {
   font-size: 14px;
   line-height: 24px;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .copy p {
@@ -16,7 +16,7 @@
   margin: 16px 0 0;
   font-size: 14px;
   line-height: 22px;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .actions {

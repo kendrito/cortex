@@ -12,11 +12,12 @@
 
 import type { Context } from '@cortex/cordis'
 import type {
-  ApprovalRequestId, CordisDynamicPluginId, DynamicCordisInvokeResult, JsonValue,
+  ApprovalRequestId, CordisDynamicPluginId, DynamicCordisInvokeResult,
   DynamicCordisInventoryRow,
 } from '@cortex/api-remotes/client'
 import type { ClientModuleSystem } from '@cortex/client-modules/client'
-import type { SlotRegistry } from '@cortex/client-runtime/client'
+import type { SlotRegistry } from '@cortex/client-ui-renderer/client'
+import type { JsonValue } from '@cortex/util-values'
 // The Client Remote assembly is the one place the two planes meet: it mounts the
 // `dynamicCordisRunner` namespace and re-exports its payload vocabulary, so this
 // package names what it sends without importing a Host package.

@@ -4,8 +4,17 @@
  * metadata field must stay static, and a disabled expression must parse.
  */
 
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { metadataExpressionErrors } from './verify-cordis-config.ts'
+import {
+  bundleManifestPaths,
+  bundlePluginDependencyErrors,
+  metadataExpressionErrors,
+  packageTestFixtureDependencyErrors,
+  packageTestPluginDependencyErrors,
+} from './verify-cordis-config.ts'
 
 describe('verify-cordis-config metadata expressions', () => {
   it('accepts a disabled !!js expression', () => {
@@ -35,5 +44,112 @@ describe('verify-cordis-config metadata expressions', () => {
       '[0]',
     )
     expect(problems.some(problem => problem.includes('[0].disabled: disabled expression does not parse'))).toBe(true)
+  })
+})
+
+describe('workspace Bundle discovery and product dependency closures', () => {
+  it('discovers a Bundle outside packages/bundle from its manifest declaration', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'cortex-bundle-discovery-'))
+    try {
+      const bundleDir = join(fixture, 'packages/subagent/example')
+      const plainDir = join(fixture, 'packages/bundle/plain')
+      mkdirSync(bundleDir, { recursive: true })
+      mkdirSync(plainDir, { recursive: true })
+      writeFileSync(join(bundleDir, 'package.json'), JSON.stringify({
+        name: '@cortex/subagent-example',
+        cortex: { bundle: { patch: './cordis.patch.yml' } },
+      }))
+      writeFileSync(join(plainDir, 'package.json'), JSON.stringify({
+        name: '@cortex/plain',
+      }))
+
+      expect(bundleManifestPaths(fixture)).toEqual([
+        'packages/subagent/example/package.json',
+      ])
+    } finally {
+      rmSync(fixture, { recursive: true, force: true })
+    }
+  })
+
+  it('allows a Bundle to mount itself but rejects an undeclared plugin package', () => {
+    const manifestPath = 'packages/subagent/example/package.json'
+    const file = 'packages/subagent/example/cordis.patch.yml'
+    const manifest = {
+      name: '@cortex/subagent-example',
+      dependencies: {},
+    }
+    const self = { file, name: '@cortex/subagent-example' }
+    expect(bundlePluginDependencyErrors(manifestPath, manifest, [self])).toEqual([])
+    expect(bundlePluginDependencyErrors(manifestPath, manifest, [
+      self,
+      { file, name: '@cortex/missing-plugin' },
+    ])).toEqual([
+      `${file}: @cortex/missing-plugin must be declared in ${manifestPath} dependencies`,
+    ])
+  })
+})
+
+describe('package-owned Loader test dependency closures', () => {
+  it('requires package test configs to declare each named plugin they load', () => {
+    const manifestPath = 'packages/example/owner/package.json'
+    const file = 'packages/example/owner/tests/fixtures/cordis.yml'
+    const manifest = {
+      name: '@cortex/owner',
+      dependencies: {},
+      devDependencies: {
+        '@cortex/declared': 'workspace:^',
+      },
+    }
+    expect(packageTestPluginDependencyErrors(manifestPath, manifest, [
+      { file, name: '@cortex/owner' },
+      { file, name: '@cortex/declared' },
+      { file, name: '@cortex/missing' },
+    ])).toEqual([
+      `${file}: @cortex/missing must be declared in ${manifestPath} dependencies or devDependencies`,
+    ])
+  })
+
+  it('requires executable package test fixtures to declare their bare imports', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'cortex-package-test-entrypoint-'))
+    try {
+      const packageDir = join(fixture, 'packages/example/owner')
+      const driverDir = join(packageDir, 'tests/fixtures/loader')
+      mkdirSync(driverDir, { recursive: true })
+      writeFileSync(join(packageDir, 'package.json'), JSON.stringify({
+        name: '@cortex/owner',
+        devDependencies: {
+          '@cortex/declared': 'workspace:^',
+        },
+      }))
+      writeFileSync(join(driverDir, 'driver.ts'), [
+        "import '@cortex/owner'",
+        "import '@cortex/declared'",
+        "import '@cortex/missing'",
+      ].join('\n'))
+      writeFileSync(join(driverDir, 'cordis.yml'), '[]\n')
+      writeFileSync(join(driverDir, 'fixture.mjs'), "import '@cortex/declared'\n")
+      const unrelatedDir = join(packageDir, 'tests/fixtures/unrelated')
+      mkdirSync(unrelatedDir, { recursive: true })
+      writeFileSync(join(unrelatedDir, 'driver.ts'), "import '@cortex/unrelated'\n")
+
+      expect(packageTestFixtureDependencyErrors(fixture)).toEqual([
+        'packages/example/owner/tests/fixtures/loader/driver.ts: '
+        + '@cortex/missing must be declared in '
+        + 'packages/example/owner/package.json dependencies or devDependencies',
+      ])
+    } finally {
+      rmSync(fixture, { recursive: true, force: true })
+    }
+  })
+
+  it('fails loud when package-owned Loader fixtures disappear from the scan', () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'cortex-empty-package-test-entrypoint-'))
+    try {
+      expect(packageTestFixtureDependencyErrors(fixture)).toEqual([
+        'package test fixture dependency scan found no package-owned Loader configs',
+      ])
+    } finally {
+      rmSync(fixture, { recursive: true, force: true })
+    }
   })
 })

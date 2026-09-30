@@ -1,27 +1,29 @@
 /**
  * GoalBar: the goal indicator docked above the message composer (input dock
  * strip). A present goal shows a goal glyph, a phase label, the truncated
- * objective, and icon actions — resume when paused, edit (inline form in the
- * same strip), and clear. Goal creation lives on the `/goal` command, not
- * here: loading (undefined), no goal (null), and complete goals render
- * nothing. Live state arrives as the projected whole snapshot; the verbs are
- * the injected face.
+ * objective, and icon actions — resume when active-disarmed or paused, edit
+ * (inline form in the same strip), and clear. Goal creation lives on the
+ * `/goal` command, not here: loading (undefined), no goal (null), and complete
+ * goals render nothing. Durable state arrives as the projected whole snapshot;
+ * process-local activation arrives through the injected activation hook.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { GoalSnapshot } from '@cortex/goal/client'
+import type { GoalActivation, GoalSnapshot } from '@cortex/goal/client'
 import {
-  IconCheckOutline16, IconCloseOutline16, IconEditOutline16, IconGoalOutline16,
-  IconPauseOutline16, IconPlayOutline16, IconTrashOutline16, Tooltip,
+  IconCheckOutlineRegular, IconCloseOutlineRegular, IconEditOutlineRegular, IconGoalOutlineRegular,
+  IconPauseOutlineRegular, IconPlayOutlineRegular, IconTrashOutlineRegular, Tooltip,
 } from '@cortex/client-ui-primitives'
-import type { PropsLocale } from '@cortex/client-ui-slots'
-import type { GoalActionResult, GoalBarActions } from './slots.ts'
+import type { InjectFace, PropsLocale, TranslateNS } from '@cortex/client-ui-slots'
+import type { GoalActionResult, GoalBarActions, GoalBarInjected } from './slots.ts'
 import type { GoalKey } from './locales.ts'
 import css from './GoalBar.module.css'
 
 export interface GoalBarProps extends GoalBarActions {
   /** Current goal snapshot; undefined = capability absent or loading, null = no goal set. */
   goal: GoalSnapshot | null | undefined
+  /** Process-local continuation activation; absent while the live read is pending. */
+  activation?: GoalActivation
 }
 
 /** Strip label keys per visible phase; complete goals render nothing. */
@@ -31,7 +33,13 @@ const PHASE_LABELS = {
   blocked: 'phase.blocked',
 } as const satisfies Record<string, GoalKey>
 
-export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBarProps & PropsLocale<'goal'>) {
+/** Strip label for an active goal using its process-local activation. */
+function activeLabel(activation: GoalActivation | undefined, t: TranslateNS<'goal'>): string {
+  if (activation === 'disarmed') return t('phase.active.disarmed')
+  return t(PHASE_LABELS.active)
+}
+
+export function GoalBar({ goal, activation, onEdit, onPause, onResume, onClear, t }: GoalBarProps & PropsLocale<'goal'>) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [pending, setPending] = useState(false)
@@ -95,7 +103,7 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
           />
           {actionError !== null && <span className={css.error} role="alert">{actionError}</span>}
           <div className={css.actions}>
-            <Tooltip label={t('action.save')} side="bottom" delayMs={500}>
+            <Tooltip portal label={t('action.save')} side="bottom" delayMs={500}>
               <button
                 type="button"
                 className={css.iconBtn}
@@ -103,10 +111,10 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
                 disabled={pending || draft.trim() === ''}
                 aria-label={t('action.save')}
               >
-                <IconCheckOutline16 size={14} />
+                <IconCheckOutlineRegular size={14} />
               </button>
             </Tooltip>
-            <Tooltip label={t('action.cancel')} side="bottom" delayMs={500}>
+            <Tooltip portal label={t('action.cancel')} side="bottom" delayMs={500}>
               <button
                 type="button"
                 className={css.iconBtn}
@@ -114,7 +122,7 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
                 disabled={pending}
                 aria-label={t('action.cancel')}
               >
-                <IconCloseOutline16 size={14} />
+                <IconCloseOutlineRegular size={14} />
               </button>
             </Tooltip>
           </div>
@@ -124,29 +132,32 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
   }
 
   const title = goal.phase === 'blocked' ? goal.blockedReason?.message : undefined
+  const label = goal.phase === 'active' ? activeLabel(activation, t) : t(PHASE_LABELS[goal.phase])
+  const showResume = goal.phase === 'paused'
+    || (goal.phase === 'active' && activation === 'disarmed')
   return (
     <div className={css.dock} data-goal-bar>
       <div className={css.bar} title={title}>
-        <span className={css.goalGlyph}><IconGoalOutline16 size={14} /></span>
-        <span className={css.label}>{t(PHASE_LABELS[goal.phase])}</span>
+        <span className={css.goalGlyph}><IconGoalOutlineRegular size={14} /></span>
+        <span className={css.label}>{label}</span>
         <span className={css.objective}>{goal.objective}</span>
         {actionError !== null && <span className={css.error} role="alert">{actionError}</span>}
         <div className={css.actions}>
-          {goal.phase === 'active' && (
-            <Tooltip label={t('action.pause')} side="bottom" delayMs={500}>
+          {goal.phase === 'active' && activation === 'armed' && (
+            <Tooltip portal label={t('action.pause')} side="bottom" delayMs={500}>
               <button type="button" className={css.iconBtn} disabled={pending} onClick={() => { void runAction(onPause) }} aria-label={t('action.pause')}>
-                <IconPauseOutline16 size={14} />
+                <IconPauseOutlineRegular size={14} />
               </button>
             </Tooltip>
           )}
-          {goal.phase === 'paused' && (
-            <Tooltip label={t('action.resume')} side="bottom" delayMs={500}>
+          {showResume && (
+            <Tooltip portal label={t('action.resume')} side="bottom" delayMs={500}>
               <button type="button" className={css.iconBtn} disabled={pending} onClick={() => { void runAction(onResume) }} aria-label={t('action.resume')}>
-                <IconPlayOutline16 size={14} />
+                <IconPlayOutlineRegular size={14} />
               </button>
             </Tooltip>
           )}
-          <Tooltip label={t('action.edit')} side="bottom" delayMs={500}>
+          <Tooltip portal label={t('action.edit')} side="bottom" delayMs={500}>
             <button
               type="button"
               className={css.iconBtn}
@@ -154,12 +165,12 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
               onClick={() => { setDraft(goal.objective); setEditing(true) }}
               aria-label={t('action.edit')}
             >
-              <IconEditOutline16 size={14} />
+              <IconEditOutlineRegular size={14} />
             </button>
           </Tooltip>
-          <Tooltip label={t('action.clear')} side="bottom" delayMs={500}>
+          <Tooltip portal label={t('action.clear')} side="bottom" delayMs={500}>
             <button type="button" className={css.iconBtn} disabled={pending} onClick={() => { void handleClear(goal.id) }} aria-label={t('action.clear')}>
-              <IconTrashOutline16 size={14} />
+              <IconTrashOutlineRegular size={14} />
             </button>
           </Tooltip>
         </div>
@@ -168,15 +179,28 @@ export function GoalBar({ goal, onEdit, onPause, onResume, onClear, t }: GoalBar
   )
 }
 
-/** Full props of the dock entry: InputZone owner share + session standard kit + injected verbs + the locale seat. */
-export type GoalDockProps = import('@cortex/client-ui-slots').PropsRuntime<'conversation.input.dock'> & GoalBarActions & PropsLocale<'goal'>
+/** Full props of the dock entry: InputZone owner share + injected verbs/activation hook + the locale seat. */
+export type GoalDockProps =
+  import('@cortex/client-ui-slots').PropsRuntime<'conversation.input.dock'>
+  & InjectFace<GoalBarInjected>
+  & PropsLocale<'goal'>
 
-/** Dock adapter: reads the host-computed 'goal' projection (whole value; absent or null renders nothing). */
-export function GoalDock({ useProjection, onEdit, onPause, onResume, onClear, t }: GoalDockProps) {
+/** Dock adapter: overlays process-local activation on the durable goal projection. */
+export function GoalDock({
+  useProjection, useGoalActivation, onEdit, onPause, onResume, onClear, t,
+}: GoalDockProps) {
   const projection = useProjection('goal')
+  const goal = projection === undefined || projection === null ? projection : projection.goal
+  const goalId = goal?.id
+  const revision = goal?.revision
+  const activation = useGoalActivation(next => (
+    next.id === goalId && next.revision === revision ? next.activation : undefined
+  ))
+
   return (
     <GoalBar
-      goal={projection === undefined ? undefined : projection === null ? null : projection.goal}
+      goal={goal}
+      {...activation === undefined ? {} : { activation }}
       onEdit={onEdit}
       onPause={onPause}
       onResume={onResume}

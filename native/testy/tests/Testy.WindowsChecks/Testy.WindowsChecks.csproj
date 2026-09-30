@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><UseWPF>true</UseWPF><AssemblyName>Testy.WindowsChecks</AssemblyName></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../src/Testy.Windows/Testy.Windows.csproj" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="Fixtures/*.png" /></ItemGroup>
+</Project>

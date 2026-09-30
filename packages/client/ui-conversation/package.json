@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-conversation",
-  "description": "Conversation domain: skeleton, ordered chat flow, composer with the Host-backed busy-Enter preference, and details host",
-  "version": "0.1.0-rc.5",
+  "description": "Target-neutral Conversation assembly, shell, composer, queue, and view navigation",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,10 +18,6 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./client": {
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.js"
@@ -32,12 +28,14 @@
   "cortex": {
     "client": {
       "inject": [
-        "@cortex/client-connection",
+        "@cortex/api-session-controller",
+        "@cortex/client-file-upload",
         "@cortex/client-locale",
-        "@cortex/client-runtime",
+        "@cortex/client-ui-layout",
+        "@cortex/client-ui-renderer",
+        "@cortex/client-ui-session",
         "@cortex/client-ui-settings",
-        "@cortex/api-remotes",
-        "@cortex/client-ui-layout"
+        "@cortex/client-ui-workspace"
       ],
       "platform": "web"
     }
@@ -48,67 +46,60 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@cortex/settings": "workspace:^",
-    "clsx": "^2.0.0",
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/attachment": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/client-connection": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-ui-attachment": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-input-trigger": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/compaction": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm-retry": "workspace:^",
-    "@cortex/session-stats": "workspace:^",
-    "@cortex/token-meter": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "react": "^18.2.0"
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/attachment": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/client-connection": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-test-runtime": "workspace:^",
-    "@cortex/client-ui-layout": "workspace:^",
-    "@cortex/client-ui-attachment": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-input-trigger": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/compaction": "workspace:^",
-    "@cortex/goal": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm-retry": "workspace:^",
-    "@cortex/permission-presets": "workspace:^",
-    "@cortex/plan-mode": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/session-stats": "workspace:^",
-    "@cortex/token-meter": "workspace:^",
-    "@cortex/tool-todo": "workspace:^",
-    "@cortex/tools": "workspace:^",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/api-workspace-controller": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-file-upload": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-layout": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-settings": "workspace:*",
+    "@cortex/client-ui-workspace": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/goal": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/llm-retry": "workspace:*",
+    "@cortex/plan-mode": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/token-meter": "workspace:*",
+    "@cortex/tool-todo": "workspace:*",
+    "@cortex/util-crypto": "workspace:*",
+    "@cortex/workspace": "workspace:*",
+    "@cortex/file-reference": "workspace:*",
+    "@cortex/util-workspace-path": "workspace:*",
     "@types/react": "~18.3.1",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "@lexical/headless": "^0.49.0",
+    "react-dom": "^18.2.0",
+    "@types/react-dom": "~18.3.0",
+    "zod": "^4.4.3",
+    "lexical": "^0.49.0",
+    "clsx": "^2.0.0",
+    "@lexical/utils": "^0.49.0",
+    "@lexical/text": "^0.49.0",
+    "@lexical/plain-text": "^0.49.0",
+    "@lexical/history": "^0.49.0",
+    "@cortex/agent": "workspace:*",
+    "@cortex/settings": "workspace:*",
+    "@cortex/client-shortcuts": "workspace:*"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/client.js",
     "lib/types/**/*.d.ts"
   ]

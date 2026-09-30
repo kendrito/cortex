@@ -8,7 +8,7 @@
 .error {
   max-width: 180px;
   overflow: hidden;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
   font-size: 12px;
   line-height: 18px;
   text-overflow: ellipsis;

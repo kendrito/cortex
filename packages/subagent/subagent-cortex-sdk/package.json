@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subagent-cortex-sdk",
   "description": "Out-of-process SDK subagent backend: drives a child Cortex runtime subprocess over stdio JSON-RPC through the TypeScript SDK client",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,43 +18,45 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sdk-client": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sdk-client": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/loader-smoke": "workspace:^",
-    "@cortex/sdk-client": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-instructions": "workspace:*",
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/loader-smoke": "workspace:*",
+    "@cortex/sdk-client": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-checkpoint-policy": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/skill-filesystem": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tool-subagent": "workspace:*"
   }
 }

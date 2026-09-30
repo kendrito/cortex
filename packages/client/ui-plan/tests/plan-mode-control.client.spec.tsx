@@ -7,18 +7,18 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createSnapshotStore } from '@cortex/client-runtime/client'
-import { bindSnapshotSelector } from '@cortex/client-web-react'
+import { createSnapshotStore } from '@cortex/client-store'
+import { bindSnapshotSelector, makeTranslate } from '@cortex/client-test-runtime'
 import type { PlanProjection } from '@cortex/plan-mode/client'
 import { PlanChip, type PlanChipProps } from '../src/client/PlanModeControl.tsx'
-import { makeTranslate } from '@cortex/client-test-runtime'
-import { en as commonEn } from '@cortex/client-locale/src/locales/index.ts'
-import { en } from '../src/client/locales.ts'
+import css from '../src/client/PlanModeControl.module.css'
+import { zh as commonZh } from '@cortex/client-locale/src/locales/zh.ts'
+import { zh } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
-// The framework-injected t seat, stubbed over the en dictionaries (the default locale).
-const t: PlanChipProps['t'] = makeTranslate(en, commonEn)
+// The framework-injected t seat, stubbed over the zh dictionaries (the default locale).
+const t: PlanChipProps['t'] = makeTranslate(zh, commonZh)
 
 function setup(
   plan: PlanProjection | undefined,
@@ -33,7 +33,7 @@ function setup(
   return { store, exitPlanMode, view }
 }
 
-const chip = () => screen.getByRole('button', { name: 'Plan mode on, press to turn off' })
+const chip = () => screen.getByRole('button', { name: '计划模式已开启，按下关闭' })
 
 describe('PlanChip', () => {
   it('renders nothing for an absent capability or a default-mode target', () => {
@@ -49,10 +49,25 @@ describe('PlanChip', () => {
 
   it('renders the Plan status for active and pending-entry targets', () => {
     setup({ active: true, pending: false })
-    expect(chip().textContent).toBe('Plan')
+    expect(chip().textContent).toBe('计划')
     cleanup()
     setup({ active: false, pending: true })
-    expect(chip().textContent).toBe('Plan')
+    expect(chip().textContent).toBe('计划')
+  })
+
+  it('leads with the plan glyph and swaps in the circled close only while hovered', () => {
+    setup({ active: true, pending: false })
+    // Glyph-then-label like the sibling access-mode trigger; the two glyphs
+    // share one slot and CSS shows exactly one of them, so no trailing cross.
+    const glyphs = chip().querySelectorAll('svg')
+    expect(glyphs).toHaveLength(2)
+    const slot = glyphs[0]!.parentElement!
+    expect(slot).toBe(chip().firstElementChild)
+    expect(slot.getAttribute('aria-hidden')).toBe('true')
+    expect(glyphs[0]!.classList.contains(css.restGlyph!)).toBe(true)
+    expect(glyphs[1]!.classList.contains(css.hoverGlyph!)).toBe(true)
+    expect(glyphs[1]!.parentElement).toBe(slot)
+    expect(chip().lastChild?.textContent).toBe('计划')
   })
 
   it('executes /plan off once and follows the projection down', async () => {
@@ -66,7 +81,7 @@ describe('PlanChip', () => {
     resolve(null)
     store.set({ value: { active: true, pending: true } })
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: 'Plan mode on, press to turn off' })).toBeNull()
+      expect(screen.queryByRole('button', { name: '计划模式已开启，按下关闭' })).toBeNull()
     })
   })
 
@@ -82,7 +97,7 @@ describe('PlanChip', () => {
       .mockRejectedValueOnce('socket closed')
     setup({ active: true, pending: false }, exitPlanMode)
     fireEvent.click(chip())
-    expect((await screen.findByText('failed to exit plan mode')).getAttribute('title')).toBe('host said no')
+    expect((await screen.findByText('退出计划模式失败')).getAttribute('title')).toBe('host said no')
     expect(chip()).toBeTruthy()
 
     fireEvent.click(chip())

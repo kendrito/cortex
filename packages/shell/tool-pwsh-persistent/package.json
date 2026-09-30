@@ -1,0 +1,59 @@
+{
+  "name": "@cortex/tool-pwsh-persistent",
+  "description": "Model-facing owner-scoped persistent PowerShell tool backed by the Harness PTY service",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/shell/tool-pwsh-persistent"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/agent": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/output-retention": "workspace:*",
+    "@cortex/terminal": "workspace:*",
+    "@cortex/terminal-bash": "workspace:*",
+    "@cortex/pwsh-local": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  }
+}

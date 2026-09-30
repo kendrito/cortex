@@ -1,7 +1,7 @@
 {
   "name": "@cortex/acp",
   "description": "Automation-only Agent Client Protocol server for driving Cortex agents over JSON-RPC stdio",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,39 +18,49 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "dependencies": {
-    "@agentclientprotocol/sdk": "0.25.1",
-    "@cortex/schemastery": "workspace:^"
+    "@agentclientprotocol/sdk": "1.4.0",
+    "@cortex/brand": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/mcp-client": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/token-meter": "workspace:*",
+    "@cortex/user-approval": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/token-meter": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/agent-loop": "workspace:^",
-    "@cortex/agent-loop-testkit": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/user-approval": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/mcp-client": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/token-meter": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/user-approval": "workspace:*"
   }
 }

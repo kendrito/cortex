@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sdk-jsonrpc-server",
   "description": "Stdio JSON-RPC server plugin for out-of-process Cortex SDK clients",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,44 +18,42 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
   },
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/agent-spine-demo": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/llm-pi-ai": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-persistence-jsonl": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/llm-pi-ai": "workspace:*"
   }
 }

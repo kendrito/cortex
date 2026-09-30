@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import LlmRuntime, { createUserMessage, LlmAdapter  } from '@cortex/llm'
 import type { GenerateOptions, StreamChunk } from '@cortex/llm'
 import SessionStore, { Session, SessionId } from '@cortex/session'
+import SessionProjectionRegistry from '@cortex/session-projection'
+import { turnBoundaryProjectionDefinition } from '@cortex/agent-loop'
 import SessionTitleService from '@cortex/session-title'
 import * as providerPlugin from '@cortex/session-title-all-prompts-llm'
 
@@ -19,6 +21,7 @@ class RecordingAdapter extends LlmAdapter {
 const TITLE_CONFIG = { fallbackMaxWords: 5, fallbackMaxBytes: 40, maxTitleBytes: 80 } as const
 const LLM_CONFIG = {
   targetWords: 5,
+  targetCjkCharacters: 10,
   maxInputBytes: 1_000,
   maxOutputTokens: 32,
   timeoutMs: 1_000,
@@ -43,13 +46,16 @@ describe('all-messages LLM title provider', () => {
     const ctx = new Context()
     await ctx.plugin(LlmRuntime)
     await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    ctx.sessionProjections.register(turnBoundaryProjectionDefinition)
     await ctx.plugin(SessionTitleService, TITLE_CONFIG)
     const adapter = new RecordingAdapter()
     ctx.llm.registerAdapter(['current-route'], adapter)
     await ctx.plugin(providerPlugin, LLM_CONFIG)
     const session = ctx.sessions.create(SessionId('all-plugin'), {
-      seed: seeded.events,
-      meta: { parentSession: seeded.id, seedLength: seeded.seq },
+      seed: seeded.snapshotEvents(),
+      inheritedEventCount: seeded.seq,
+      meta: { parentSession: seeded.id, isSeeded: true },
     })
     session.append('turn/start', { turn: 2 })
     const latest = session.append('user/message', createUserMessage({

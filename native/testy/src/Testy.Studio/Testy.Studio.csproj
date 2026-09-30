@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Testy.Studio</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- The exe's icon (Explorer, Start, shortcuts). Windows use the same file as a resource (Window.Icon), so publish needs no loose file. -->
+    <ApplicationIcon>Assets\Testy.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Testy.ico" />
+    <InternalsVisibleTo Include="Testy.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Testy.Core\Testy.Core.csproj" />
+    <ProjectReference Include="..\Testy.Windows\Testy.Windows.csproj" />
+  </ItemGroup>
+</Project>

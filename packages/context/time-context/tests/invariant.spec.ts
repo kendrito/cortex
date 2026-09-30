@@ -2,7 +2,7 @@ import { createUserMessage } from '@cortex/llm'
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
 import type { ContentBlock } from '@cortex/llm'
-import SessionStore, { Session, SessionId, type SessionEvent } from '@cortex/session'
+import SessionStore, { Session, SessionId, SessionSeq, type SessionEvent } from '@cortex/session'
 import * as TimeInvariant from '@cortex/time-context/invariant'
 import InvariantRegistry from '@cortex/invariants'
 
@@ -24,18 +24,18 @@ function event(
 ): SessionEvent<'user/message'> {
   return {
     type: 'user/message',
-    seq: 0,
+    surfaceOp: 'append',
+    seq: SessionSeq(0),
     time,
     data: createUserMessage({
       content: (content ?? [{ type: 'text', text }]) as ContentBlock[],
       source: plugin === 'time-context'
         ? {
-          kind: 'plugin',
-          plugin,
+          kind: 'time-context',
           form: 'snapshot',
           sections: [{ name: plugin, text }],
         }
-        : { kind: 'plugin', plugin },
+        : { kind: 'other' },
     }),
   }
 }
@@ -77,8 +77,7 @@ function appendReading(session: Session, text: string): void {
   session.append('user/message', createUserMessage({
     content: [{ type: 'text', text }],
     source: {
-      kind: 'plugin',
-      plugin: 'time-context',
+      kind: 'time-context',
       form: 'snapshot',
       sections: [{ name: 'time-context', text }],
     },
@@ -101,7 +100,7 @@ describe('time-context invariants', () => {
     }).not.toThrow()
   })
 
-  it('requires browser-zone policy and timestamp to match current-turn request provenance', async () => {
+  it('requires browser-zone policy and timestamp to match current-turn request sources', async () => {
     const ctx = await setup()
     const policy = 'Browser time zone for this request: Asia/Singapore. '
       + 'Interpret otherwise-unqualified dates and times in this zone.'
@@ -149,7 +148,7 @@ describe('time-context invariants', () => {
     }
   })
 
-  it('rejects invalid browser provenance loaded across the durable boundary', async () => {
+  it('rejects invalid browser-zone data loaded across the durable boundary', async () => {
     const ctx = await setup()
     const timeZone = 'Not/A_Real_Zone'
     const policy = `Browser time zone for this request: ${timeZone}. `
@@ -282,27 +281,24 @@ describe('time-context invariants', () => {
     }).toThrow(message)
   })
 
-  it('requires exact snapshot provenance without copied request authority', async () => {
+  it('requires the exact snapshot source without copied request authority', async () => {
     const ctx = await setup()
     const base = event(reading())
     for (const source of [
-      { kind: 'plugin', plugin: 'time-context' },
+      { kind: 'time-context' },
       { ...base.data.source, authority: {} },
       {
-        kind: 'plugin',
-        plugin: 'time-context',
+        kind: 'time-context',
         form: 'snapshot',
         sections: [{ name: 'time-context', text: 'different' }],
       },
       {
-        kind: 'plugin',
-        plugin: 'time-context',
+        kind: 'time-context',
         form: 'snapshot',
         sections: { 0: { name: 'time-context', text: reading() }, length: 1 },
       },
       {
-        kind: 'plugin',
-        plugin: 'time-context',
+        kind: 'time-context',
         form: 'snapshot',
         sections: [{ name: 'time-context', text: reading(), extra: true }],
       },
@@ -322,9 +318,9 @@ describe('time-context invariants', () => {
     expect(() => {
       ctx.sessions.create(SessionId('time-invariant-created-invalid'), {
         seed: [
-          { type: 'turn/start', seq: 0, time: SECOND, data: { turn: 1 } },
-          { type: 'step/start', seq: 1, time: SECOND, data: { turn: 1, step: 1 } },
-          { ...event(text), seq: 2, surfaceOp: 'append' },
+          { type: 'turn/start', seq: SessionSeq(0), time: SECOND, data: { turn: 1 } },
+          { type: 'step/start', seq: SessionSeq(1), time: SECOND, data: { turn: 1, step: 1 } },
+          { ...event(text), seq: SessionSeq(2), surfaceOp: 'append' },
         ],
       })
     }).toThrow(/expected turn 1\/step 1/)
@@ -345,7 +341,7 @@ describe('time-context invariants', () => {
     expect(() => { ctx.emit('session/event', preparing(1, 1), user) }).not.toThrow()
     expect(() => {
       ctx.emit('session/event', preparing(1, 1), {
-        type: 'turn/start', seq: 0, time: 0, data: { turn: 1 },
+        type: 'turn/start', seq: SessionSeq(0), time: 0, data: { turn: 1 },
       })
       ctx.emit('tools/change')
     }).not.toThrow()

@@ -1,0 +1,68 @@
+{
+  "name": "@cortex/client-shortcuts",
+  "description": "Application keyboard command registry and physical-key routing",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/shortcuts"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./protocol": {
+      "types": "./lib/types/protocol.d.ts",
+      "default": "./lib/protocol.js"
+    }
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/client-locale"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/host-webserver": "workspace:*"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/protocol.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "dependencies": {
+    "@cortex/util-crypto": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
+  }
+}

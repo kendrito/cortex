@@ -1,0 +1,61 @@
+{
+  "name": "@cortex/experimental-tool-agent-team",
+  "description": "Scoped model-facing Agent Teams tools over ctx.agentTeams",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/tool-agent-team"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@cortex/agent": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/experimental-agent-team": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subagent-fork-in-process": "workspace:*",
+    "@cortex/subagent-spawn-in-process": "workspace:*",
+    "@cortex/tool-subagent-control": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/experimental-agent-team": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/llm": "workspace:*"
+  }
+}

@@ -3,13 +3,13 @@
  * plugin's apply-world change listener is the only writer; the row component
  * reads via props.useStore.
  */
-import { defineStore, type EngineStoreHandle } from '@cortex/client-runtime/client'
+import { defineStore, type EngineStoreHandle } from '@cortex/client-store'
 
 /** One selectable locale row (id + self-described label). */
 export interface LanguageOptionRow {
   /** Locale id (the setLocale argument). */
   id: string
-  /** Display name in its own language (English). */
+  /** Display name in its own language (中文 / English). */
   label: string
 }
 

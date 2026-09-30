@@ -1,0 +1,107 @@
+{
+  "name": "@cortex/plugin-manager",
+  "description": "Current-profile plugin and bundle management shared by cortex CLI, Web and agent tools",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/boot/plugin-manager"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./registry": {
+      "types": "./lib/types/registry.d.ts",
+      "default": "./lib/types/registry.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./operations": {
+      "types": "./lib/types/operations.d.ts",
+      "default": "./lib/types/operations.js"
+    },
+    "./tools": {
+      "types": "./lib/types/tools.d.ts",
+      "default": "./lib/types/tools.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/atomic-write": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "execa": "^10.0.0",
+    "yaml": "^2.9.0",
+    "zod": "^4.4.3",
+    "@cortex/util-values": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/host-plugin-inventory": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/hmr": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/user-approval": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/hmr": {
+      "optional": true
+    },
+    "@cortex/user-approval": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@cortex/package-manifest": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/host-plugin-inventory": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/hmr": "workspace:*",
+    "@cortex/cordis-plugin-timer": "workspace:~",
+    "@cortex/brand": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/agent": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/user-approval": "workspace:*"
+  }
+}

@@ -9,13 +9,15 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
 import Loader from '@cortex/cordis-plugin-loader'
 import Include from '@cortex/cordis-plugin-include'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import { Session, SessionId } from '@cortex/session'
-import AgentRegistry, { Inbox } from '@cortex/agent'
+import AgentRegistry from '@cortex/agent'
 import type { Agent } from '@cortex/agent'
 import SystemPrompt from '@cortex/system-prompt'
 import ToolRuntime from '@cortex/tools'
+import SessionProjectionRegistry from '@cortex/session-projection'
 import * as ToolTodo from '@cortex/tool-todo'
+import { unsupportedInbox } from '@cortex/agent-loop-testkit'
 
 let root: string | undefined
 let context: Context | undefined
@@ -27,18 +29,18 @@ afterEach(async () => {
   root = undefined
 })
 
-function agent(ctx: Context): Agent {
+async function agent(ctx: Context): Promise<Agent> {
   const scope = ctx.plugin(() => {})
   const id = SessionId('todo-loader-agent')
   const session = Session.create(id)
   const value: Agent = {
-    id, options: {}, session, inbox: new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+    id, options: {}, session, inbox: unsupportedInbox(),
     status: 'idle', ctx: scope.ctx,
     followup: () => {}, steer: () => {}, inject: () => {}, send: () => {}, cancel() {},
     runMaintenance: task => task(new AbortController().signal),
     whenIdle: () => Promise.resolve(),
   }
-  ctx.agents.register(value)
+  await ctx.agents.register(value)
   return value
 }
 
@@ -58,6 +60,7 @@ async function boot(configLines: readonly string[]): Promise<Context> {
     "- name: '@cortex/agent'",
     "- name: '@cortex/system-prompt'",
     "- name: '@cortex/tools'",
+    "- name: '@cortex/session-projection'",
     "- name: '@cortex/tool-todo'",
     ...configLines.length > 0 ? ['  config:', ...configLines] : [],
     '',
@@ -72,6 +75,7 @@ async function boot(configLines: readonly string[]): Promise<Context> {
     ['@cortex/agent', AgentRegistry],
     ['@cortex/system-prompt', SystemPrompt],
     ['@cortex/tools', ToolRuntime],
+    ['@cortex/session-projection', SessionProjectionRegistry],
     ['@cortex/tool-todo', ToolTodo],
   ])
   ctx.loader.internal = {
@@ -83,6 +87,7 @@ async function boot(configLines: readonly string[]): Promise<Context> {
   } as unknown as NonNullable<typeof ctx.loader.internal>
   await ctx.loader.create({ name: 'cordis:include', config: { path: pathToFileURL(configPath).href } })
   await ctx.loader.await()
+  for (const entry of ctx.loader.entries()) await entry.fiber?.await()
   return ctx
 }
 
@@ -95,37 +100,37 @@ describe('tool-todo real Loader composition through cordis.yml', () => {
   it('allowParallelInProgress: false narrows the description and rejects a parallel write', async () => {
     const ctx = await boot(['    allowParallelInProgress: false'])
     const description = ctx.tools.schemas().find(s => s.name === 'todo_write')?.description ?? ''
-    expect(description).toContain('Keep AT MOST ONE todo `in_progress`')
-    expect(description).not.toContain('several at once')
+    expect(description).toContain('keep exactly one todo `in_progress`')
+    expect(description).not.toContain('several only')
 
-    const owner = agent(ctx)
+    const owner = await agent(ctx)
     const result = await ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('parallel'),
+      callId: ToolCallId('parallel'),
       name: 'todo_write',
       arguments: { todos: PARALLEL_TODOS },
       agent: owner,
     })
     expect(result.isError).toBe(true)
     expect(resultText(result)).toContain('at most one task may be in_progress')
-    expect(owner.session.events.some(e => e.type === 'todo/write')).toBe(false)
+    expect(owner.session.snapshotEvents().some(e => e.type === 'todo/write')).toBe(false)
   }, 30_000)
 
   it('allowParallelInProgress: true permits a parallel write end to end', async () => {
     const ctx = await boot(['    allowParallelInProgress: true'])
     const description = ctx.tools.schemas().find(s => s.name === 'todo_write')?.description ?? ''
-    expect(description).toContain('several at once when work genuinely runs in parallel')
+    expect(description).toContain('several only when work runs in parallel')
 
-    const owner = agent(ctx)
+    const owner = await agent(ctx)
     const result = await ctx.tools.execute({
       signal: new AbortController().signal,
-      callId: CallId('parallel-enabled'),
+      callId: ToolCallId('parallel-enabled'),
       name: 'todo_write',
       arguments: { todos: PARALLEL_TODOS },
       agent: owner,
     })
     expect(result.isError).toBe(false)
-    expect(owner.session.events.findLast(e => e.type === 'todo/write')?.data.todos).toEqual(PARALLEL_TODOS)
+    expect(owner.session.snapshotEvents().findLast(e => e.type === 'todo/write')?.data.todos).toEqual(PARALLEL_TODOS)
   }, 30_000)
 
   it.each([

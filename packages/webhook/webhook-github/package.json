@@ -1,0 +1,55 @@
+{
+  "name": "@cortex/webhook-github",
+  "description": "Signed GitHub HTTP webhook adapter for the Cortex webhook runtime",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/webhook/webhook-github"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/credentials": "workspace:*",
+    "@cortex/host-webserver": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/webhook": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "@octokit/webhooks": "^14.2.0"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/credentials": "workspace:*",
+    "@cortex/host-webserver": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/webhook": "workspace:*"
+  }
+}

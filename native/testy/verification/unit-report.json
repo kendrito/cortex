@@ -1,0 +1,1703 @@
+{
+  "timestamp": "2026-09-30T13:41:35.4522824+00:00",
+  "total": 339,
+  "passed": 339,
+  "failed": 0,
+  "results": [
+    {
+      "name": "runner executes ordered actions and captures evidence",
+      "passed": true,
+      "durationMs": 203
+    },
+    {
+      "name": "assertion mismatch fails and stops later actions",
+      "passed": true,
+      "durationMs": 187
+    },
+    {
+      "name": "assertions poll until delayed state appears",
+      "passed": true,
+      "durationMs": 221
+    },
+    {
+      "name": "missing selector times out without invoking an action",
+      "passed": true,
+      "durationMs": 187
+    },
+    {
+      "name": "cancellation stops before later actions",
+      "passed": true,
+      "durationMs": 92
+    },
+    {
+      "name": "evidence capture failure fails the run",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "runner escapes untrusted text in HTML report",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "workspace test, run and settings round trip",
+      "passed": true,
+      "durationMs": 43
+    },
+    {
+      "name": "workspace rejects path traversal IDs",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "workspace reports corrupt saved data",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "schema rejects invalid actions, timeouts and empty tests",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "plan parser accepts valid structured plans",
+      "passed": true,
+      "durationMs": 6
+    },
+    {
+      "name": "plan parser rejects invalid and hostile plans",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "JSON round trip preserves Unicode and special characters",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "step observer receives evidence and preserves authoritative outcomes",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "draft storage allows incomplete editing but execution rejects it",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "truncated trees cannot prove selector absence",
+      "passed": true,
+      "durationMs": 9518
+    },
+    {
+      "name": "Responses provider sends strict schema and parses output",
+      "passed": true,
+      "durationMs": 33
+    },
+    {
+      "name": "Compatible provider uses chat messages and strict schema",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "HTTP credentials fall back to Windows user variables and preserve process precedence",
+      "passed": true,
+      "durationMs": 649
+    },
+    {
+      "name": "Responses planning and explanations honor the image-sharing setting",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "API provider refuses missing credential before making a request",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "provider rejects incomplete and malformed model responses",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "provider restricts plaintext remote endpoints",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "local computer tools enforce schemas, target and call limits",
+      "passed": true,
+      "durationMs": 27
+    },
+    {
+      "name": "offline parser is deterministic and rejects unsupported instructions",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "custom computer-use loop returns tool observations and preserves assertion results",
+      "passed": true,
+      "durationMs": 95
+    },
+    {
+      "name": "custom computer-use loop enforces turn and tool boundaries",
+      "passed": true,
+      "durationMs": 40
+    },
+    {
+      "name": "Codex resolution honors explicit configuration and process PATH order",
+      "passed": true,
+      "durationMs": 6
+    },
+    {
+      "name": "Codex resolution finds only direct official installs and latest version children",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "AI runner requires every immutable saved assertion",
+      "passed": true,
+      "durationMs": 38
+    },
+    {
+      "name": "AI runner rejects skipped interactions despite a passing final assertion",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "AI runner rejects wrong or weaker acceptance checks",
+      "passed": true,
+      "durationMs": 47
+    },
+    {
+      "name": "AI runner enforces assertion order and duplicate occurrences",
+      "passed": true,
+      "durationMs": 39
+    },
+    {
+      "name": "AI runner requires explicit completion independently of checks",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "AI runner accepts completed exact assertions and deduplicates progress",
+      "passed": true,
+      "durationMs": 15
+    },
+    {
+      "name": "AI runner preserves failure and cancellation in reports",
+      "passed": true,
+      "durationMs": 35
+    },
+    {
+      "name": "AI runner refuses passed actions without screenshot and snapshot evidence",
+      "passed": true,
+      "durationMs": 11
+    },
+    {
+      "name": "AI runner validates assertions and turn limits before invoking model",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "execution service defaults to AI and replay is explicitly selectable",
+      "passed": true,
+      "durationMs": 9
+    },
+    {
+      "name": "native computer loop returns matching screenshot call IDs and verifies assertions",
+      "passed": true,
+      "durationMs": 91
+    },
+    {
+      "name": "native safety checks, batches and mutation assertion tools execute nothing",
+      "passed": true,
+      "durationMs": 72
+    },
+    {
+      "name": "Codex live controller uses updated observations before each decision",
+      "passed": true,
+      "durationMs": 46
+    },
+    {
+      "name": "text-only Codex decisions omit images while retaining local screenshot evidence",
+      "passed": true,
+      "durationMs": 30
+    },
+    {
+      "name": "Codex decision validation prevents arbitrary tools",
+      "passed": true,
+      "durationMs": 15
+    },
+    {
+      "name": "text-only compatible models receive trees without images",
+      "passed": true,
+      "durationMs": 18
+    },
+    {
+      "name": "native failure review receives the failed screenshot without more actions",
+      "passed": true,
+      "durationMs": 42
+    },
+    {
+      "name": "truncated compatible tool decisions execute no action",
+      "passed": true,
+      "durationMs": 19
+    },
+    {
+      "name": "selector snapshot wait respects the step deadline",
+      "passed": true,
+      "durationMs": 116
+    },
+    {
+      "name": "agent locks are released after artifact directory failures",
+      "passed": true,
+      "durationMs": 56
+    },
+    {
+      "name": "saved wait duration cannot be shortened through a different timeout",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "native saved clicks reject unrelated overlapping UI controls",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "native saved selection requires an option in the intended subtree",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "AI runner rejects empty action records and empty image evidence",
+      "passed": true,
+      "durationMs": 19
+    },
+    {
+      "name": "native coverage requires fresh acknowledged input on the intended runtime control",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "execution service forwards replay reviews without bypassing AI-directed routing",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "saved workflow requires each exact local mutation in order",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "native clicks and typing map to observed saved controls",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "native typing into the wrong field cannot claim an existing correct value",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "initial automatic observation cannot fulfill a saved screenshot step",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "native workflow mapping rejects outside coordinates and truncated trees",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "native workflow value comparisons reject truncated observations",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "suite validates later cases before issuing any actions",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "suite repetitions preserve saved inputs and independent artifacts",
+      "passed": true,
+      "durationMs": 37
+    },
+    {
+      "name": "suite fails fast and records unexecuted cases as skipped",
+      "passed": true,
+      "durationMs": 20
+    },
+    {
+      "name": "suite cancellation preserves completed evidence and skips later cases",
+      "passed": true,
+      "durationMs": 15
+    },
+    {
+      "name": "suite rejects incomplete or mismatched runner outcomes",
+      "passed": true,
+      "durationMs": 41
+    },
+    {
+      "name": "suite reports escape text and prevent artifact links escaping the suite",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "suite rejects concurrent execution on the same runner",
+      "passed": true,
+      "durationMs": 29
+    },
+    {
+      "name": "composite selectors combine exact id label and type",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "ancestor selectors isolate duplicate controls across reordered sections",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "nested ancestor selectors do not cross siblings windows or self",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "query selectors reject malformed unknown duplicate and unbounded grammar",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "legacy selectors and literal Unicode values remain exact",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "scoped selector ambiguity and absence prevent mutation",
+      "passed": true,
+      "durationMs": 166
+    },
+    {
+      "name": "scoped selector runner requires complete trees and exact outcomes",
+      "passed": true,
+      "durationMs": 16346
+    },
+    {
+      "name": "native saved key coverage honors scoped focus identity",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "failure diagnostics preserve exact assertion observations and report evidence",
+      "passed": true,
+      "durationMs": 128
+    },
+    {
+      "name": "capture failure is an evidence problem after a completed input",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "cancellation during input records an unknown outcome without a product verdict",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "ignored driver cancellation returns at deadline with uncertain input and no retry",
+      "passed": true,
+      "durationMs": 110
+    },
+    {
+      "name": "selector diagnostics distinguish missing ambiguous disabled and truncated observations",
+      "passed": true,
+      "durationMs": 8362
+    },
+    {
+      "name": "AI workflow omissions remain verification failures rather than application defects",
+      "passed": true,
+      "durationMs": 20
+    },
+    {
+      "name": "HTTP model failures preserve provider classification through the AI runner",
+      "passed": true,
+      "durationMs": 1534
+    },
+    {
+      "name": "native dispatch failures retain uncertain input diagnostics",
+      "passed": true,
+      "durationMs": 35
+    },
+    {
+      "name": "failure explanation context separates observations from prior model hypotheses",
+      "passed": true,
+      "durationMs": 114
+    },
+    {
+      "name": "terminal failed or cancelled runs cannot emit all-green JUnit",
+      "passed": true,
+      "durationMs": 16
+    },
+    {
+      "name": "snapshot deadline retains an earlier mismatch as supporting evidence",
+      "passed": true,
+      "durationMs": 262
+    },
+    {
+      "name": "advanced value contracts reject malformed ambiguous and coercible payloads",
+      "passed": true,
+      "durationMs": 9
+    },
+    {
+      "name": "advanced actions preserve legacy enum and JSON contracts across schemas",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "typed property assertions inspect disabled offscreen controls without input",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "typed UIA value assertions distinguish empty cell values from accessible names",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "truncated legacy text never proves exact or substring assertions",
+      "passed": true,
+      "durationMs": 22
+    },
+    {
+      "name": "complete legacy text remains independent of bounded typed properties",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "property diagnostics preserve scalar types and distinguish unavailable evidence",
+      "passed": true,
+      "durationMs": 153
+    },
+    {
+      "name": "password and unknown property observations never leak values into evidence",
+      "passed": true,
+      "durationMs": 10
+    },
+    {
+      "name": "logical item assertions persist read-only lookup evidence despite virtualization",
+      "passed": true,
+      "durationMs": 16
+    },
+    {
+      "name": "unsupported ambiguous and unknown item lookups never prove absence",
+      "passed": true,
+      "durationMs": 28
+    },
+    {
+      "name": "realized-only trees cannot prove generic selector absence",
+      "passed": true,
+      "durationMs": 19
+    },
+    {
+      "name": "advanced mutation capability gates prevent input and dispatch supported actions once",
+      "passed": true,
+      "durationMs": 59
+    },
+    {
+      "name": "ignored read-only item lookup cancellation remains bounded without mutation",
+      "passed": true,
+      "durationMs": 113
+    },
+    {
+      "name": "item lookup deadlines preserve earlier completed mismatch as supporting evidence",
+      "passed": true,
+      "durationMs": 420
+    },
+    {
+      "name": "bound dispatch uses immutable saved definitions and fresh evidence",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "bound dispatcher rejects unknown repeated reordered and rewritten steps before input",
+      "passed": true,
+      "durationMs": 20
+    },
+    {
+      "name": "failed or missing bound evidence cannot be reset into a mutation retry",
+      "passed": true,
+      "durationMs": 38
+    },
+    {
+      "name": "Codex governs each canonical saved step from updated observations",
+      "passed": true,
+      "durationMs": 72
+    },
+    {
+      "name": "bound model completion cannot skip saved workflow coverage",
+      "passed": true,
+      "durationMs": 23
+    },
+    {
+      "name": "insufficient bound model budgets stop before any target input",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "public AI preflight rejects impossible saved provider contracts without a driver",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "suite progress JUnit cannot appear successful before terminal completion",
+      "passed": true,
+      "durationMs": 35
+    },
+    {
+      "name": "bound compatible loop retains paired action facts but only latest image and tree",
+      "passed": true,
+      "durationMs": 55
+    },
+    {
+      "name": "bound Responses loop retains reasoning and paired results with latest observation only",
+      "passed": true,
+      "durationMs": 45
+    },
+    {
+      "name": "native bound assertions execute immutable saved IDs without input",
+      "passed": true,
+      "durationMs": 36
+    },
+    {
+      "name": "native hybrid protocol combines native input with every canonical advanced control operation",
+      "passed": true,
+      "durationMs": 182
+    },
+    {
+      "name": "native hybrid tool categories IDs order and one-call boundary reject misuse before input",
+      "passed": true,
+      "durationMs": 198
+    },
+    {
+      "name": "hybrid semantic dispatch requires earlier full native workflow receipt coverage",
+      "passed": true,
+      "durationMs": 48
+    },
+    {
+      "name": "hybrid unsupported capabilities stop before input and retain deterministic diagnostics",
+      "passed": true,
+      "durationMs": 30
+    },
+    {
+      "name": "missing or incorrectly attributed hybrid semantic steps cannot satisfy saved workflow coverage",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "native saved workflow budgets reject impossible execution before model or driver calls",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "native saved waits beyond executor capability reject before model or input",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "native receipt coverage rejects blank and reserved probe identities",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "grid contracts reject unbounded ambiguous and reflective payloads",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "grid actions require explicit capabilities and execute each mutation once",
+      "passed": true,
+      "durationMs": 41
+    },
+    {
+      "name": "grid and diagnostic state remain typed read-only observations",
+      "passed": true,
+      "durationMs": 22
+    },
+    {
+      "name": "native hybrid exposes separate canonical grid edit commit and cancel decisions",
+      "passed": true,
+      "durationMs": 81
+    },
+    {
+      "name": "legacy records default to strict execution and empty application diagnostics",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "selector alternatives are explicit bounded identities and never weaken absence checks",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "strict replay ignores authored alternatives and preserves requested definition",
+      "passed": true,
+      "durationMs": 112
+    },
+    {
+      "name": "approved recovery records immutable expectations and engine identity evidence",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "recovery rejects existing ambiguous disabled or changed target identities before input",
+      "passed": true,
+      "durationMs": 8059
+    },
+    {
+      "name": "recovery absence proof respects complete scoped collection boundaries",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "recovery fails when identity changes on the driver\u0027s final guard",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "read-only recovered assertions cannot change or weaken expected values",
+      "passed": true,
+      "durationMs": 123
+    },
+    {
+      "name": "failed or uncertain recovered mutations are never repeated in a bound session",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "Codex chooses each explicit approved recovery step from fresh evidence",
+      "passed": true,
+      "durationMs": 48
+    },
+    {
+      "name": "compatible recovery feedback exposes exact approved identity and fresh evidence",
+      "passed": true,
+      "durationMs": 70
+    },
+    {
+      "name": "Responses recovery feedback exposes exact approved identity and fresh evidence",
+      "passed": true,
+      "durationMs": 62
+    },
+    {
+      "name": "bound recovery rejects unknown reordered and rewritten proposals before target access",
+      "passed": true,
+      "durationMs": 6
+    },
+    {
+      "name": "AI drafts preserve authored alternatives only for uniquely unchanged saved contracts",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "native recovery is rejected before model target or executor use",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "bounded classified application diagnostics survive model context and reports",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "project commands preserve literal Windows arguments and closed stdin",
+      "passed": true,
+      "durationMs": 135
+    },
+    {
+      "name": "project commands drain both large pipes with bounded retained output",
+      "passed": true,
+      "durationMs": 99
+    },
+    {
+      "name": "project commands preserve nonzero exit failure and stderr",
+      "passed": true,
+      "durationMs": 92
+    },
+    {
+      "name": "project command timeout terminates owned descendants",
+      "passed": true,
+      "durationMs": 1027
+    },
+    {
+      "name": "project command cancellation terminates owned descendants",
+      "passed": true,
+      "durationMs": 168
+    },
+    {
+      "name": "project command normal exit also cleans up sleeping descendants",
+      "passed": true,
+      "durationMs": 185
+    },
+    {
+      "name": "project commands scrub inherited credentials and redact known output secrets",
+      "passed": true,
+      "durationMs": 199
+    },
+    {
+      "name": "project commands redact bare echoed configured secret arguments",
+      "passed": true,
+      "durationMs": 94
+    },
+    {
+      "name": "project command path preflight and prior cancellation launch nothing",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "project file reads cite actual bytes, identities and requested lines",
+      "passed": true,
+      "durationMs": 53
+    },
+    {
+      "name": "project paths reject traversal, sibling prefixes, devices, ADS and network scope",
+      "passed": true,
+      "durationMs": 100
+    },
+    {
+      "name": "project observations reject real directory junctions and hard-link aliases",
+      "passed": true,
+      "durationMs": 99
+    },
+    {
+      "name": "project command path leases prevent replacement until executable launch completes",
+      "passed": true,
+      "durationMs": 10
+    },
+    {
+      "name": "project exclusions apply to direct reads, discovery and search",
+      "passed": true,
+      "durationMs": 92
+    },
+    {
+      "name": "project output redacts configured and recognizable credentials before persistence",
+      "passed": true,
+      "durationMs": 31
+    },
+    {
+      "name": "project file byte, line, listing and search bounds remain explicit",
+      "passed": true,
+      "durationMs": 31
+    },
+    {
+      "name": "project unavailable evidence never exposes exception paths or file bytes",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "project requests reject duplicate, additional and malformed JSON fields",
+      "passed": true,
+      "durationMs": 71
+    },
+    {
+      "name": "project configuration and returned records cannot widen a frozen session",
+      "passed": true,
+      "durationMs": 15
+    },
+    {
+      "name": "project required commands gate UI until each successful one-shot completion",
+      "passed": true,
+      "durationMs": 40
+    },
+    {
+      "name": "project command failure blocks input and further commands but permits diagnostics",
+      "passed": true,
+      "durationMs": 101
+    },
+    {
+      "name": "project thrown and cancelled executors retain terminal unknown-outcome evidence",
+      "passed": true,
+      "durationMs": 70
+    },
+    {
+      "name": "project command output and invocation credentials are redacted",
+      "passed": true,
+      "durationMs": 19
+    },
+    {
+      "name": "project configured credential arguments stay redacted when echoed without labels",
+      "passed": true,
+      "durationMs": 16
+    },
+    {
+      "name": "project cancellation and exhausted call budgets retain terminal evidence",
+      "passed": true,
+      "durationMs": 20
+    },
+    {
+      "name": "project preflight rejects invalid command catalogs and accepts disabled defaults",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "all execution adapters inspect project files without advancing saved UI workflow",
+      "passed": true,
+      "durationMs": 219
+    },
+    {
+      "name": "all execution adapters require fresh UI observation after a project command",
+      "passed": true,
+      "durationMs": 371
+    },
+    {
+      "name": "failed project commands block UI and final success but permit read-only diagnostics",
+      "passed": true,
+      "durationMs": 164
+    },
+    {
+      "name": "required project commands cannot be skipped by completion or saved UI input",
+      "passed": true,
+      "durationMs": 230
+    },
+    {
+      "name": "project and UI calls in one model turn are rejected before either dispatch",
+      "passed": true,
+      "durationMs": 61
+    },
+    {
+      "name": "AI run aggregates project evidence separately from canonical UI actions",
+      "passed": true,
+      "durationMs": 68
+    },
+    {
+      "name": "native computer actions coexist with project functions and immutable assertions",
+      "passed": true,
+      "durationMs": 70
+    },
+    {
+      "name": "required-command execution budgets fail before model calls, observations or commands",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "UI failure explanations retain project evidence without granting more tool actions",
+      "passed": true,
+      "durationMs": 757
+    },
+    {
+      "name": "project-aware authoring performs actual tool turns before a validated draft for every provider",
+      "passed": true,
+      "durationMs": 49
+    },
+    {
+      "name": "project-aware planning rejects uninspected submissions and missing command prerequisites",
+      "passed": true,
+      "durationMs": 44
+    },
+    {
+      "name": "project-aware planning cannot grant a draft after a failed configured command",
+      "passed": true,
+      "durationMs": 40
+    },
+    {
+      "name": "project-aware planning rejects mixed calls and preserves evidence when turn budget ends",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "selected project survives Studio-style provider connection replacement",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "explicitly disabling project access survives restart and connection save",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "embedded project settings survive older connection editors",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "strict project config rejects unknown duplicate and null properties",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "invalid project selection leaves previous configured workspace intact",
+      "passed": true,
+      "durationMs": 6
+    },
+    {
+      "name": "unavailable saved repositories load for recovery but reject execution and saving",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "missing configured SDK remains visible in embedded settings but cannot execute",
+      "passed": true,
+      "durationMs": 15
+    },
+    {
+      "name": "stored project JSON stays strict while filesystem availability is deferred",
+      "passed": true,
+      "durationMs": 25
+    },
+    {
+      "name": "project evidence validates finalized real file records and mock command provenance",
+      "passed": true,
+      "durationMs": 16
+    },
+    {
+      "name": "project evidence rejects missing changed and escaped artifacts or mismatched records",
+      "passed": true,
+      "durationMs": 22
+    },
+    {
+      "name": "project evidence rejects malformed citations and incomplete record status",
+      "passed": true,
+      "durationMs": 39
+    },
+    {
+      "name": "project evidence rejects false command success and unowned command timelines",
+      "passed": true,
+      "durationMs": 61
+    },
+    {
+      "name": "project evidence rejects duplicate reordered and repeated command sequences",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "project evidence cannot satisfy missing prerequisites or pass blocking failures",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "transient incomplete trees are observed again before exact assertions",
+      "passed": true,
+      "durationMs": 526
+    },
+    {
+      "name": "transient incomplete readiness never duplicates or prematurely dispatches input",
+      "passed": true,
+      "durationMs": 325
+    },
+    {
+      "name": "persistent incomplete trees cannot prove selectors or absence before deadline",
+      "passed": true,
+      "durationMs": 24590
+    },
+    {
+      "name": "cancellation during incomplete readiness dispatches no input",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "snapshot deadline after an incomplete observation retains evidence classification",
+      "passed": true,
+      "durationMs": 195
+    },
+    {
+      "name": "late synchronous complete observations cannot bypass the step deadline",
+      "passed": true,
+      "durationMs": 340
+    },
+    {
+      "name": "post-step incomplete evidence is reobserved without repeating the action",
+      "passed": true,
+      "durationMs": 667
+    },
+    {
+      "name": "persistent post-step incompleteness fails a completed action without retry",
+      "passed": true,
+      "durationMs": 8015
+    },
+    {
+      "name": "late matching snapshots preserve prior selector facts and their original evidence",
+      "passed": true,
+      "durationMs": 529
+    },
+    {
+      "name": "late synchronous screenshots cannot bypass the shared evidence deadline",
+      "passed": true,
+      "durationMs": 8108
+    },
+    {
+      "name": "a virtualized or recycled UIA element is transient incompleteness, not a snapshot failure",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "CSV preserves quoted Unicode, multiline values and formula-like text literally",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "CSV rejects malformed quotes, duplicate headers, missing cells and extra columns",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "credential target identity is bound to exact endpoint and key slot",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "Windows vault round-trip keeps provider settings secret-free and deletes owned test credential",
+      "passed": true,
+      "durationMs": 28
+    },
+    {
+      "name": "prelaunch AI preparation uses real project observations without any fake UI target",
+      "passed": true,
+      "durationMs": 116
+    },
+    {
+      "name": "preparation rejects premature completion batches and impossible budgets before commands",
+      "passed": true,
+      "durationMs": 52
+    },
+    {
+      "name": "lifecycle prepares before launching and gives the UI phase readonly project access",
+      "passed": true,
+      "durationMs": 77
+    },
+    {
+      "name": "failed preparation and missing build outputs never invoke the worker",
+      "passed": true,
+      "durationMs": 1260
+    },
+    {
+      "name": "interrupted lifecycle reconciliation never resumes unknown commands or input",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "transient model response retries dispatch each command once with durable attempt evidence",
+      "passed": true,
+      "durationMs": 68
+    },
+    {
+      "name": "nontransient model errors and exhausted retry budgets execute no tools",
+      "passed": true,
+      "durationMs": 23
+    },
+    {
+      "name": "long local workflows retain every exact saved action and bounded model decisions",
+      "passed": true,
+      "durationMs": 905
+    },
+    {
+      "name": "agent journals persist pending dispatch before input and observations after completion",
+      "passed": true,
+      "durationMs": 43
+    },
+    {
+      "name": "operations freeze typed workloads and survive a new store instance",
+      "passed": true,
+      "durationMs": 30
+    },
+    {
+      "name": "operations reject invalid profiles, altered snapshots and future store versions",
+      "passed": true,
+      "durationMs": 20
+    },
+    {
+      "name": "operations queue limits reject excess pending jobs without changing earlier jobs",
+      "passed": true,
+      "durationMs": 894
+    },
+    {
+      "name": "operations desktop lease excludes another process and concurrent borrowers",
+      "passed": true,
+      "durationMs": 143
+    },
+    {
+      "name": "operations residual registered child prevents desktop reuse until it exits",
+      "passed": true,
+      "durationMs": 105
+    },
+    {
+      "name": "operations commit claims atomically and dead owners become uncertain without replay",
+      "passed": true,
+      "durationMs": 233
+    },
+    {
+      "name": "operations busy desktop never claims or dispatches a pending job",
+      "passed": true,
+      "durationMs": 10
+    },
+    {
+      "name": "operations successful dispatch persists verified terminal result and releases lease",
+      "passed": true,
+      "durationMs": 78
+    },
+    {
+      "name": "operations queued cancellation never dispatches and rerun is a new explicit attempt",
+      "passed": true,
+      "durationMs": 29
+    },
+    {
+      "name": "operations cancellation reaches the active executor and pauses its schedule",
+      "passed": true,
+      "durationMs": 131
+    },
+    {
+      "name": "operations thrown or incomplete executors cannot pass or repeat automatically",
+      "passed": true,
+      "durationMs": 118
+    },
+    {
+      "name": "operations schedules coalesce missed ticks and pause after failed occurrences",
+      "passed": true,
+      "durationMs": 128
+    },
+    {
+      "name": "operations restored pending jobs never automatically resume",
+      "passed": true,
+      "durationMs": 40
+    },
+    {
+      "name": "targets accept only canonical local and VM spellings",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "legacy lifecycle requests serialize byte-identically and keep store format 1",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "saved-test jobs validate target, executable and provider rules",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "saved-test jobs pass only with a no-preparation result and mark store format 2",
+      "passed": true,
+      "durationMs": 119
+    },
+    {
+      "name": "VM jobs are claimed only through their VM lease after readiness",
+      "passed": true,
+      "durationMs": 85
+    },
+    {
+      "name": "VM lease excludes another process",
+      "passed": true,
+      "durationMs": 138
+    },
+    {
+      "name": "an unavailable desktop leaves local jobs queued without dispatch",
+      "passed": true,
+      "durationMs": 14
+    },
+    {
+      "name": "agent planner waits for locked desktops, pauses, busy targets and unready VMs",
+      "passed": true,
+      "durationMs": 11
+    },
+    {
+      "name": "agent planner launches ready targets and requests reconcile for due schedules or dead claims",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "agent sign-in task runs in the interactive session with highest privileges",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "VM sign-in round-trips through the current user\u0027s credential vault",
+      "passed": true,
+      "durationMs": 26
+    },
+    {
+      "name": "agent state lives outside the workspace and reads tolerate replacement",
+      "passed": true,
+      "durationMs": 142
+    },
+    {
+      "name": "data saved before the rename from Axiom still loads: lifecycle profiles, VM sign-ins and API keys",
+      "passed": true,
+      "durationMs": 68
+    },
+    {
+      "name": "workspace backup roundtrip preserves evidence bytes and resolves restored history locally",
+      "passed": true,
+      "durationMs": 110
+    },
+    {
+      "name": "workspace restore checksum failures leave the destination unchanged",
+      "passed": true,
+      "durationMs": 65
+    },
+    {
+      "name": "workspace archives reject duplicate, traversal, device and extra entries",
+      "passed": true,
+      "durationMs": 98
+    },
+    {
+      "name": "workspace maintenance rejects future formats and validates before migration",
+      "passed": true,
+      "durationMs": 73
+    },
+    {
+      "name": "workspace backup refuses active writes, pending files and source-contained archives",
+      "passed": true,
+      "durationMs": 93
+    },
+    {
+      "name": "workspace maintenance excludes active queued operations without disrupting their state",
+      "passed": true,
+      "durationMs": 122
+    },
+    {
+      "name": "workspace restore never overwrites a populated workspace",
+      "passed": true,
+      "durationMs": 56
+    },
+    {
+      "name": "workspace maintenance refuses actual junctions without reading external files",
+      "passed": true,
+      "durationMs": 44
+    },
+    {
+      "name": "workspace cancellation commits no partial archive or restored directory",
+      "passed": true,
+      "durationMs": 88
+    },
+    {
+      "name": "workspace backup includes only local files and keeps original history immutable",
+      "passed": true,
+      "durationMs": 91
+    },
+    {
+      "name": "restored profiles load copied frozen inputs when the original workspace is absent",
+      "passed": true,
+      "durationMs": 155
+    },
+    {
+      "name": "screenshot geometry evidence is bound to the exact target artifact",
+      "passed": true,
+      "durationMs": 11
+    },
+    {
+      "name": "changed screenshot origin and size refresh evidence without repeating input",
+      "passed": true,
+      "durationMs": 218
+    },
+    {
+      "name": "persistent screenshot coordinate disagreement cannot pass or repeat input",
+      "passed": true,
+      "durationMs": 8020
+    },
+    {
+      "name": "missing foreign and malformed screenshot provenance fails closed",
+      "passed": true,
+      "durationMs": 35
+    },
+    {
+      "name": "cancelled screenshot pairing does not continue polling or input",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "initial model observation uses a settled screenshot and tree pair",
+      "passed": true,
+      "durationMs": 120
+    },
+    {
+      "name": "compatible planning omits only the redundant remote array cap and preserves strict schema",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "compatible planning still accepts200 and rejects201 steps through authoritative host validation",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "MCP Cortex workflow suites CSV preferences and revisions round trip",
+      "passed": true,
+      "durationMs": 236
+    },
+    {
+      "name": "MCP Cortex backup task exposes completed result and survives polling",
+      "passed": true,
+      "durationMs": 76
+    },
+    {
+      "name": "MCP Cortex run history pages deterministically and validates offsets",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "MCP Cortex standalone report embeds contained PNGs and escapes untrusted evidence",
+      "passed": true,
+      "durationMs": 42
+    },
+    {
+      "name": "MCP Cortex standalone report rejects foreign folders malformed PNGs and oversized downloads",
+      "passed": true,
+      "durationMs": 65
+    },
+    {
+      "name": "MCP initialize negotiates every handshake revision and answers unknown versions with the latest",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "MCP initialized notification gets no response and ping returns an empty result",
+      "passed": true,
+      "durationMs": 311
+    },
+    {
+      "name": "MCP tools/list exposes unique schema-complete tools whose action enum equals StepAction, with side-effect and open-world hints",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "MCP protocol errors: unknown method, malformed JSON, missing params, null and fractional ids, bad progress token",
+      "passed": true,
+      "durationMs": 17
+    },
+    {
+      "name": "MCP echoes string and number request ids exactly",
+      "passed": true,
+      "durationMs": 6
+    },
+    {
+      "name": "MCP refuses an id that is still in flight and tells string ids from number ids",
+      "passed": true,
+      "durationMs": 1287
+    },
+    {
+      "name": "MCP tool failures return isError with guidance and an unknown tool is a -32602 protocol error",
+      "passed": true,
+      "durationMs": 36
+    },
+    {
+      "name": "MCP argument rules: exact action spelling, whole numbers, earlier argument names, error wording",
+      "passed": true,
+      "durationMs": 60
+    },
+    {
+      "name": "MCP create/get/update/delete/list/validate round trip writes the workspace files Studio reads",
+      "passed": true,
+      "durationMs": 38
+    },
+    {
+      "name": "MCP validation refuses keys, chords and toggle values that cannot run, and warns about what is probably unintended",
+      "passed": true,
+      "durationMs": 22
+    },
+    {
+      "name": "MCP structured tool results satisfy their declared output schemas and declare every top-level property",
+      "passed": true,
+      "durationMs": 73
+    },
+    {
+      "name": "MCP text content is compact JSON with literal quotes and non-ASCII text",
+      "passed": true,
+      "durationMs": 27
+    },
+    {
+      "name": "MCP observations leave out usual values, page, scope to a control and redact passwords",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "MCP resources list/read cover the workspace, the guide, saved tests and runs as the tools return them",
+      "passed": true,
+      "durationMs": 55
+    },
+    {
+      "name": "MCP prompts/get renders the write_test workflow and rejects missing arguments",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "MCP launch policy starts only local Windows GUI programs and touches no refused path",
+      "passed": true,
+      "durationMs": 67
+    },
+    {
+      "name": "MCP launch_app and run_test refuse shells, script hosts, console programs and network paths without starting anything",
+      "passed": true,
+      "durationMs": 80
+    },
+    {
+      "name": "MCP a cancelled request gets no response and no further progress, and its app is closed",
+      "passed": true,
+      "durationMs": 3157
+    },
+    {
+      "name": "MCP a cancellation written right after its request always finds it",
+      "passed": true,
+      "durationMs": 624
+    },
+    {
+      "name": "MCP a long call without a progress token sends no notification, and a slow reader does not slow the call",
+      "passed": true,
+      "durationMs": 7186
+    },
+    {
+      "name": "MCP JSON-RPC batches are answered with one array",
+      "passed": true,
+      "durationMs": 43
+    },
+    {
+      "name": "MCP stdin framing: byte order mark, CRLF, blank lines, split writes, invalid UTF-8 and an oversized line",
+      "passed": true,
+      "durationMs": 511
+    },
+    {
+      "name": "MCP stateless 2026-07-28 requests: server/discover, per-request version negotiation and resultType",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "MCP stateless 2026-07-28 requests must carry their _meta fields, and removed methods are not found",
+      "passed": true,
+      "durationMs": 12
+    },
+    {
+      "name": "MCP subscriptions/listen acknowledges, stays silent after a cancel and closes properly when the server stops",
+      "passed": true,
+      "durationMs": 567
+    },
+    {
+      "name": "MCP a background run is polled, blocks other input with a clear message and is stopped by cancel_run",
+      "passed": true,
+      "durationMs": 6308
+    },
+    {
+      "name": "MCP run_test hands a long run to the background, and cancelling the waiting call cancels the run without a response",
+      "passed": true,
+      "durationMs": 5159
+    },
+    {
+      "name": "MCP a run that stops with an error after it started is saved as failed",
+      "passed": true,
+      "durationMs": 109
+    },
+    {
+      "name": "MCP run progress stays on one scale, increases strictly and names the run",
+      "passed": true,
+      "durationMs": 499
+    },
+    {
+      "name": "MCP perform_step and run_test refuse to work while the desktop lease is held elsewhere",
+      "passed": true,
+      "durationMs": 165
+    },
+    {
+      "name": "MCP a run is reported finished as soon as its result is recorded, while it still closes its app",
+      "passed": true,
+      "durationMs": 5253
+    },
+    {
+      "name": "MCP a stored network or relative program path is never opened, and a copied test or run file is refused",
+      "passed": true,
+      "durationMs": 62
+    },
+    {
+      "name": "MCP run screenshots are served only from the run\u0027s evidence folder in the workspace",
+      "passed": true,
+      "durationMs": 128
+    },
+    {
+      "name": "MCP list tools read each run file once, and old evidence is removed at start",
+      "passed": true,
+      "durationMs": 322
+    },
+    {
+      "name": "MCP end of input completes the stdio transport and shutdown closes tracked apps",
+      "passed": true,
+      "durationMs": 6239
+    },
+    {
+      "name": "MCP launched apps end with the server however it ends, unless keepOpen",
+      "passed": true,
+      "durationMs": 2252
+    },
+    {
+      "name": "MCP command line: own options, help, errors on stderr only, token from the environment",
+      "passed": true,
+      "durationMs": 3759
+    },
+    {
+      "name": "MCP HTTP transport enforces sessions, origin, host, bearer token, content type and method rules",
+      "passed": true,
+      "durationMs": 68
+    },
+    {
+      "name": "MCP HTTP sessions: initialize replaces a session, 64 at most, idle sessions expire",
+      "passed": true,
+      "durationMs": 2654
+    },
+    {
+      "name": "MCP HTTP revision 2026-07-28: headers mirror the body, invalid envelopes are 400 and unknown tools stay 200",
+      "passed": true,
+      "durationMs": 25
+    },
+    {
+      "name": "MCP HTTP answers tools/call as an SSE stream, and closing the stream cancels the call",
+      "passed": true,
+      "durationMs": 24975
+    },
+    {
+      "name": "MCP HTTP subscriptions/listen streams its acknowledgement and closure",
+      "passed": true,
+      "durationMs": 6066
+    },
+    {
+      "name": "MCP HTTP refuses a body above 32 MiB while reading it and parses one at the limit",
+      "passed": true,
+      "durationMs": 127
+    },
+    {
+      "name": "MCP logs never contain a whole session id or the bearer token",
+      "passed": true,
+      "durationMs": 523
+    },
+    {
+      "name": "MCP Studio\u0027s write ledger tells its own saves and deletes from outside changes, and the watcher debounce is bounded",
+      "passed": true,
+      "durationMs": 46
+    },
+    {
+      "name": "MCP --describe manifest and mcp-server.json are structurally valid and state what the server can do",
+      "passed": true,
+      "durationMs": 10
+    },
+    {
+      "name": "App names: exact beats prefix beats whole words beats fuzzy overlap, each with its reason",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "App names: one clear winner above the threshold, a margin makes ties ambiguous, a single running instance wins a tie",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "App names: discovery entries merge per program and a running instance takes the names of its program",
+      "passed": true,
+      "durationMs": 3
+    },
+    {
+      "name": "App names: a description names its app only in a leading clause",
+      "passed": true,
+      "durationMs": 14
+    },
+    {
+      "name": "MCP find_app and the app argument: candidates, ambiguity as isError, stored apps, and the pid rules",
+      "passed": true,
+      "durationMs": 80
+    },
+    {
+      "name": "MCP every earlier tool argument, range, required field and resource is still accepted and declared",
+      "passed": true,
+      "durationMs": 21
+    },
+    {
+      "name": "MCP run_test hands a long run over after waitSeconds and get_run waitSeconds waits for its end",
+      "passed": true,
+      "durationMs": 3090
+    },
+    {
+      "name": "Cortex provider routing is pinned and settings never persist bridge credentials",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "Cortex model operations isolate async contexts and fail closed without one",
+      "passed": true,
+      "durationMs": 27
+    },
+    {
+      "name": "Cortex AI planner sends the authenticated route and current context",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "Cortex test revisions prevent stale saves and deletion",
+      "passed": true,
+      "durationMs": 8
+    },
+    {
+      "name": "Cortex Studio initializes empty workspaces without starter tests and preserves standalone demos",
+      "passed": true,
+      "durationMs": 28
+    },
+    {
+      "name": "Cortex full workflow catalog marks AI and human-only configuration",
+      "passed": true,
+      "durationMs": 13
+    },
+    {
+      "name": "Cortex native target launches never inherit private bridge capabilities",
+      "passed": true,
+      "durationMs": 1734
+    },
+    {
+      "name": "Cortex guest relay forwards requests without a provider credential",
+      "passed": true,
+      "durationMs": 121
+    },
+    {
+      "name": "Cortex guest relay rejects foreign responses and cleans cancellation",
+      "passed": true,
+      "durationMs": 112
+    },
+    {
+      "name": "Cortex guest relay refuses oversized requests before writing",
+      "passed": true,
+      "durationMs": 4
+    },
+    {
+      "name": "Cortex AI discovery selects only captured application ids",
+      "passed": true,
+      "durationMs": 2
+    },
+    {
+      "name": "Cortex AI discovery preserves ambiguity without selecting an app",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "Cortex AI discovery refuses invented or malformed target responses",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "Cortex AI discovery refuses a reused or exited process identity",
+      "passed": true,
+      "durationMs": 0
+    },
+    {
+      "name": "Cortex AI discovery uses its pinned model context and treats window titles as data",
+      "passed": true,
+      "durationMs": 7
+    },
+    {
+      "name": "Cortex AI discovery keeps saved sample executables eligible beside the Studio controller",
+      "passed": true,
+      "durationMs": 5
+    },
+    {
+      "name": "Cortex AI entry requires intent but no manual app selection",
+      "passed": true,
+      "durationMs": 1
+    },
+    {
+      "name": "Cortex AI refinement preserves unsaved authoring and checks the original revision",
+      "passed": true,
+      "durationMs": 3
+    }
+  ]
+}

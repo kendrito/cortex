@@ -1,0 +1,29 @@
+# Keyless context-overflow replay composition.
+
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: none
+
+- id: compaction-basic
+  name: '@cortex/compaction-basic'
+  config:
+    thresholdRatio: 0.99
+    retainTokens: 20
+    maxTokens: 32
+
+- insert:
+    - id: llm-replay
+      name: '@cortex/llm-replay'
+      config:
+        providers:
+          - id: deepseek-official
+            name: DeepSeek
+            models:
+              - id: deepseek-v4-flash
+                contextWindow: 128000

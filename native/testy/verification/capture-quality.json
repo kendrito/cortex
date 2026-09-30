@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "startedAt": "2026-09-30T13:41:35.5494511+00:00",
+  "finishedAt": "2026-09-30T13:41:35.599172+00:00",
+  "error": "",
+  "checks": [
+    {
+      "fixture": "black-client-framed.png",
+      "passed": true,
+      "rejected": true,
+      "reason": "Target capture returned a blank or nearly uniform CLIENT AREA. A visible title bar is not valid application evidence."
+    },
+    {
+      "fixture": "readable-client.png",
+      "passed": true,
+      "rejected": false,
+      "reason": ""
+    }
+  ]
+}

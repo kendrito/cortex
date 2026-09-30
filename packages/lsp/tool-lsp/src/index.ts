@@ -13,11 +13,10 @@
 import type { Context } from '@cortex/cordis'
 import z from '@cortex/schemastery'
 import { defineTool } from '@cortex/tools'
-import { assertNever } from '@cortex/llm'
 import { LspError } from '@cortex/lsp'
 import type {} from '@cortex/lsp'
-import type {} from '@cortex/system-prompt'
 import { MAX_TIMER_DELAY_MS } from '@cortex/timeout'
+import { assertNever } from '@cortex/util-values'
 import {
   DEFAULT_MAX_LOCATIONS,
   DEFAULT_MAX_RESULT_CHARS,
@@ -101,7 +100,11 @@ export function apply(ctx: Context, config: Config): void {
   assertPositiveInteger('maxResultChars', resolved.maxResultChars)
   assertTimer('timeoutMs', resolved.timeoutMs)
 
-  ctx.systemPrompt.section({ name: 'tool:lsp', order: 112, text: LSP_PROMPT_TEXT })
+  ctx.systemPrompt.section({
+    name: 'tool:lsp',
+    order: ctx.systemPrompt.getSectionOrder('TOOL_LSP'),
+    text: LSP_PROMPT_TEXT,
+  })
 
   ctx.tools.register(defineTool({
     name: 'lsp',

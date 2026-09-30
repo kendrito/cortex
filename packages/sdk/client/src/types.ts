@@ -5,7 +5,8 @@
  * @module @cortex/sdk-client/types
  */
 
-import type { ContentBlock } from '@cortex/llm'
+import type { ContentBlock, ReasoningEffortId } from '@cortex/llm'
+import type { SdkPromptContentBlock } from '@cortex/sdk-protocol'
 import type { SessionEvent } from '@cortex/session'
 
 /** One server-to-client notification as received off the wire. */
@@ -21,19 +22,26 @@ export type NotificationFilter = (notification: HarnessNotification) => boolean
 
 /** Launch and timeout options for {@link HarnessClient}. */
 export interface HarnessClientOptions {
-  /** The runtime executable (the `cortex-jsonrpc-agent` bin, a packaged exe, or `node`). */
-  command: string
-  /** Arguments passed to {@link command}. */
-  args?: string[]
-  /** Working directory for the runtime process itself. */
-  cwd?: string
+  /** Absolute or caller-relative cortex CLI module; omitted resolves this package's same-version dependency. */
+  cortexBin?: string
+  /** Named profile serving the SDK protocol (default `sdk`). */
+  profile?: string
+  /** Ordered per-launch profile patches; relative paths resolve before spawn. */
+  patches?: string[]
+  /** Explicit Harness home for this child; relative paths resolve before spawn. */
+  cortexHome?: string
+  /** Working directory for the cortex process itself. */
+  processCwd?: string
   /**
-   * The complete child environment. `undefined` inherits the parent env
-   * verbatim; passing an object replaces it entirely, so callers own
+   * The complete child environment, read when {@link HarnessClient.start}
+   * spawns. `undefined` reads the parent env at that time; passing an object
+   * reads that object at spawn and replaces the parent environment entirely, so callers own
    * credential policy (see `scrubbedParentEnv` in `@cortex/subprocess`
    * for the shared scrub-then-merge base).
    */
   env?: NodeJS.ProcessEnv
+  /** Bound (ms) on the initial profile handshake (default 10000). */
+  initializeTimeoutMs?: number
   /** Per-request timeout (ms); `undefined` waits indefinitely (a turn can legitimately run long). */
   requestTimeoutMs?: number
   /** Bound (ms) on the protocol `shutdown` exchange inside `close()` (default 1000). */
@@ -45,15 +53,15 @@ export interface HarnessClientOptions {
 }
 
 /** Options for the high-level {@link CortexHarness} wrapper. */
-export interface CortexHarnessOptions {
-  /** Launch spec for the runtime subprocess (command, args, cwd, env, timeouts). */
-  launch: HarnessClientOptions
-  /** Workspace cwd recorded on every SDK-created session (default: the launch cwd, else `process.cwd()`). */
+export interface CortexHarnessOptions extends HarnessClientOptions {
+  /** Workspace cwd recorded on every SDK-created session (default: the process cwd, else `process.cwd()`). */
   cwd?: string
-  /** Provider route for SDK-created agents (default `cortex-official`). */
+  /** Host-configured provider route for SDK-created agents; unconfigured by default. */
   provider?: string
-  /** Model for SDK-created agents (default `cortex-v4-flash`). */
+  /** Model on the configured route; unconfigured by default. */
   model?: string
+  /** Adapter-owned reasoning effort for the selected provider/model route. */
+  reasoningEffort?: ReasoningEffortId
   /** Maximum output tokens for each conversation-model request. */
   maxTokens?: number
 }
@@ -72,3 +80,4 @@ export interface RunResult {
 
 /** Re-exported content-block alias so SDK callers need no extra import. */
 export type { ContentBlock }
+export type { SdkPromptContentBlock }

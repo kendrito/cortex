@@ -1,6 +1,0 @@
-- listitem:
-  - button "client-ui-settings, Mounted, Enabled":
-    - strong: client-ui-settings
-    - img "Mounted"
-    - text: Enabled
-    - img

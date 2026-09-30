@@ -1,6 +1,6 @@
 .confirmation {
   width: min(440px, 100%);
-  max-height: calc(100vh - 48px);
+  max-height: 100%;
   overflow: hidden;
 }
 
@@ -20,7 +20,7 @@
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
   font-size: 14px;
   line-height: 22px;
 }
@@ -32,7 +32,7 @@
 .warningIcon {
   flex: none;
   margin-top: 2px;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .acknowledgement {
@@ -40,7 +40,7 @@
   align-items: flex-start;
   gap: 10px;
   margin-top: 20px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
   font-size: 14px;
   line-height: 22px;
   cursor: pointer;
@@ -51,12 +51,12 @@
   width: 16px;
   height: 16px;
   margin: 3px 0 0;
-  accent-color: var(--cortex-alias-button-primary-fill);
+  accent-color: var(--dsw-alias-button-primary-fill);
   cursor: pointer;
 }
 
 .acknowledgement input:focus-visible {
-  outline: 2px solid var(--cortex-alias-border-l4);
+  outline: var(--dsw-focus-ring-width) solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
   outline-offset: 2px;
 }
 

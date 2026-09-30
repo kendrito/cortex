@@ -1,0 +1,82 @@
+{
+  "name": "@cortex/client-ui-open-in-app",
+  "description": "Web \"Open In...\" controls: the Session-header split button opening the workspace directory in an installed application, and the document preview's default-application controls for one file",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/client/ui-open-in-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-gateway",
+        "@cortex/api-remotes",
+        "@cortex/api-session-controller",
+        "@cortex/client-locale",
+        "@cortex/client-shortcuts",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-layout",
+        "@cortex/client-ui-renderer",
+        "@cortex/client-ui-session",
+        "@cortex/client-ui-sidebar-documentpreview"
+      ],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-layout": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-sidebar-documentpreview": "workspace:*",
+    "@cortex/client-ui-sidebar-files": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/host-open-in-app": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0",
+    "@cortex/client-ui-deliverables": "workspace:*",
+    "@cortex/native-command": "workspace:*",
+    "@cortex/client-shortcuts": "workspace:*"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "enabled": false,
+  "rootDirectory": "",
+  "commands": [],
+  "requiredBeforeUiCommands": [],
+  "maximumCalls": 20,
+  "maximumCommandInvocations": 3,
+  "maximumPlanningTurns": 12,
+  "maximumOutputCharacters": 16000,
+  "maximumFiles": 2000,
+  "maximumFileBytes": 512000
+}

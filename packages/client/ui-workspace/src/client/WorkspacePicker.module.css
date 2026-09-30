@@ -12,9 +12,9 @@
 }
 
 .modalError {
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 .menuStatus {
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }

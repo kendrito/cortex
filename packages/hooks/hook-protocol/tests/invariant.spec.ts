@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
-import SessionStore, { Session, SessionId } from '@cortex/session'
+import SessionStore, { Session, SessionId, SessionSeq } from '@cortex/session'
 import * as HookInvariant from '@cortex/hook-protocol/invariant'
 import InvariantRegistry from '@cortex/invariants'
 
@@ -62,14 +62,14 @@ describe('hook-protocol invariants', () => {
     const session = Session.create(SessionId('bare-hook-session'))
     expect(() => {
       ctx.emit('session/event', session, {
-        type: 'turn/start', seq: 0, time: 0,
+        type: 'turn/start', seq: SessionSeq(0), time: 0,
         data: { turn: 1 },
       })
       ctx.emit('session/event', session, {
-        type: 'hook/invoked', seq: 1, time: 1, data: invoked(),
+        type: 'hook/invoked', seq: SessionSeq(1), time: 1, data: invoked(),
       })
       ctx.emit('session/event', session, {
-        type: 'hook/result', seq: 2, time: 2, data: result(),
+        type: 'hook/result', seq: SessionSeq(2), time: 2, data: result(),
       })
     }).not.toThrow()
   })

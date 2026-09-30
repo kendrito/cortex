@@ -1,5 +1,7 @@
 # Cortex — Codebase Trust Audit
 
+> Historical audit of commit `9182f62`. This report does not certify the current dependency tree. The current build removes the integration and bundled servers discussed below; see [the current privacy and migration notes](docs/cortex-upstream-sync.md).
+
 **Repository-level review of this repository for telemetry, phone-home behaviour, hidden or
 obfuscated code, supply-chain integrity, and default outbound network surface.**
 
@@ -352,7 +354,7 @@ Code view (M1), turn-activity counters in the UI, base-bundle composition change
 and DeepSeek packages out, `subagent-codex` in and enabled in presets), a Models-page
 provider allow-list, removal of the automatic `llm-deepseek` fallback (fresh installs boot
 with **no** LLM route until configured), UI removals and de-localisation, script cleanups
-(including switching a Node mirror from `npmmirror.com` to `nodejs.org`), branding, and the
+(including switching a third-party Node mirror to `nodejs.org`), branding, and the
 Atlassian DC integration (480 added files; lockfile gains only two workspace importers).
 
 > **Provenance verdict:** the fork is **upstream `deepseek-harness` 0.1.0-rc.5 + a

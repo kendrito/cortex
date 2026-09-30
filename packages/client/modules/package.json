@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-modules",
   "description": "Client module system, dual-face: node half composes the __CORTEX_BOOT__ entry graph (incremental cortex.client scan, bundle route, index tap, webPlugins service); browser half is the lazy-CJS module table the vendored cordis Loader consumes as its internal seam",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -42,10 +42,12 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/host-webserver": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/host-webserver": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/package-manifest": "workspace:*",
+    "@cortex/client-store": "workspace:*"
   },
   "files": [
     "lib/index.js",
@@ -54,7 +56,6 @@
     "lib/types/**/*.d.ts"
   ],
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~"
   }
 }

@@ -1,0 +1,72 @@
+{
+  "name": "@cortex/workflow-ptc",
+  "description": "Workflow orchestration in the shared sandboxed Node PTC runtime",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/workflow/workflow-ptc"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/workflow": "workspace:*",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*"
+  },
+  "dependencies": {
+    "@cortex/brand": "workspace:*",
+    "@cortex/util-values": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subagent-spawn-in-process": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/workflow": "workspace:*",
+    "@cortex/http-proxy": "workspace:*",
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/ptc-runtime-node": "workspace:*",
+    "@cortex/fs": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/sandbox-local": "workspace:*",
+    "@cortex/llm-pi-ai": "workspace:*"
+  }
+}

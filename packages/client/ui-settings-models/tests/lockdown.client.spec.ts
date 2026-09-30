@@ -57,6 +57,10 @@ describe('rowLocked', () => {
     expect(rowLocked({ baseURL: 42 })).toBe(true)
   })
 
+  it('locks a local non-OpenAI route', () => {
+    expect(rowLocked({ baseURL: 'http://localhost:4000', api: 'anthropic-messages' })).toBe(true)
+  })
+
   it('locks an external endpoint and frees the local gateway', () => {
     expect(rowLocked({ baseURL: 'https://api.anthropic.com' })).toBe(true)
     expect(rowLocked({ baseURL: 'http://127.0.0.1:4000/v1' })).toBe(false)

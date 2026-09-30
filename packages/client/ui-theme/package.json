@@ -1,7 +1,7 @@
 {
   "name": "@cortex/client-ui-theme",
-  "description": "Theme plugin: Host bootstrap for the pre-plugin palette; DOM-free ThemeRuntime for light/dark/system state; --cortex-* token styles and Appearance settings row",
-  "version": "0.1.0-rc.5",
+  "description": "Theme plugin: Host bootstrap for the pre-plugin palette; DOM-free ThemeRuntime for light/dark/system state; --dsw-* token styles and Appearance settings row",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,24 +18,20 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./client": {
       "types": "./lib/types/client/index.d.ts",
       "default": "./lib/client.js"
     },
-    "./styles/*": "./lib/styles/*",
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./brand-font.css": "./lib/styles/brand-font.css"
   },
   "cortex": {
     "client": {
       "inject": [
         "@cortex/client-connection",
-        "@cortex/client-runtime",
         "@cortex/client-locale",
+        "@cortex/client-ui-renderer",
         "@cortex/client-ui-settings",
         "@cortex/api-remotes"
       ],
@@ -45,35 +41,27 @@
   },
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/client-connection": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/host-webserver": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "react": "^18.2.0"
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/api-remotes": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-test-runtime": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-settings": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/host-webserver": "workspace:^",
-    "@cortex/invariants": "workspace:^",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-settings": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/host-webserver": "workspace:*",
     "@types/react": "~18.3.1",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "clsx": "^2.0.0",
+    "@cortex/settings": "workspace:*"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/client.js",
     "lib/styles",
     "lib/types/**/*.d.ts"
@@ -83,8 +71,6 @@
     "watch": "tsdown --watch"
   },
   "dependencies": {
-    "@cortex/settings": "workspace:^",
-    "clsx": "^2.0.0",
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   }
 }

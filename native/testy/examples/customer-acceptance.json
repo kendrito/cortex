@@ -1,0 +1,28 @@
+{
+  "id": "demo-customer-acceptance",
+  "name": "Demonstrated customer creation",
+  "intent": "Create Ada Lovelace and check the exact successful confirmation and customer count.",
+  "category": "Explicit acceptance",
+  "steps": [
+    {
+      "id": "confirmation",
+      "title": "Verify confirmation",
+      "action": "assertText",
+      "selector": "id:StatusMessage",
+      "value": "Customer added: Ada Lovelace",
+      "timeoutMs": 5000,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": "count",
+      "title": "Verify one customer",
+      "action": "assertText",
+      "selector": "id:ResultCount",
+      "value": "1 customer",
+      "timeoutMs": 5000,
+      "x": 0,
+      "y": 0
+    }
+  ]
+}

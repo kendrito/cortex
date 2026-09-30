@@ -10,7 +10,7 @@ import type { Context, Events } from '@cortex/cordis'
 import { scopeTarget } from '@cortex/scope'
 import type { Scoped } from '@cortex/scope'
 import type { AssembleContext } from '@cortex/system-prompt'
-import type { Agent } from './runtime-types.ts'
+import type { Agent } from './types.ts'
 
 /** Extract the parameter tuple from an event handler type (its `this` is not part of the tuple). */
 type Params<F> = F extends (...args: infer P) => unknown ? P : never

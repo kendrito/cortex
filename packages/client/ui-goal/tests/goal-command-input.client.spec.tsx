@@ -1,21 +1,24 @@
 // @vitest-environment jsdom
 import { cleanup, render, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import type { SessionLiveEventEntry } from '@cortex/api-session-controller/client'
 import type {
-  ChatConversationViewNode, ChatSnapshot, ConversationEventInput,
   ConversationNodeDefinition, ConversationViewDefinition,
-} from '@cortex/client-runtime/client'
-import { ConversationNodeAssembler } from '@cortex/client-runtime/client'
+} from '@cortex/client-ui-conversation/client'
+import { ConversationNodeAssembler } from '@cortex/client-ui-conversation/client'
+import type {
+  ChatConversationViewNode, ChatSnapshot,
+} from '@cortex/client-ui-chat/client'
 import { makeTranslate } from '@cortex/client-test-runtime'
+import { zh as commonZh } from '@cortex/client-locale/src/locales/zh.ts'
 import type { SessionEvent } from '@cortex/session/types'
-import { commandDefinition } from '@cortex/client-ui-conversation/src/client/conversation-nodes/command.ts'
-import { chatViewDefinition } from '@cortex/client-ui-conversation/src/client/conversation-nodes/chat-snapshot-builder.ts'
+import { commandDefinition } from '@cortex/client-ui-chat/src/client/conversation-nodes/command.ts'
+import { chatViewDefinition } from '@cortex/client-ui-chat/src/client/conversation-nodes/chat-snapshot-builder.ts'
 import { GoalCommandInputView } from '../src/client/GoalCommandInputView.tsx'
 import {
   goalCommandInputDefinition, goalCommandText,
 } from '../src/client/goal-command-input.ts'
-import { en as commonEn } from '@cortex/client-locale/src/locales/index.ts'
-import { en } from '../src/client/locales.ts'
+import { zh } from '../src/client/locales.ts'
 
 afterEach(cleanup)
 
@@ -35,17 +38,17 @@ class TestViewDefinitions {
   }
 }
 
-function entry(seq: number, type: string, data: unknown): ConversationEventInput {
+function entry(seq: number, type: string, data: unknown): SessionLiveEventEntry {
   return {
-    event: { seq, time: 1_700_000_000_000 + seq, type, data } as ConversationEventInput['event'],
-    view: undefined,
+    type: 'event',
+    event: { seq, time: 1_700_000_000_000 + seq, type, data } as SessionEvent,
   }
 }
 
-function snapshot(entries: readonly ConversationEventInput[], hasMore = false): ChatSnapshot {
+function snapshot(entries: readonly SessionLiveEventEntry[], hasMore = false): ChatSnapshot {
   const assembler = new ConversationNodeAssembler(new TestEventDefinitions(), new TestViewDefinitions())
   assembler.replaceWindow(entries, hasMore)
-  assembler.flush()
+  assembler.activateTarget('chat')
   const value = assembler.snapshot('chat') as ChatSnapshot | undefined
   if (value === undefined) throw new Error('chat view was not registered')
   return value
@@ -117,7 +120,7 @@ describe('goal command input projection', () => {
   })
 
   it('renders the user-style command bubble without ordinary message actions', () => {
-    const t = makeTranslate(en, commonEn)
+    const t = makeTranslate(zh, commonZh)
     const props = {
       node: {
         key: 'goal-command-input:one',
@@ -126,9 +129,43 @@ describe('goal command input projection', () => {
       t,
     } as unknown as Parameters<typeof GoalCommandInputView>[0]
     const view = render(<GoalCommandInputView {...props} />)
-    const bubble = view.getByRole('group', { name: 'Command input' })
+    const bubble = view.getByRole('group', { name: '指令输入' })
 
     expect(bubble.textContent).toBe('/goal ship it')
     expect(within(bubble).queryByRole('button')).toBeNull()
+    // The executed command token reads as a reference chip; the objective stays plain text.
+    const chips = [...bubble.querySelectorAll('[data-ref-chip]')]
+    expect(chips.map(chip => [chip.getAttribute('data-ref-chip'), chip.textContent])).toEqual([['command', '/goal']])
+  })
+
+  it('renders a bare /goal as one command chip and nothing else', () => {
+    const t = makeTranslate(zh, commonZh)
+    const props = {
+      node: {
+        key: 'goal-command-input:bare',
+        data: { commandId: 'command-goal', text: '/goal', time: 1_700_000_000_000 },
+      },
+      t,
+    } as unknown as Parameters<typeof GoalCommandInputView>[0]
+    const view = render(<GoalCommandInputView {...props} />)
+    const bubble = view.getByRole('group', { name: '指令输入' })
+    expect(bubble.textContent).toBe('/goal')
+    expect([...bubble.querySelectorAll('[data-ref-chip]')].map(chip => chip.textContent)).toEqual(['/goal'])
+  })
+
+  it('decorates only the leading command token: a /goal inside the objective stays plain', () => {
+    const t = makeTranslate(zh, commonZh)
+    const props = {
+      node: {
+        key: 'goal-command-input:two',
+        data: { commandId: 'command-goal', text: '/goal 检查 /goal 的语法', time: 1_700_000_000_000 },
+      },
+      t,
+    } as unknown as Parameters<typeof GoalCommandInputView>[0]
+    const view = render(<GoalCommandInputView {...props} />)
+    const bubble = view.getByRole('group', { name: '指令输入' })
+    expect(bubble.textContent).toBe('/goal 检查 /goal 的语法')
+    const chips = [...bubble.querySelectorAll('[data-ref-chip]')]
+    expect(chips.map(chip => chip.textContent)).toEqual(['/goal'])
   })
 })

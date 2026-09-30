@@ -1,7 +1,7 @@
 {
   "name": "@cortex/tool-todo",
   "description": "Model-facing todo_write tool over the Cortex event-sourced session log",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -37,31 +37,30 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@cortex/schemastery": "workspace:^",
+    "@cortex/schemastery": "workspace:~",
     "zod": "^4.4.3"
   },
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-include": "workspace:^",
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/agent-loop": "workspace:^",
-    "@cortex/agent-loop-testkit": "workspace:^",
-    "@cortex/host-apiproxy": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/session-projection": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/tools": "workspace:^",
-    "@cortex/user-questions": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/user-questions": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

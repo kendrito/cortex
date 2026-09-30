@@ -7,7 +7,7 @@ import { globSync, readFileSync } from 'node:fs'
 import { resolve, sep } from 'node:path'
 
 const ROOT = resolve(import.meta.dirname, '..')
-const CORTEX_PACKAGE_NAME = /^@cortex\/cortex(?:-|$)/
+const CORTEX_PACKAGE_NAME = /^@cortex\//
 
 /** Result of checking every Cortex package reachable through the root workspace list. */
 export interface CortexPackageLicenseReport {
@@ -59,6 +59,8 @@ export function inspectCortexPackageLicenses(root: string): CortexPackageLicense
   const failures: string[] = []
 
   for (const file of workspaceManifestPaths(root)) {
+    // Vendored Cordis packages retain their independently owned licenses.
+    if (file.split(sep).join('/').startsWith('vendor/')) continue
     const manifest = readManifest(root, file)
     const name = manifest.name
     if (typeof name !== 'string' || !CORTEX_PACKAGE_NAME.test(name)) continue

@@ -1,16 +1,15 @@
 // @vitest-environment jsdom
-// ReadBlock + the highlightLines token path: the banner (label, language, the
-// "showing N of M" note only when the read is a window, copy control), the
-// gutter-numbered rows keeping the file's own line numbers, the shiki per-line
-// highlighting resolved to css-variables token spans with an identical-geometry
-// plain fallback for an unknown/absent language, the head/tail height cap and
-// its expand control, and the copy control writing the raw window text on both
-// the accepted and refused clipboard paths.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { DEFAULT_READ_MAX_LINES, ReadBlock, type ReadBlockLine } from '../src/index.ts'
+import type { ComponentProps } from 'react'
+import { DEFAULT_READ_MAX_LINES, ReadBlock as LocalizedReadBlock, type ReadBlockLine } from '../src/index.ts'
 import { grammarLoadCount, highlightLines, subscribeGrammarLoaded } from '../src/markdown/highlight.ts'
+import { readBlockLabels } from './labels.client.ts'
+
+function ReadBlock(props: Omit<ComponentProps<typeof LocalizedReadBlock>, 'labels'>) {
+  return <LocalizedReadBlock {...props} labels={readBlockLabels} />
+}
 
 afterEach(cleanup)
 
@@ -18,17 +17,14 @@ beforeEach(() => {
   vi.useRealTimers()
 })
 
-/** `count` lines starting at `first`, each with distinct text. */
 function lines(count: number, first = 1): ReadBlockLine[] {
   return Array.from({ length: count }, (_value, index) => ({ number: first + index, text: `line ${first + index}` }))
 }
 
-/** The rendered rows as `<gutter><content>` strings (CSS-module class prefix). */
 function rowTexts(container: HTMLElement): string[] {
   return [...container.querySelectorAll('[class^="_line_"]')].map(row => row.textContent ?? '')
 }
 
-/** The gutter numbers of the rendered rows, in order. */
 function gutters(container: HTMLElement): string[] {
   return [...container.querySelectorAll('[class^="_gutter_"]')].map(cell => cell.textContent ?? '')
 }
@@ -130,18 +126,17 @@ describe('ReadBlock banner', () => {
     const view = render(<ReadBlock label="src/a.ts" lang="ts" lines={lines(3, 41)} totalLines={180} />)
     expect(view.getByText('src/a.ts')).toBeTruthy()
     expect(view.getByText('ts')).toBeTruthy()
-    expect(view.getByText('Showing 3 / 180 lines')).toBeTruthy()
+    expect(view.getByText('显示 3 / 180 行')).toBeTruthy()
   })
 
   it('omits the count note when the window is the whole file', () => {
     const view = render(<ReadBlock label="a.ts" lines={lines(3)} totalLines={3} />)
-    expect(view.queryByText(/Showing/u)).toBeNull()
+    expect(view.queryByText(/显示/u)).toBeNull()
   })
 
-  it('draws an empty label and empty language when neither is given', () => {
-    const view = render(<ReadBlock lines={lines(1)} totalLines={1} />)
-    expect(view.container.querySelector('[class^="_label_"]')?.textContent).toBe('')
-    expect(view.container.querySelector('[class^="_lang_"]')?.textContent).toBe('')
+  it('uses the localized code title when no language is given', () => {
+    render(<ReadBlock lines={lines(1)} totalLines={1} />)
+    expect(screen.getByText('代码块')).toBeTruthy()
   })
 })
 
@@ -156,15 +151,15 @@ describe('ReadBlock height cap', () => {
     const view = render(<ReadBlock label="a" lines={lines(10)} totalLines={10} maxLines={4} />)
     // maxLines 4: head = ceil(4/2) = 2, tail = 4 - 2 = 2, 6 hidden.
     expect(gutters(view.container)).toEqual(['1', '2', '9', '10'])
-    const toggle = view.getByRole('button', { name: 'Expand 6 more lines' })
+    const toggle = view.getByRole('button', { name: '展开其余 6 行' })
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
-    expect(toggle.textContent).toBe('… 6 more lines')
+    expect(toggle.textContent).toBe('… 其余 6 行')
 
     fireEvent.click(toggle)
     expect(rowTexts(view.container)).toHaveLength(10)
-    const collapse = view.getByRole('button', { name: 'Collapse content' })
+    const collapse = view.getByRole('button', { name: '收起内容' })
     expect(collapse.getAttribute('aria-expanded')).toBe('true')
-    expect(collapse.textContent).toBe('Collapse')
+    expect(collapse.textContent).toBe('收起')
 
     fireEvent.click(collapse)
     expect(gutters(view.container)).toEqual(['1', '2', '9', '10'])
@@ -173,7 +168,7 @@ describe('ReadBlock height cap', () => {
   it('renders the head slice alone when the cap leaves no tail', () => {
     const view = render(<ReadBlock label="a" lines={lines(5)} totalLines={5} maxLines={1} />)
     expect(gutters(view.container)).toEqual(['1'])
-    expect(view.getByRole('button', { name: 'Expand 4 more lines' })).toBeTruthy()
+    expect(view.getByRole('button', { name: '展开其余 4 行' })).toBeTruthy()
   })
 
   it('caps at the documented default when maxLines is absent', () => {
@@ -181,7 +176,7 @@ describe('ReadBlock height cap', () => {
       <ReadBlock label="a" lines={lines(DEFAULT_READ_MAX_LINES + 1)} totalLines={DEFAULT_READ_MAX_LINES + 1} />,
     )
     expect(rowTexts(view.container)).toHaveLength(DEFAULT_READ_MAX_LINES)
-    expect(view.getByRole('button', { name: 'Expand 1 more lines' })).toBeTruthy()
+    expect(view.getByRole('button', { name: '展开其余 1 行' })).toBeTruthy()
   })
 })
 
@@ -191,26 +186,26 @@ describe('ReadBlock copy', () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     render(<ReadBlock label="a" lines={lines(3, 41)} totalLines={180} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制' }))
     expect(writeText).toHaveBeenCalledWith('line 41\nline 42\nline 43')
     await act(async () => {
       await Promise.resolve()
     })
-    expect(screen.getByRole('button', { name: 'Copied' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '复制成功' })).toBeTruthy()
     // While the ok label is showing, further clicks are no-ops.
-    fireEvent.click(screen.getByRole('button', { name: 'Copied' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制成功' }))
     expect(writeText).toHaveBeenCalledTimes(1)
     await vi.advanceTimersByTimeAsync(1000)
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
   })
 
   it('copies the whole window while the height cap hides its middle', async () => {
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } })
     render(<ReadBlock label="a" lines={lines(10)} totalLines={10} maxLines={4} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制' }))
     expect(writeText).toHaveBeenCalledWith(lines(10).map(line => line.text).join('\n'))
-    expect(await screen.findByRole('button', { name: 'Copied' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: '复制成功' })).toBeTruthy()
   })
 
   it('does not claim success when the host refuses the write', async () => {
@@ -219,12 +214,12 @@ describe('ReadBlock copy', () => {
       value: { writeText: vi.fn().mockRejectedValue(new Error('denied')) },
     })
     render(<ReadBlock label="a" lines={lines(1)} totalLines={1} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Copy' }))
+    fireEvent.click(screen.getByRole('button', { name: '复制' }))
     await act(async () => {
       await Promise.resolve()
     })
-    expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Copied' })).toBeNull()
+    expect(screen.getByRole('button', { name: '复制' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '复制成功' })).toBeNull()
   })
 
   it('merges className onto the wrapper', () => {
@@ -236,6 +231,6 @@ describe('ReadBlock copy', () => {
     // A successful read of an empty file settles to lines: [] with card:'read',
     // so this branch is reachable; copying then would clear the clipboard.
     const view = render(<ReadBlock label="empty.ts" lines={[]} totalLines={0} />)
-    expect(view.queryByRole('button', { name: 'Copy' })).toBeNull()
+    expect(view.queryByRole('button', { name: '复制' })).toBeNull()
   })
 })

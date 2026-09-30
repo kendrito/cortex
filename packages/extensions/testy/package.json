@@ -1,0 +1,128 @@
+{
+  "name": "@cortex/testy",
+  "description": "Integrated Windows application testing, evidence, and automation with Cortex's configured model",
+  "version": "0.2.0-rc.2",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/client-connection",
+        "@cortex/client-locale",
+        "@cortex/client-ui-layout",
+        "@cortex/client-ui-workspace",
+        "@cortex/client-ui-sidebar",
+        "@cortex/client-ui-renderer",
+        "@cortex/client-ui-slots",
+        "@cortex/client-ui-primitives",
+        "@cortex/client-store"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/extensions/testy"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "runtime/win-x64/**",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "dependencies": {
+    "@cortex/schemastery": "workspace:~",
+    "@cortex/util-values": "workspace:*",
+    "@modelcontextprotocol/client": "2.0.0",
+    "ajv": "^8.20.0",
+    "zod": "^4.4.3",
+    "@cortex/brand": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*"
+  },
+  "peerDependencies": {
+    "@cortex/mcp-client": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/mcp-client": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-ui-layout": "workspace:*",
+    "@cortex/client-ui-workspace": "workspace:*",
+    "@cortex/client-ui-sidebar": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@types/react": "~18.3.1",
+    "@testing-library/react": "^16.1.0",
+    "react": "^18.2.0",
+    "clsx": "^2.1.1",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/agent-default-model": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/tools": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/attachment-local": "workspace:*",
+    "@cortex/session-title": "workspace:*",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-query": "workspace:*",
+    "@cortex/session-query-sqlite": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*"
+  }
+}

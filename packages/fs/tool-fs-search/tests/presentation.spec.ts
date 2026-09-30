@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import type { JsonValue } from '@cortex/session'
+import type { JsonValue } from '@cortex/util-values'
 import {
   globSearchMeta,
   grepSearchMeta,

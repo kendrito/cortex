@@ -1,0 +1,39 @@
+# TypeScript SDK snapshot-record patch over `cortex --profile sdk`.
+
+# The fixture corpus must not depend on the developer's personal skill roots.
+# Ordinary product launches retain the sdk profile's default skill discovery.
+- id: skill-filesystem
+  name: '@cortex/skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: !!js "process.env.CORTEX_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: tool-subagent
+  name: '@cortex/tool-subagent'
+  config:
+    provider: spawn
+    toolName: subagent
+    backgroundMode: one-shot
+    enableRunInBackground: false
+    maxDepth: 1
+
+- insert:
+    - id: snapshot-message-feedback
+      name: '@cortex/message-feedback'
+      disabled: !!js "process.env.CORTEX_SNAPSHOT_FEEDBACK !== '1'"
+      config:
+        maxNoteBytes: 1024
+    - id: snapshot-feedback-producer
+      name: './feedback-producer.mjs'
+      disabled: !!js "process.env.CORTEX_SNAPSHOT_FEEDBACK !== '1'"

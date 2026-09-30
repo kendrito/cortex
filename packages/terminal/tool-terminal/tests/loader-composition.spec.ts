@@ -6,9 +6,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
 import Loader from '@cortex/cordis-plugin-loader'
 import Include from '@cortex/cordis-plugin-include'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import { Session, SessionId } from '@cortex/session'
-import AgentRegistry, { Inbox } from '@cortex/agent'
+import AgentRegistry from '@cortex/agent'
 import type { Agent } from '@cortex/agent'
 import SystemPrompt from '@cortex/system-prompt'
 import ToolRuntime from '@cortex/tools'
@@ -16,9 +16,11 @@ import TerminalSessionService from '@cortex/terminal'
 import SandboxProvider from '@cortex/sandbox'
 import type { ConfinedArgv, SandboxPolicy } from '@cortex/sandbox'
 import SandboxPolicyService from '@cortex/sandbox-policy'
+import SessionProjectionRegistry from '@cortex/session-projection'
 import LocalSubprocessRuntime from '@cortex/subprocess-local'
 import * as TerminalLocal from '@cortex/terminal-bash'
 import * as ToolPty from '@cortex/tool-terminal'
+import { unsupportedInbox } from '@cortex/agent-loop-testkit'
 
 let root: string | undefined
 let context: Context | undefined
@@ -31,17 +33,17 @@ afterEach(async () => {
 })
 
 class PassthroughSandbox extends SandboxProvider {
-  confine(argv: readonly string[], _policy: SandboxPolicy): ConfinedArgv {
+  async confine(argv: readonly string[], _policy: SandboxPolicy): Promise<ConfinedArgv> {
     return { argv: [...argv], enforcement: 'full', denialSignatures: [], runnerFailureRules: [] }
   }
 }
 
-function agent(ctx: Context): Agent {
+async function agent(ctx: Context): Promise<Agent> {
   const scope = ctx.plugin(() => {})
   const id = SessionId('pty-loader-agent')
   const session = Session.create(id)
   const value: Agent = {
-    id, options: {}, session, inbox: new Inbox(session, { inserted: () => {}, discarded: () => {}, claimed: () => {} }),
+    id, options: {}, session, inbox: unsupportedInbox(),
     status: 'idle',
     ctx: scope.ctx,
     send: () => {},
@@ -49,7 +51,7 @@ function agent(ctx: Context): Agent {
     runMaintenance: job => job(new AbortController().signal),
     whenIdle: () => Promise.resolve(),
   }
-  ctx.agents.register(value)
+  await ctx.agents.register(value)
   return value
 }
 
@@ -69,6 +71,7 @@ suite('terminal real Loader composition through cordis.yml', () => {
       "- name: '@cortex/tools'",
       "- name: '@cortex/terminal'",
       "- name: '@cortex/test-sandbox'",
+      "- name: '@cortex/session-projection'",
       "- name: '@cortex/sandbox-policy'",
       '  config:',
       '    mode: danger-full-access',
@@ -96,6 +99,7 @@ suite('terminal real Loader composition through cordis.yml', () => {
       ['@cortex/tools', ToolRuntime],
       ['@cortex/terminal', TerminalSessionService],
       ['@cortex/test-sandbox', PassthroughSandbox],
+      ['@cortex/session-projection', SessionProjectionRegistry],
       ['@cortex/sandbox-policy', SandboxPolicyService],
       ['@cortex/subprocess-local', LocalSubprocessRuntime],
       ['@cortex/terminal-bash', TerminalLocal],
@@ -111,18 +115,18 @@ suite('terminal real Loader composition through cordis.yml', () => {
     await context.loader.create({ name: 'cordis:include', config: { path: pathToFileURL(configPath).href } })
     await context.loader.await()
 
-    const owner = agent(context)
+    const owner = await agent(context)
     const signal = new AbortController().signal
     const spawn = await context.tools.execute({
-      signal, callId: CallId('spawn'), name: 'terminal_open', arguments: { type: 'shell', name: 'main', cwd: root }, agent: owner,
+      signal, callId: ToolCallId('spawn'), name: 'terminal_open', arguments: { type: 'shell', name: 'main', cwd: root }, agent: owner,
     })
     expect(resultText(spawn)).toContain('started terminal session pty-1 (main)')
 
     await context.tools.execute({
-      signal, callId: CallId('state'), name: 'terminal_send', arguments: { sessionId: 'pty-1', text: 'export KEEP=loader; cd /' }, agent: owner,
+      signal, callId: ToolCallId('state'), name: 'terminal_send', arguments: { sessionId: 'pty-1', text: 'export KEEP=loader; cd /' }, agent: owner,
     })
     const read = await context.tools.execute({
-      signal, callId: CallId('read'), name: 'terminal_send', arguments: { sessionId: 'pty-1', text: 'printf "cwd=%s keep=%s\\n" "$PWD" "$KEEP"' }, agent: owner,
+      signal, callId: ToolCallId('read'), name: 'terminal_send', arguments: { sessionId: 'pty-1', text: 'printf "cwd=%s keep=%s\\n" "$PWD" "$KEEP"' }, agent: owner,
     })
     expect(resultText(read)).toContain('cwd=/ keep=loader')
     expect(context.terminals.list(owner)).toHaveLength(1)

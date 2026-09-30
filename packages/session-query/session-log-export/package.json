@@ -1,8 +1,10 @@
 {
   "name": "@cortex/session-log-export",
   "description": "Web Session-log export command and shared download dialog",
-  "version": "0.1.0-rc.5",
-  "publishConfig": { "access": "public" },
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/local/cortex.git",
@@ -12,40 +14,57 @@
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
   "exports": {
-    ".": { "types": "./lib/types/index.d.ts", "default": "./lib/index.js" },
-    "./invariant": { "types": "./lib/types/invariant.d.ts", "default": "./lib/invariant.js" },
-    "./client": { "types": "./lib/types/client/index.d.ts", "default": "./lib/client.js" },
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
-  "files": ["lib/index.js", "lib/invariant.js", "lib/client.js", "lib/types/**/*.d.ts"],
-  "scripts": { "bundle": "tsdown", "watch": "tsdown --watch" },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
   "license": "MIT",
+  "dependencies": {
+    "@cortex/session-format": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "fflate": "^0.8.2",
+    "@cortex/brand": "workspace:*"
+  },
   "peerDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-ui-commands": "workspace:^",
-    "@cortex/client-ui-conversation": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "react": "^18.2.0"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*"
   },
   "devDependencies": {
-    "@cortex/cordis": "workspace:^",
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/client-locale": "workspace:^",
-    "@cortex/client-runtime": "workspace:^",
-    "@cortex/client-ui-commands": "workspace:^",
-    "@cortex/client-ui-conversation": "workspace:^",
-    "@cortex/client-ui-primitives": "workspace:^",
-    "@cortex/client-ui-slots": "workspace:^",
-    "@cortex/commands": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/session": "workspace:^",
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/attachment": "workspace:*",
+    "@cortex/client-connection": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-ui-commands": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-message-feedback": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/commands": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-persistence": "workspace:*",
+    "@cortex/session-query": "workspace:*",
     "@types/react": "~18.3.1",
     "react": "^18.2.0"
   },
@@ -53,9 +72,10 @@
     "client": {
       "inject": [
         "@cortex/client-locale",
-        "@cortex/client-runtime",
         "@cortex/client-ui-commands",
-        "@cortex/client-ui-conversation"
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-renderer",
+        "@cortex/client-ui-session"
       ],
       "platform": "web"
     }

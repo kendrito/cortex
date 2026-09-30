@@ -4,7 +4,7 @@
  * @module @cortex/sandbox-local/profiles
  */
 
-import { grantArgs as landlockGrantArgs } from '@cortex/node-addon-landlock-run'
+import { grantArgs as landlockGrantArgs } from '@deepseek-ai/node-addon-system/landlock-run'
 import { writableRoots } from '@cortex/sandbox'
 import type { SandboxPolicy } from '@cortex/sandbox'
 
@@ -14,7 +14,7 @@ import type { SandboxPolicy } from '@cortex/sandbox'
  * @returns profile arguments before the trailing separator and command argv.
  */
 export function bwrapProfileArgs(policy: SandboxPolicy): string[] {
-  const args = ['--ro-bind', '/', '/', '--dev', '/dev', '--proc', '/proc', '--die-with-parent']
+  const args = ['--ro-bind', '/', '/', '--dev', '/dev', '--unshare-pid', '--proc', '/proc', '--die-with-parent']
   if (policy.mode === 'workspace-write') {
     args.push('--tmpfs', '/tmp')
     args.push('--bind', policy.workspaceRoot, policy.workspaceRoot)

@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises'
 import { Context } from '@cortex/cordis'
 import AgentLoop from '@cortex/agent-loop'
 import { mountAgentLoopTestDependencies } from '@cortex/agent-loop-testkit'
-import { createUserMessage, CallId, type GenerateOptions, LlmAdapter, type StreamChunk  } from '@cortex/llm'
+import { createUserMessage, ToolCallId, type GenerateOptions, LlmAdapter, type StreamChunk  } from '@cortex/llm'
 import { SessionId } from '@cortex/session'
 import JsonlSessionPersistence from '@cortex/session-persistence-jsonl'
 import * as checkpointPolicy from '../../src/index.ts'
@@ -29,7 +29,7 @@ class CrashAdapter extends LlmAdapter {
     yield {
       type: 'block-end',
       index: 0,
-      block: { type: 'tool-call', id: CallId('crash-call'), name: 'crash_tool', arguments: '{}' },
+      block: { type: 'tool-call', id: ToolCallId('crash-call'), name: 'crash_tool', arguments: '{}' },
     }
     yield { type: 'finish', reason: { kind: 'tool-calls' } }
   }

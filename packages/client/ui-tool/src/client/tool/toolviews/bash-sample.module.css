@@ -13,11 +13,11 @@
    pinned; 224px = the 260px card cap minus the ~36px banner); the margin
    replaces the primitive's standalone vertical margin with the flow's. */
 .terminal {
-  --dsl-terminal-font: var(--cortex-font-markdown-code-block-small);
+  --dsl-terminal-font: var(--dsw-font-markdown-code-block-small);
   --dsl-terminal-line-height: 18px;
   --dsl-terminal-output-max-height: 224px;
   margin: 4px 0 4px 4px;
-  border: 1px solid var(--cortex-alias-border-l1);
+  border: 0.5px solid var(--dsw-alias-border-l1);
 }
 
 /* A bash execution error can settle without terminal-card material (for
@@ -27,10 +27,10 @@
   display: flex;
   flex-direction: column;
   margin: 4px 0 4px 4px;
-  border: 1px solid var(--cortex-alias-border-l1);
-  border-radius: 12px;
-  background: var(--cortex-alias-markdown-code-block);
-  font: var(--cortex-font-markdown-code-block-small);
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-markdown-code-block);
+  font: var(--dsw-font-markdown-code-block-small);
 }
 
 .ioSection {
@@ -46,7 +46,7 @@
 .ioSection::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   background-clip: padding-box;
-  border-radius: 6px;
+  border-radius: var(--dsw-radius-sm);
 }
 
 .ioSection::-webkit-scrollbar-track {
@@ -57,24 +57,24 @@
   position: sticky;
   top: 0;
   align-self: start;
-  color: var(--cortex-alias-label-caption);
+  color: var(--dsw-alias-label-caption);
 }
 
 .ioDivider {
   flex: none;
-  height: 1px;
-  background: var(--cortex-alias-border-l2);
+  height: 0.5px;
+  background: var(--dsw-alias-border-l2);
 }
 
 .ioText {
   min-width: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .ioText[data-error] {
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }
 
 /* ToolRow's unified expand interaction, replicated per the registrant
@@ -85,51 +85,49 @@
 }
 
 .root {
-  position: relative; /* sweep-glare overlay anchor */
-  overflow: hidden;
   display: flex;
   align-items: center;
-  height: 24px;
+  height: calc(24px + var(--cortex-content-font-delta, 0px));
   min-width: 0;
+  color: var(--dsw-alias-label-tertiary);
+  transition: color 100ms ease;
 }
 
-/* Running sweep glare — same design-system ShimmerText pattern as ToolRow. */
-.root[data-state='running']::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 300px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    color-mix(in srgb, var(--cortex-alias-bg-base) 60%, transparent) 55%,
-    transparent 100%
-  );
-  animation: cortex-bash-row-sweep 2.6s ease-out infinite;
-  pointer-events: none;
+.root:hover {
+  color: var(--dsw-alias-label-secondary);
 }
 
-@keyframes cortex-bash-row-sweep {
-  0% { left: -300px; }
-  90%, 100% { left: 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
 }
 
 .leading {
   position: relative; /* .chevronHover overlay anchor */
   flex: none;
-  width: 16px;
-  height: 16px;
+  width: calc(16px + var(--cortex-content-font-delta, 0px));
+  height: calc(16px + var(--cortex-content-font-delta, 0px));
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-right: 6px;
-  color: var(--cortex-alias-label-tertiary);
+  color: inherit;
+}
+
+/* Same glyph-scaling rule as DisclosureRow's leading: the CSS edge overrides
+   the svg attributes so the 14px business glyph follows the font-size delta.
+   TODO: this bash header duplicates the DisclosureRow structure (and this is
+   the fourth copy of the glyph rule, with DisclosureRow, MessageItem
+   .compactionLeading, and MessageIconActions); migrating the bash row onto
+   the shared DisclosureRow would collapse them to one. */
+.leading svg:not([data-state]) {
+  width: calc(14px + var(--cortex-content-font-delta, 0px));
+  height: calc(14px + var(--cortex-content-font-delta, 0px));
 }
 
 .chevron {
-  color: var(--cortex-alias-label-secondary);
+  color: inherit;
 }
 
 /* Hover preview on the expandable row: the idle icon crossfades (100ms) into
@@ -158,9 +156,8 @@
 
 .title {
   flex: none;
-  font-size: 14px;
-  line-height: 24px;
-  color: var(--cortex-alias-label-secondary);
+  font-size: var(--cortex-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--cortex-content-font-delta, 0px));
 }
 
 .sep {
@@ -169,7 +166,7 @@
   height: 2px;
   border-radius: 1px;
   margin: 0 8px;
-  background: var(--cortex-alias-label-caption);
+  background: var(--dsw-alias-label-caption);
 }
 
 .summary {
@@ -178,14 +175,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
-  line-height: 24px;
-  color: var(--cortex-alias-label-tertiary);
+  font-size: var(--cortex-content-font-size-secondary, 13px);
+  line-height: calc(24px + var(--cortex-content-font-delta, 0px));
 }
 
 /* Error row's collapsed summary: the failure's first line in the error color. */
 .errorSummary {
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.stoppedSummary {
+  color: var(--dsw-alias-state-warn-label);
 }
 
 /* Hover-revealed Inspect pill under the expanded terminal's bottom-left —
@@ -204,11 +204,12 @@
   gap: 4px;
   margin: 4px 0 2px 4px;
   padding: 2px 8px;
-  border: 1px solid var(--cortex-alias-border-l2);
+  border: 0.5px solid var(--dsw-alias-border-l4);
   border-radius: 999px;
+  corner-shape: round;
   /* Base background, not bg-overlay: the overlay token reads too heavy. */
-  background: var(--cortex-alias-bg-base);
-  color: var(--cortex-alias-label-secondary);
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-secondary);
   font-size: 11px;
   line-height: 16px;
   cursor: pointer;
@@ -224,8 +225,8 @@
 /* Solid hover fill: the pill floats over terminal output, so a translucent
    hover token would let the text underneath bleed through. */
 .inspectButton:hover {
-  background: var(--cortex-alias-interactive-bg-hover-solid);
-  color: var(--cortex-alias-label-primary);
+  background: var(--dsw-alias-interactive-bg-hover-solid);
+  color: var(--dsw-alias-label-primary);
 }
 
 

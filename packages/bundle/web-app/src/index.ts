@@ -5,26 +5,26 @@
  * the built frontend dist (workspace knowledge of this bundle, never user
  * config), mounts the `frontend-static` fallback owner over it, registers the
  * harness-source and web-surface prompt sections, the bash-visible web runtime
- * variable, and the URL line. App command-line values arrive through the
- * `webStartup` service expressions in the bundle patch.
+ * variable, the process-token URL line, and the default-browser handoff. The
+ * model and shell retain the clean URL. App command-line values arrive through
+ * the `webStartup` service expressions in the bundle patch.
  * @module @cortex/web-app
  */
 
-import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { spawn, type ChildProcess } from 'node:child_process'
+import { dirname, join } from 'node:path'
 import { createRequire } from 'node:module'
-import { connect } from 'node:net'
 import { networkInterfaces } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import type { Context } from '@cortex/cordis'
 import z from '@cortex/schemastery'
-import { addHarnessSourceSection } from '@cortex/app-boot'
+import { addHarnessSourceSection, auditStartupEntries } from '@cortex/app-boot'
+import type {} from '@cortex/client-connection'
 import * as FrontendStatic from '@cortex/host-frontend-static'
+import { launchedThroughSsh, launchEnvironmentOf } from '@cortex/launch-environment'
+import { scrubbedParentEnv } from '@cortex/subprocess'
 import type {} from '@cortex/cordis-plugin-loader'
 import type {} from '@cortex/host-webserver'
-import type {} from '@cortex/system-prompt'
 import type {} from '@cortex/shell-env'
 
 /** Stable Cordis plugin name. */
@@ -32,6 +32,7 @@ export const name = 'web-app'
 
 /** This cortex installation's root, from either this package's source or built entry. */
 const SOURCE_ROOT = fileURLToPath(new URL('../../../..', import.meta.url))
+const ANNOUNCED_ROOTS = new WeakSet<Context>()
 
 /** Runtime service that releases Web rows after bind-dependent values resolve. */
 const WEB_RUNTIME_SERVICE = 'webRuntime'
@@ -41,6 +42,8 @@ export const inject = ['webServer']
 
 /** Plugin config: composed deployment settings plus per-invocation command-line values. */
 export interface Config {
+  /** Permit default-browser handoff after the Loader tree settles; an SSH launch suppresses it. */
+  openBrowser: boolean
   /** Print the URL line on activation; a non-interactive layer can turn it off. */
   printUrl: boolean
   /**
@@ -52,152 +55,14 @@ export interface Config {
   surfaceContext: boolean
   /** Explicit `--trusted-host` authorities from this invocation. */
   trustedHosts: string[]
-  /** Embedded editor sidecar: 'auto' starts a local VS Code web server for the Code view; 'off' skips it. */
-  editor: 'auto' | 'off'
-  /** Local port the editor sidecar binds; the Code view frames this origin. */
-  editorPort: number
 }
 
 export const Config: z<Config> = z.object({
+  openBrowser: z.boolean().default(true),
   printUrl: z.boolean().default(true),
   surfaceContext: z.boolean().default(true),
   trustedHosts: z.array(String).default([]),
-  editor: z.union(['auto', 'off']).default('auto'),
-  editorPort: z.number().default(3082),
 })
-
-/** A found editor server binary and the argv that serves it on a port. */
-interface EditorLauncher {
-  command: string
-  args: (port: number, dataDir: string) => string[]
-  label: string
-}
-
-/** The sidecar's own persistent data directory; its settings mirror the GUI theme. */
-const EDITOR_DATA_DIR = join(homedir(), '.cortex', 'editor')
-
-/** GUI theme preference values the sidecar mirrors (ui-theme's vocabulary). */
-type ThemePreference = 'light' | 'dark' | 'system'
-
-/**
- * Mirror the harness theme into the sidecar's VS Code user settings, merging
- * over whatever else the file holds so a hand-added editor setting survives.
- * An explicit preference pins the matching Modern theme; `system` hands the
- * choice to the workbench's own scheme detection — the same browser the
- * harness renders in, so the two stay in step by construction.
- * @param preference - the GUI theme preference to mirror.
- */
-function writeEditorTheme(preference: ThemePreference): void {
-  const userDir = join(EDITOR_DATA_DIR, 'data', 'User')
-  const file = join(userDir, 'settings.json')
-  let current: Record<string, unknown> = {}
-  try {
-    current = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>
-  } catch {
-    // First run or a hand-broken file: start from the mirrored keys alone.
-  }
-  const mirrored = preference === 'system'
-    ? {
-      'window.autoDetectColorScheme': true,
-      'workbench.preferredDarkColorTheme': 'Default Dark Modern',
-      'workbench.preferredLightColorTheme': 'Default Light Modern',
-    }
-    : {
-      'window.autoDetectColorScheme': false,
-      'workbench.colorTheme': preference === 'dark' ? 'Default Dark Modern' : 'Default Light Modern',
-    }
-  mkdirSync(userDir, { recursive: true })
-  writeFileSync(file, `${JSON.stringify({ ...current, ...mirrored }, null, 2)}\n`)
-}
-
-/** Narrow an unknown settings value to a theme preference; anything else is `system`. */
-function themePreferenceOf(value: unknown): ThemePreference {
-  const preference = (value as { preference?: unknown } | undefined)?.preference
-  return preference === 'light' || preference === 'dark' ? preference : 'system'
-}
-
-/** PATH lookup that never throws; empty on any failure. */
-function which(binary: string): string | undefined {
-  const probe = spawnSync('which', [binary], { encoding: 'utf8' })
-  const found = probe.status === 0 ? probe.stdout.trim() : ''
-  return found === '' ? undefined : found
-}
-
-/**
- * Discover an installed editor server, preferring code-server (built for
- * embedding) over VS Code's own `serve-web`, including the macOS app bundle
- * CLI for machines where the `code` shell command was never installed.
- * @returns the launcher, or undefined when no editor binary exists.
- */
-function findEditorLauncher(): EditorLauncher | undefined {
-  const codeServer = which('code-server')
-  if (codeServer !== undefined) {
-    return {
-      command: codeServer,
-      label: 'code-server',
-      args: (port, dataDir) => [
-        '--auth', 'none', '--bind-addr', `127.0.0.1:${String(port)}`,
-        '--user-data-dir', join(dataDir, 'data'),
-        '--disable-telemetry', '--disable-update-check', '--disable-workspace-trust',
-      ],
-    }
-  }
-  const serveWebArgs = (port: number, dataDir: string): string[] => [
-    'serve-web', '--host', '127.0.0.1', '--port', String(port),
-    '--without-connection-token', '--accept-server-license-terms',
-    '--server-data-dir', dataDir, '--disable-telemetry',
-  ]
-  const code = which('code')
-  if (code !== undefined) return { command: code, label: 'code serve-web', args: serveWebArgs }
-  const appBundle = '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code'
-  if (process.platform === 'darwin' && existsSync(appBundle)) {
-    return { command: appBundle, label: 'code serve-web', args: serveWebArgs }
-  }
-  return undefined
-}
-
-/**
- * Probe whether something already listens on the editor port, so a second
- * `cortex web` (or a hand-started server) is reused instead of collided with.
- * @param port - local port to probe.
- * @returns true when a listener accepted the connection.
- */
-function editorAlreadyUp(port: number): Promise<boolean> {
-  return new Promise((resolvePort) => {
-    const socket = connect({ host: '127.0.0.1', port, timeout: 400 })
-    socket.once('connect', () => { socket.destroy(); resolvePort(true) })
-    socket.once('error', () => { resolvePort(false) })
-    socket.once('timeout', () => { socket.destroy(); resolvePort(false) })
-  })
-}
-
-/**
- * Start the embedded-editor sidecar for the Code view: reuse a live server,
- * else spawn the discovered launcher and dispose it with the plugin.
- * @param ctx - plugin context owning the child's lifetime.
- * @param port - local port the sidecar serves.
- */
-function startEditorSidecar(ctx: Context, port: number): void {
-  void editorAlreadyUp(port).then((up) => {
-    if (up) {
-      console.log(`cortex editor: http://127.0.0.1:${String(port)} (existing server)`)
-      return
-    }
-    const launcher = findEditorLauncher()
-    if (launcher === undefined) {
-      console.log('cortex editor: no VS Code or code-server found; the Code view will show setup guidance')
-      return
-    }
-    const child = spawn(launcher.command, launcher.args(port, EDITOR_DATA_DIR), { stdio: 'ignore' })
-    child.once('error', () => {
-      console.log(`cortex editor: failed to start ${launcher.label}`)
-    })
-    child.once('spawn', () => {
-      console.log(`cortex editor: http://127.0.0.1:${String(port)} (${launcher.label})`)
-    })
-    ctx.effect(() => () => { child.kill() }, 'web-app: editor sidecar')
-  })
-}
 
 /** Bind-dependent Web values shared by the trust fence and URL display. */
 export interface WebRuntimeValues {
@@ -215,6 +80,37 @@ const CORTEX_WEB_URL = 'CORTEX_WEB_URL' as const
 const LOOPBACK_HOST = '127.0.0.1'
 /** The webserver schema's all-interfaces bind literal. */
 const ALL_INTERFACES_HOST = '0.0.0.0'
+
+const BROWSER_OPENER_MODULE = import.meta.resolve('open')
+
+const BROWSER_OPENER_PROGRAM = `
+try {
+  const { default: open } = await import(${JSON.stringify(BROWSER_OPENER_MODULE)})
+  const launcher = await open(process.argv[1])
+  if (process.platform === 'win32') {
+    // open resolves at PowerShell spawn; keep it referenced until that launcher hands the URL to Windows.
+    const code = launcher.exitCode ?? await new Promise((resolve, reject) => {
+      function onError(error) {
+        launcher.off('close', onClose)
+        reject(error)
+      }
+      function onClose(code) {
+        launcher.off('error', onError)
+        resolve(code)
+      }
+      launcher.ref()
+      launcher.once('error', onError)
+      launcher.once('close', onClose)
+    })
+    if (code !== 0) throw new Error('browser operating-system launcher exited with code ' + String(code))
+  }
+  process.exitCode = 0
+} catch (error) {
+  // The parent turns this exit into the manual-URL warning.
+  console.error(error)
+  process.exitCode = 1
+}
+`
 
 /**
  * Resolve one LAN-trust snapshot from the active server bind.
@@ -256,28 +152,81 @@ function localWebUrl(ctx: Context): string {
   return `http://${LOOPBACK_HOST}:${String(port)}`
 }
 
-/** Dist location is workspace knowledge of this bundle: resolved through the frontend package exports, not configured. */
+/**
+ * Dist location is workspace knowledge of this bundle: anchored on the
+ * frontend package manifest, not configured. Existence is a request-time
+ * concern — the fallback owner reads files per request, so a composition
+ * whose page never reaches the fallback seat (the static worker preview
+ * ships its own page and carries no dist) boots without one.
+ */
 function resolveDistIndex(): string {
   const require = createRequire(import.meta.url)
   try {
-    return require.resolve('@cortex/web-frontend/dist/index.html')
+    return join(dirname(require.resolve('@cortex/web-frontend/package.json')), 'dist', 'index.html')
   } catch {
-    /* v8 ignore next 2 -- reachable only on a checkout without a built dist; the test tree builds it */
-    throw new Error('web-app: frontend dist not built; run pnpm run build from the repository root first')
+    /* v8 ignore next 2 -- reachable only when the frontend package is absent from the checkout */
+    throw new Error('web-app: @cortex/web-frontend is not resolvable from this composition')
   }
 }
 
-/** Test hook: hosts with no built frontend dist substitute the resolver; production never touches this. */
-export const internals: { resolveDistIndex: () => string } = { resolveDistIndex }
+/** Start the maintained platform opener without forwarding Harness credentials. */
+function spawnBrowserLauncher(url: string): ChildProcess {
+  return spawn(process.execPath, [
+    '--input-type=module',
+    '--eval', BROWSER_OPENER_PROGRAM,
+    '--', url,
+  ], {
+    env: scrubbedParentEnv(),
+    stdio: ['ignore', 'inherit', 'pipe'],
+  })
+}
+
+/** Hand one URL to the operating system's default browser. */
+async function openBrowser(url: string): Promise<void> {
+  const launcher = spawnBrowserLauncher(url)
+  let launcherStderr = ''
+  launcher.stderr?.setEncoding('utf8')
+  launcher.stderr?.on('data', (chunk: string) => { launcherStderr += chunk })
+  await new Promise<void>((resolve, reject) => {
+    function onError(error: Error): void {
+      launcher.off('close', onClose)
+      reject(error)
+    }
+    function onClose(code: number | null): void {
+      launcher.off('error', onError)
+      if (code !== 0) {
+        const firstLine = launcherStderr.trim().split(/\r?\n/u)[0]
+        const reason = firstLine === undefined || firstLine === ''
+          ? `browser launcher exited with code ${String(code)}`
+          : firstLine.replace(/^(?:[A-Za-z]*Error):\s*/u, '')
+        reject(new Error(reason))
+        return
+      }
+      if (launcherStderr !== '') process.stderr.write(launcherStderr)
+      resolve()
+    }
+    launcher.once('error', onError)
+    launcher.once('close', onClose)
+  })
+}
+
+/** Test hooks for the built dist and native browser handoff; production never mutates them. */
+export const internals: {
+  resolveDistIndex: () => string
+  openBrowser: (url: string) => Promise<void>
+} = { resolveDistIndex, openBrowser }
 
 /**
  * Mount the Web runtime: dist serving, surface prompt, the bash runtime
- * variable, and the URL line.
+ * variable, the URL line, and the default-browser handoff.
  * @param ctx - plugin context carrying the webServer service.
  * @param config - validated {@link Config}.
  */
 export function apply(ctx: Context, config: Config): void {
   const runtime = resolveLanTrust(ctx.webServer.host, config.trustedHosts)
+  // The loopback URL belongs to this host. Under SSH, the operator reaches it
+  // through a local forwarding address that this process cannot derive.
+  const handoffBrowser = config.openBrowser && !launchedThroughSsh(launchEnvironmentOf(ctx))
   // Release dependent rows only after bind-dependent trust has been sampled once.
   ctx.provide(WEB_RUNTIME_SERVICE, runtime)
   ctx.plugin(FrontendStatic, { distIndex: internals.resolveDistIndex() })
@@ -286,7 +235,7 @@ export function apply(ctx: Context, config: Config): void {
       addHarnessSourceSection(promptCtx, SOURCE_ROOT)
       promptCtx.systemPrompt.section({
         name: 'app:web-surface',
-        order: -98,
+        order: promptCtx.systemPrompt.getSectionOrder('WEB_SURFACE'),
         text: () => webSurfacePrompt(localWebUrl(promptCtx)),
       })
     })
@@ -300,48 +249,55 @@ export function apply(ctx: Context, config: Config): void {
       })
     })
   }
-  if (config.editor === 'auto') {
-    // Mirror every committed theme change; the Code view reloads its frame on
-    // the same commit. The initial seed waits for Loader settlement, because
-    // this row can activate before ui-theme has registered its namespace —
-    // seeding earlier reads undefined and mis-writes the `system` shape.
-    ctx.on('settings/updated', (ns: unknown, next: unknown) => {
-      if (String(ns) === 'ui-theme') writeEditorTheme(themePreferenceOf(next))
-    })
-    const seed = (): void => {
-      const settingsService = ctx.get('settings') as { get(ns: string): unknown } | undefined
-      writeEditorTheme(themePreferenceOf(settingsService?.get('ui-theme')))
-      startEditorSidecar(ctx, config.editorPort)
-    }
-    const settledBoot = ctx.get('loader')?.await()
-    if (settledBoot === undefined) seed()
-    else void settledBoot.then(() => { seed() }, () => { seed() })
-  }
 
-  if (config.printUrl) {
-    // The URL line is a readiness signal: supervisors (and the keyless CLI
-    // smoke) RPC as soon as they observe it, so it must not print while
-    // sibling rows (the /api route owner) are still mounting. Await Loader
-    // settlement first; a hand-built tree without a Loader prints at once.
-    const printUrl = (): void => {
-      // Reuse the exact LAN snapshot provided to the /api trust fence.
-      const lanCandidate = runtime.lanAddresses[0]
-      const port = ctx.webServer.port
-      console.log(`cortex web: ${localWebUrl(ctx)}${lanCandidate === undefined ? '' : ` (LAN: http://${lanCandidate}:${String(port)})`}`)
-    }
-    // This row's own activation can precede a sibling failure. The app owns
-    // readiness by waiting for its Loader tree, or prints at once in a
-    // hand-built context without Loader.
-    const settled = ctx.get('loader')?.await()
-    if (settled === undefined) printUrl()
-    else {
-      void settled.then(() => {
-        // The tree can be disposed while the boot was in flight (early
-        // SIGTERM); a URL line for a dead server would only mislead, and
-        // reading the torn-down port would turn a clean shutdown into a crash.
-        if (ctx.get('webServer') !== undefined) printUrl()
-      // Loader reports a failed boot; this row only stays quiet.
-      }, () => {})
-    }
+  if (config.printUrl || handoffBrowser) {
+    ctx.inject(['connection'], (connectionCtx) => {
+      // The URL line and browser handoff are readiness signals: supervisors RPC
+      // as soon as they observe the line, while a browser requests the page as
+      // soon as it opens. Neither may run while sibling rows such as the /api
+      // route owner are still mounting. Await Loader settlement first; a
+      // hand-built tree without a Loader is already the complete tree.
+      const announceReady = (): void => {
+        if (ANNOUNCED_ROOTS.has(connectionCtx.root)) return
+        const webUrl = localWebUrl(connectionCtx)
+        const authenticatedUrl = connectionCtx.connection.authenticatedUrl(webUrl)
+        // Reuse the exact LAN snapshot provided to the /api trust fence.
+        const lanCandidate = runtime.lanAddresses[0]
+        const port = connectionCtx.webServer.port
+        const lanUrl = lanCandidate === undefined
+          ? undefined
+          : connectionCtx.connection.authenticatedUrl(`http://${lanCandidate}:${String(port)}`)
+        ANNOUNCED_ROOTS.add(connectionCtx.root)
+        if (config.printUrl) {
+          console.log(`cortex web: ${authenticatedUrl}${lanUrl === undefined ? '' : ` (LAN: ${lanUrl})`}`)
+        }
+        if (handoffBrowser) {
+          console.log('cortex web: opening the default browser; pass --no-open to disable')
+          void internals.openBrowser(authenticatedUrl).catch((error: unknown) => {
+            const reason = error instanceof Error ? error.message : String(error)
+            console.error(`web-app: could not open the default browser because ${reason}; use the cortex web URL printed at startup`)
+          })
+        }
+      }
+      // This row's own activation can precede a sibling failure. The app owns
+      // readiness by waiting for its Loader tree, or announces at once in a
+      // hand-built tree without Loader.
+      const settled = connectionCtx.get('loader')?.await()
+      if (settled === undefined) announceReady()
+      else {
+        void settled.then(async () => {
+          await auditStartupEntries(connectionCtx.root, 'cortex web', () => {})
+          // The tree can be disposed while the boot was in flight (early
+          // SIGTERM); a URL line or browser tab for a dead server would only
+          // mislead, and reading torn-down services would turn a clean shutdown
+          // into a crash.
+          if (connectionCtx.get('webServer') !== undefined
+            && connectionCtx.get('connection') !== undefined) announceReady()
+        }).catch(() => {
+          // Boot owns the failure diagnostic; readiness remains unpublished.
+        })
+      }
+    })
+
   }
 }

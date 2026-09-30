@@ -1,7 +1,7 @@
 {
   "name": "@cortex/sdk-client",
-  "description": "TypeScript client SDK for driving a Cortex runtime subprocess over stdio JSON-RPC: the CortexHarness high-level turns API and the lower-level HarnessClient",
-  "version": "0.1.0-rc.5",
+  "description": "TypeScript client SDK for driving a Cortex runtime subprocess over stdio JSON-RPC: the DeepSeekHarness high-level turns API and the lower-level HarnessClient",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,30 +18,26 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
+  "dependencies": {
+    "@cortex/cortex": "workspace:*"
+  },
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/llm": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/llm": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

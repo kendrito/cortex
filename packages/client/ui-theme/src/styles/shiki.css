@@ -5,8 +5,8 @@
    alias the markdown code-block tokens so highlighted and plain blocks agree. */
 
 :root {
-  --shiki-foreground: var(--cortex-alias-label-primary);
-  --shiki-background: var(--cortex-alias-markdown-code-block);
+  --shiki-foreground: var(--dsw-alias-label-primary);
+  --shiki-background: var(--dsw-alias-markdown-code-block);
   --shiki-token-constant: #1c7ed6;
   --shiki-token-string: #2f9e44;
   --shiki-token-comment: #868e96;

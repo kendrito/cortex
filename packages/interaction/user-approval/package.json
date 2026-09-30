@@ -1,7 +1,7 @@
 {
   "name": "@cortex/user-approval",
   "description": "User-approval seam (ctx.approval) for the Cortex: one-shot permission decisions dispatched to composed answerers over the approval/request waterfall, fail-closed by default",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -37,26 +37,26 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/agent": "workspace:^",
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/system-prompt": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/agent": "workspace:*",
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/system-prompt": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

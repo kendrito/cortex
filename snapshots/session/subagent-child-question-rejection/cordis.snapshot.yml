@@ -1,0 +1,60 @@
+# Keyless counterpart to child-question.cordis.yml: keep the real interaction
+# seam, model-facing tool, and tripwire provider while replacing DeepSeek with
+# per-session replay.
+- id: llm-deepseek
+  name: '@cortex/llm-deepseek-api-key'
+  disabled: true
+
+- id: sandbox
+  name: '@cortex/sandbox-local'
+  config:
+    runnerCommand:
+      - bash
+      - -c
+      - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
+      - passthrough-runner
+    runnerFailureSignatures:
+      - 'passthrough-runner: profile rejected'
+
+- id: agent-default-model
+  name: '@cortex/agent-default-model'
+  config:
+    provider: deepseek-official
+    model: deepseek-v4-flash
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js cortexHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- insert:
+    - id: llm-replay
+      name: '@cortex/llm-replay'
+      config:
+        providers:
+          - id: deepseek-official
+            name: DeepSeek
+            models:
+              - id: deepseek-v4-flash
+              - id: deepseek-v4-pro
+    - id: tool-ask-user
+      name: '@cortex/tool-ask-user'
+    - id: child-question-tripwire
+      name: '../../../packages/test-support/session-snapshot/tests/fixtures/child-question-tripwire.ts'
+
+- id: user-questions
+  name: '@cortex/user-questions'

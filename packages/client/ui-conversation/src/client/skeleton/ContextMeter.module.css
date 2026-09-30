@@ -1,57 +1,63 @@
-/* Context-occupancy ring beside the send button plus its click-open breakdown
-   panel (menu surface: r12, inverted hairline, shadow-lv3). */
+/* Context-occupancy pill below the composer plus its click-open breakdown
+   panel (menu surface: elevation-prominent). */
 
 .root {
-  position: relative;
   display: inline-flex;
+  flex: none;
 }
 
-/* Same 28px circular hit target family as the composer's attach button. */
 .trigger {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   flex: none;
-  width: 28px;
-  height: 28px;
+  padding: 1px 8px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--dsw-radius-sm);
   background: transparent;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-tertiary);
+  font-family: inherit;
+  font-size: var(--cortex-content-font-size-secondary, 13px);
+  font-variant-numeric: tabular-nums;
+  line-height: calc(20px + var(--cortex-content-font-delta-secondary, 0px));
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.trigger:hover {
-  background: var(--cortex-alias-interactive-bg-hover);
+.trigger:hover,
+.trigger[aria-expanded='true'] {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .track {
   fill: none;
-  stroke: var(--cortex-alias-border-l3);
+  stroke: var(--dsw-alias-border-l3);
   stroke-width: 2;
 }
 
 .fill {
   fill: none;
-  stroke: var(--cortex-alias-label-tertiary);
+  stroke: var(--dsw-alias-label-tertiary);
   stroke-width: 2;
   stroke-linecap: round;
 }
 
 .panel {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  right: 0;
-  z-index: 100;
+  position: fixed;
+  z-index: 1100;
   box-sizing: border-box;
-  width: 264px;
+  width: min(264px, calc(100vw - 24px));
   padding: 12px;
-  border: 1px solid var(--cortex-alias-border-inverted);
-  border-radius: 12px;
-  background: var(--cortex-specific-menu);
-  box-shadow: var(--cortex-shadow-lv3);
+  border: 0;
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-specific-menu);
+  backdrop-filter: var(--dsw-menu-backdrop-filter);
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
+  box-shadow: var(--dsw-elevation-prominent);
   font-size: 12px;
   line-height: 20px;
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
   cursor: default;
 }
 
@@ -65,16 +71,16 @@
   margin-left: auto;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .percent {
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .headline {
-  color: var(--cortex-alias-label-tertiary);
+  color: var(--dsw-alias-label-tertiary);
 }
 
 /* The headline brackets the reading, so the side a locale leaves empty must
@@ -89,7 +95,8 @@
   margin: 10px 0 12px;
   height: 4px;
   border-radius: 999px;
-  background: var(--cortex-alias-interactive-bg-hover);
+  corner-shape: round;
+  background: var(--dsw-alias-interactive-bg-hover);
   overflow: hidden;
 }
 
@@ -98,7 +105,7 @@
   min-width: 2px;
   height: 100%;
   border-radius: 1px;
-  background: var(--meter-tint, var(--cortex-alias-label-tertiary));
+  background: var(--meter-tint, var(--dsw-alias-label-tertiary));
 }
 
 .swatch {
@@ -112,7 +119,7 @@
 }
 
 .colorSystem {
-  --meter-tint: var(--cortex-static-neutral-bluish-400);
+  --meter-tint: var(--dsw-static-neutral-bluish-400);
 }
 
 .colorTools {
@@ -121,7 +128,7 @@
 }
 
 .colorMessages {
-  --meter-tint: var(--cortex-static-blue-450);
+  --meter-tint: var(--dsw-static-blue-450);
 }
 
 .rows {
@@ -137,11 +144,11 @@
 }
 
 .row dt {
-  color: var(--cortex-alias-label-secondary);
+  color: var(--dsw-alias-label-secondary);
 }
 
 .row dd {
   margin: 0;
   font-variant-numeric: tabular-nums;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/subagent-codex",
   "description": "One-shot Codex subagent provider over the official app-server protocol",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -18,45 +18,51 @@
       "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
     },
-    "./invariant": {
-      "types": "./lib/types/invariant.d.ts",
-      "default": "./lib/invariant.js"
-    },
     "./src/*": "./src/*",
     "./package.json": "./package.json"
   },
   "files": [
     "lib/index.js",
-    "lib/invariant.js",
+    "cordis.patch.yml",
     "lib/types/**/*.d.ts"
   ],
   "license": "MIT",
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/llm": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/timeout": "workspace:*"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/sdk-protocol": "workspace:*",
+    "@cortex/schemastery": "workspace:~",
+    "@openai/codex": "0.153.4"
   },
   "devDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/agent": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/loader-smoke": "workspace:^",
-    "@cortex/sdk-protocol": "workspace:^",
-    "@cortex/session": "workspace:^",
-    "@cortex/subagent": "workspace:^",
-    "@cortex/subprocess": "workspace:^",
-    "@cortex/subprocess-local": "workspace:^",
-    "@cortex/timeout": "workspace:^",
-    "@openai/codex": "0.147.0",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent": "workspace:*",
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/loader-smoke": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/session-checkpoint-policy": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/subagent": "workspace:*",
+    "@cortex/subprocess": "workspace:*",
+    "@cortex/subprocess-local": "workspace:*",
+    "@cortex/timeout": "workspace:*",
+    "@cortex/tool-jobs": "workspace:*",
+    "@cortex/tool-subagent": "workspace:*",
+    "@cortex/tools": "workspace:*"
   }
 }

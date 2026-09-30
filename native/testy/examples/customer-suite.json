@@ -1,0 +1,5 @@
+{
+  "name": "Customer creation stability",
+  "repetitions": 3,
+  "testFiles": ["create-customer.json"]
+}

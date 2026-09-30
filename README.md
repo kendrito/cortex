@@ -1,36 +1,18 @@
 # Cortex
 
-Cortex (`cortex`) is a local, plugin-based agent harness.
+Cortex is a security-focused, plugin-based agent harness built on [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) and [Cordis](https://github.com/cordiverse/cordis). This source tree incorporates upstream **0.2.0-rc.2**, commit `639ed015397290b3745d163aafe02ffee4aa3f84` (2026-09-29), while retaining Cortex's local model settings.
 
-Everything is a plugin. The composition layer is [Cordis](https://github.com/cordiverse/cordis),
-whose design is described in
-[_A Programming Paradigm for Spatiotemporal Composability_](https://github.com/cordiverse/paper).
+## Privacy policy
 
-This is a personal build, run from source rather than installed from a registry.
+The shipped profiles have no telemetry exporters, product analytics service, DeepSeek account onboarding, automatic session uploads, official provider defaults, or web grounding packages. Neither `web_search` nor `web_fetch` is registered. Settings → Models configures only an HTTP(S) loopback OpenAI-compatible gateway, such as a local LiteLLM instance. Existing external provider entries cannot be added, edited, deleted, or probed through that UI. Advanced file configuration remains an administrator-controlled capability.
 
-## Provenance and security
+Both Codex and Claude Code subagent providers are available. Cortex disables their supported telemetry and feedback settings and excludes their web search/fetch features when launching them. The experimental Stagehand browser dependency is patched to disable trace collection and export. Desktop update checks and remote update feeds are disabled. Plugin installation has no default fallback registry or automatic registry probes. These settings do not make tool execution a network firewall: configured models, browser automation, shell commands, explicitly configured MCP servers, and downloads can use the network when invoked.
 
-Cortex is a privacy-focused fork of
-[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (MIT), taken at
-0.1.0-rc.5. Relative to upstream, this fork **removes** the OTLP session-telemetry exporter
-(`session-telemetry-otel`), the DeepSeek API adapters (`llm-deepseek`,
-`web-search-deepseek`), the vendor onboarding/default-provider wiring, and the CI and
-localisation trees — and **adds** an Atlassian Data Center integration, an embedded
-editor/Code view, and small UI features. No dependency or external endpoint was added.
-
-The full tree was audited for telemetry, phone-home behaviour, hidden code, and
-supply-chain integrity — including a live verification of every lockfile hash against
-registry.npmjs.org, diffs of all vendored code against its upstreams, a rebuild of the
-prebuilt `third_party/mcp-bitbucket` bundle, and a file-by-file comparison against
-upstream. **Verdict: no telemetry, no phone-home, no hidden code.** A fresh install
-contacts nothing until you configure a model provider.
-
-Read the full report: [SECURITY-AUDIT.md](SECURITY-AUDIT.md).
-
-As of 2026-08-27 the web tool packages are removed entirely: the model has no
-`web_search`/`web_fetch` tools and no web grounding of any kind.
+[SECURITY-AUDIT.md](SECURITY-AUDIT.md) describes the earlier fork revision only. It is not an audit of this updated tree. See [the synchronization and migration notes](docs/cortex-upstream-sync.md) for scope, retained restrictions, compatibility changes, and validation limits.
 
 ## Run
+
+Use Node.js within the supported engine range and the package manager version declared in `package.json`.
 
 ```sh
 pnpm install
@@ -38,46 +20,22 @@ pnpm run build
 pnpm cortex web
 ```
 
-The Web UI is served at `http://127.0.0.1:3080` by default. See the
-[Web UI guide](docs/user/guide/index.md).
+The Web UI listens on `http://127.0.0.1:3080` by default. Configure a local model gateway before starting a model turn. Other entry points include `pnpm cortex --profile headless "run the tests"`, `pnpm cortex --profile tui`, and `pnpm cortex --dump-config`.
 
-Other entry points:
+Windows web and desktop profiles enable the experimental native Computer Use driver by default. It can observe and interact with the desktop through session tools; screenshots used by an image-capable model are sent to your configured model provider. See [Computer Use](docs/subsystems/computer-use.md) for permissions and disabling or switching providers. Headless and SDK profiles do not enable it automatically.
 
-```sh
-pnpm cortex --profile headless "run the tests"   # answer one task, print it, exit
-pnpm cortex --profile tui                        # terminal UI
-pnpm cortex --dump-config                        # print the composed profile tree
-```
+Web and desktop profiles also enable Playwright browser automation and local full-text conversation search. Browser automation does not add web grounding tools. The embedded code editor is removed; Cortex does not launch a VS Code or code-server sidecar.
+
+On Windows x64, [Testy](packages/extensions/testy/README.md) is included as an optional built-in plugin. Describe a workflow to discover the application, create and run an AI test, and review screenshots and assertions inside Cortex. Testy uses the selected Cortex model and is also available as MCP tools in chats.
 
 ## Configuration
 
-Configuration lives in `$CORTEX_HOME` (default `~/.cortex`):
-
-| file | holds |
-| --- | --- |
-| `settings.yaml` | providers, models, default model selection, UI preferences |
-| `.credentials.yaml` | API keys, referenced by name from `settings.yaml` |
-| `AGENTS.md` | instructions applied to every workspace |
-
-Models are configured from **Settings → Models** in the Web UI, or by editing
-`settings.yaml` directly. See the [model configuration guide](docs/user/guide/providers.md)
-for custom providers, reasoning levels, and per-model overrides.
+Configuration lives in `$CORTEX_HOME` (default `~/.cortex`). The active profile's `cordis.patch.yml` holds provider routes, model selections, and UI preferences; `.credentials.yaml` holds referenced credentials; `AGENTS.md` supplies workspace instructions. Legacy `settings.yaml` is imported once and renamed to `settings.yaml.imported`; rejected sections remain in that backup. Back up the home directory and persisted sessions before upgrading. Consult the [upstream upgrade guides](docs/upgrade-guide) alongside the [Cortex migration notes](docs/cortex-upstream-sync.md).
 
 ## Development
 
-Start with the [development guide](docs/development.md) and the
-[architecture documentation](docs/architecture.md).
-
-```sh
-pnpm run test        # unit tests
-pnpm run typecheck
-pnpm run lint
-pnpm run build
-```
+Start with [development](docs/development.md) and [architecture](docs/architecture.md). `pnpm run typecheck`, `pnpm run lint`, and `pnpm run test` cover separate validation surfaces. Real model fixture recording requires an explicitly configured local test gateway; it is not part of a keyless test run.
 
 ## Licence
 
-[MIT](LICENSE).
-
-Third-party dependencies and their licences are disclosed in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). Upstream and third-party attribution remains in the source tree.

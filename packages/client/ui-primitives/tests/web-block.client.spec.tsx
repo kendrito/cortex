@@ -1,19 +1,39 @@
 // @vitest-environment jsdom
-// WebBlock: both kinds of the web card. The search card's answer, its citation
-// list with the title-or-hostname label fallback and optional snippet/date, the
-// full source list under one <ol>, and the truncated indicator; the fetch
-// card's linked URL, status, and truncation. Safe-link
-// attributes on both kinds: an http(s) URL becomes an external anchor
-// (target/rel), any other URL renders as plain text with no href.
 
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from '@testing-library/react'
-import { WebBlock } from '../src/index.ts'
-import type { WebSourceView } from '../src/index.ts'
+import { LinkIconMedium, WebBlock as LocalizedWebBlock } from '../src/index.ts'
+import type {
+  WebFetchBlockProps, WebSearchBlockProps, WebSourceView,
+} from '../src/index.ts'
+import { webBlockLabels } from './labels.client.ts'
+
+type WebBlockProps =
+  | Omit<WebSearchBlockProps, 'labels'>
+  | Omit<WebFetchBlockProps, 'labels'>
+
+function WebSearchBlock(props: Omit<WebSearchBlockProps, 'labels'>) {
+  return <LocalizedWebBlock {...props} labels={webBlockLabels} />
+}
+
+function WebFetchBlock(props: Omit<WebFetchBlockProps, 'labels'>) {
+  return <LocalizedWebBlock {...props} labels={webBlockLabels} />
+}
+
+function WebBlock(props: WebBlockProps) {
+  return props.kind === 'search'
+    ? <WebSearchBlock {...props} />
+    : <WebFetchBlock {...props} />
+}
 
 afterEach(cleanup)
 
-/** `count` sources with sequential hostnames, so each row reads distinctly. */
+/** The path data of the mark a `url` link leads with for one destination. */
+function glyphMark(href: string | undefined): string | null {
+  const { container } = render(<LinkIconMedium kind="url" href={href} />)
+  return container.querySelector('path')!.getAttribute('d')
+}
+
 function sources(count: number): WebSourceView[] {
   return Array.from({ length: count }, (_value, index) => ({
     url: `https://site-${index}.example.com/page`,
@@ -38,7 +58,7 @@ describe('WebBlock search card', () => {
 
   it('shows the empty-state note when a search returns no answer and no sources', () => {
     const view = render(<WebBlock kind="search" sources={[]} truncated={false} />)
-    expect(view.getByText('No results found')).toBeTruthy()
+    expect(view.getByText('未找到结果')).toBeTruthy()
     // The empty note replaces the source list, not an empty <ol>.
     expect(view.container.querySelector('ol')).toBeNull()
   })
@@ -46,13 +66,13 @@ describe('WebBlock search card', () => {
   it('shows the source list, not the empty note, when a source is present', () => {
     const view = render(<WebBlock kind="search" sources={sources(1)} truncated={false} />)
     expect(view.container.querySelector('ol')).toBeTruthy()
-    expect(view.queryByText('No results found')).toBeNull()
+    expect(view.queryByText('未找到结果')).toBeNull()
   })
 
   it('shows the source list when an empty source list still carries an answer', () => {
     const view = render(<WebBlock kind="search" answer="Just an answer" sources={[]} truncated={false} />)
     expect(view.getByText('Just an answer')).toBeTruthy()
-    expect(view.queryByText('No results found')).toBeNull()
+    expect(view.queryByText('未找到结果')).toBeNull()
   })
 
   it('labels a source by its title, and by hostname when the title is absent', () => {
@@ -88,6 +108,20 @@ describe('WebBlock search card', () => {
     expect(anchor.getAttribute('rel')).toBe('noopener noreferrer')
   })
 
+  it("leads a source and a fetched url on a known site with that site's mark", () => {
+    /** The mark a link leads with, as its path data. */
+    const mark = (element: Element): string | null => element.querySelector('a svg path')!.getAttribute('d')
+    const view = render(<WebBlock kind="search" truncated={false} sources={[
+      { url: 'https://github.com/org/repo', title: 'Repo' },
+    ]} />)
+    expect(mark(view.container)).toBe(glyphMark('https://github.com/a'))
+    // An unmapped host keeps the globe, as does the fetch card's URL.
+    expect(mark(render(<WebBlock kind="search" sources={sources(1)} truncated={false} />).container))
+      .toBe(glyphMark(undefined))
+    expect(mark(render(<WebBlock kind="fetch" url="https://news.ycombinator.com/item?id=1" statusCode={200} truncated={false} />).container))
+      .toBe(glyphMark('https://news.ycombinator.com/item?id=2'))
+  })
+
   it('renders a non-http url as plain text with no href, and its raw text label when unparseable', () => {
     const view = render(<WebBlock kind="search" truncated={false} sources={[
       { url: 'javascript:alert(1)', title: 'Dangerous' },
@@ -117,10 +151,10 @@ describe('WebBlock search card', () => {
 
   it('shows the truncated indicator only when the list was capped by the tool', () => {
     const on = render(<WebBlock kind="search" sources={sources(1)} truncated />)
-    expect(on.getByText('Source list truncated')).toBeTruthy()
+    expect(on.getByText('来源列表已截断')).toBeTruthy()
     cleanup()
     const off = render(<WebBlock kind="search" sources={sources(1)} truncated={false} />)
-    expect(off.queryByText('Source list truncated')).toBeNull()
+    expect(off.queryByText('来源列表已截断')).toBeNull()
   })
 
   it('renders every source in one <ol> with no expand control', () => {
@@ -165,10 +199,10 @@ describe('WebBlock fetch card', () => {
 
   it('shows the truncated indicator only when the content was cut', () => {
     const on = render(<WebBlock kind="fetch" url="https://example.com" statusCode={200} truncated />)
-    expect(on.getByText('Content truncated')).toBeTruthy()
+    expect(on.getByText('内容已截断')).toBeTruthy()
     cleanup()
     const off = render(<WebBlock kind="fetch" url="https://example.com" statusCode={200} truncated={false} />)
-    expect(off.queryByText('Content truncated')).toBeNull()
+    expect(off.queryByText('内容已截断')).toBeNull()
   })
 
   it('carries a non-200 status verbatim', () => {

@@ -8,8 +8,9 @@ import { homedir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import type { Agent } from '@cortex/agent'
+import { SESSION_FORMAT_VERSION } from '@cortex/session'
 import type { ToolExecution } from '@cortex/tools'
 import { ShellEnvRegistry } from '@cortex/shell-env'
 import * as BashEnvPlugin from '@cortex/shell-env'
@@ -22,13 +23,19 @@ function execution(sessionId?: string): ToolExecution {
   return {
     signal: testToolSignal,
     token: Symbol('bash-env-test') as ToolExecution['token'],
-    callId: CallId('bash-env-call'),
-    rootCallId: CallId('bash-env-call'),
+    callId: ToolCallId('bash-env-call'),
+    rootCallId: ToolCallId('bash-env-call'),
     name: 'bash',
     arguments: { command: 'true' },
     ...(sessionId === undefined
       ? {}
-      : { agent: { session: { header: { version: 0, id: sessionId, createdAt: 0 } } } as Agent }),
+      : {
+        agent: {
+          session: {
+            header: { version: SESSION_FORMAT_VERSION, id: sessionId, createdAt: 0, isSeeded: false },
+          },
+        } as unknown as Agent,
+      }),
   }
 }
 
@@ -46,6 +53,21 @@ describe('ShellEnvRegistry', () => {
       CORTEX_SESSION_ID: 'session-a',
       CORTEX_SHELL: '1',
     })
+  })
+
+  it('collects the launcher-provided profile name and directory when a profile context exists', () => {
+    const ctx = new Context()
+    ctx.provide('profileContext', {
+      name: 'web', dir: '/profiles/web', patchPath: '/profiles/web/cordis.patch.yml', installAnchor: '/cortex/package.json',
+      cwd: '/work', home: '/home', startedBundles: [], overlays: [], telemetryDisabledEnv: undefined,
+    })
+    const registry = new ShellEnvRegistry(ctx, { cortexHome: './test-cortex-home' })
+    expect(registry.collect(execution())).toMatchObject({ CORTEX_PROFILE: 'web', CORTEX_PROFILE_DIR: '/profiles/web' })
+    expect(() => registry.register({
+      name: 'profile-claimer',
+      variables: { CORTEX_PROFILE: { description: 'Reserved key.' } },
+      resolve: () => ({}),
+    })).toThrow(/reserved key "CORTEX_PROFILE"/)
   })
 
   it('resolves CORTEX_HOME from the ambient override or the user-home default', () => {
@@ -199,40 +221,10 @@ describe('ShellEnvRegistry', () => {
     expect(registry.collect(execution())).not.toHaveProperty('CORTEX_EXPLICIT_DISPOSAL')
   })
 
-  it('the plugin registers the service and the persistence contributor on load', async () => {
+  it('the plugin registers the service with no contributors on load', async () => {
     const ctx = new Context()
     await ctx.plugin(BashEnvPlugin)
     expect(ctx.shellEnv).toBeInstanceOf(ShellEnvRegistry)
-    expect(ctx.shellEnv.list()).toEqual([
-      {
-        contributor: 'session-persistence',
-        description: 'Absolute target path of the current session JSONL when the active persistence backend provides one.',
-        key: 'CORTEX_SESSION_JSONL',
-      },
-    ])
-  })
-
-  it('the persistence contributor resolves CORTEX_SESSION_JSONL only for a jsonl backend', async () => {
-    const ctx = new Context()
-    await ctx.plugin(BashEnvPlugin)
-    ctx.provide('sessionPersistence', {
-      locate: () => ({ kind: 'jsonl' as const, path: 'C:\\sessions\\s.jsonl' }),
-    })
-    expect(ctx.shellEnv.collect(execution('sess-p')).CORTEX_SESSION_JSONL).toBe('C:\\sessions\\s.jsonl')
-  })
-
-  it('the persistence contributor omits the variable for a non-jsonl backend', async () => {
-    const ctx = new Context()
-    await ctx.plugin(BashEnvPlugin)
-    ctx.provide('sessionPersistence', {
-      locate: () => ({ kind: 'sqlite' as const, path: 'C:\\sessions\\s.db' }),
-    })
-    expect(ctx.shellEnv.collect(execution('sess-p'))).not.toHaveProperty('CORTEX_SESSION_JSONL')
-  })
-
-  it('the persistence contributor omits the variable without a persistence backend', async () => {
-    const ctx = new Context()
-    await ctx.plugin(BashEnvPlugin)
-    expect(ctx.shellEnv.collect(execution('sess-p'))).not.toHaveProperty('CORTEX_SESSION_JSONL')
+    expect(ctx.shellEnv.list()).toEqual([])
   })
 })

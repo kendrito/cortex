@@ -1,0 +1,17 @@
+- name: '@cortex/session'
+- name: '@cortex/system-prompt'
+- name: '@cortex/tools'
+- name: '@cortex/fs-local'
+- name: '@cortex/tool-fs'
+- name: '@cortex/session-query-sqlite'
+  config:
+    path: ':memory:'
+    openAt: never
+- name: '@cortex/session-reference'
+  config:
+    maxReferenceBytes: 360
+- name: './source-session.ts'
+- name: '@cortex/spill-local'
+  config:
+    root: '{{spillRoot}}'
+    cleanupPeriodDays: 0

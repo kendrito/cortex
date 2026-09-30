@@ -1,0 +1,59 @@
+{
+  "name": "@cortex/experimental-speech-to-text",
+  "description": "Experimental speech recognition with independently selectable providers",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/speech-to-text"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./wave": {
+      "types": "./lib/types/wave.d.ts",
+      "default": "./lib/types/wave.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@cortex/brand": "workspace:*",
+    "@cortex/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/settings": "workspace:*",
+    "@cortex/cordis-plugin-loader": "workspace:~"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/app-boot": "workspace:*",
+    "@cortex/config-editor": "workspace:*",
+    "@cortex/settings": "workspace:*",
+    "@cortex/cordis-plugin-loader": "workspace:~"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/cordis-plugin-loader": {
+      "optional": true
+    }
+  }
+}

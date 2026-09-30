@@ -1,7 +1,7 @@
 {
   "name": "@cortex/fs",
   "description": "Abstract filesystem capability seam (ctx.fs) for the Cortex — vocabulary types, the FileSystem service (text IO + optional version-guarded atomic mutations), and the fs/* policy event vocabulary",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -32,17 +32,17 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/brand": "workspace:^",
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/sandbox": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/brand": "workspace:*",
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/sandbox": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

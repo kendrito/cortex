@@ -1,0 +1,87 @@
+<Window x:Class="Testy.WpfLab.LabWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Testy.WpfLab"
+        Title="Testy WPF Control Lab" Width="1000" Height="740" MinWidth="850" MinHeight="650" WindowStartupLocation="CenterScreen" Background="#F3F5F8" Loaded="OnLoaded">
+  <Window.Resources>
+    <Style TargetType="Button"><Setter Property="Padding" Value="9,5"/><Setter Property="Margin" Value="0,0,6,0"/></Style>
+    <Style TargetType="GroupBox"><Setter Property="Margin" Value="0,6,10,6"/><Setter Property="Padding" Value="8"/></Style>
+    <Style TargetType="TextBox"><Setter Property="Padding" Value="5"/><Setter Property="Margin" Value="0,4"/></Style>
+  </Window.Resources>
+  <Grid Margin="16">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <TextBlock Text="WPF control verification lab" FontSize="23" FontWeight="SemiBold"/>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,5">
+      <Button x:Name="ResetLab" AutomationProperties.AutomationId="ResetLab" Content="Reset" Click="Reset_Click"/>
+      <Button AutomationProperties.AutomationId="SortDescending" Content="Sort descending" Click="Sort_Click"/>
+      <Button AutomationProperties.AutomationId="FilterHigh" Content="Filter 1500+" Click="Filter_Click"/>
+      <Button AutomationProperties.AutomationId="ClearFilter" Content="Clear filter" Click="ClearFilter_Click"/>
+      <Button AutomationProperties.AutomationId="ReorderColumns" Content="Reorder columns" Click="Reorder_Click"/>
+      <Button AutomationProperties.AutomationId="OpenModal" Content="Modal" Click="Modal_Click"/>
+    </StackPanel>
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="2.5*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Grid.RowDefinitions><RowDefinition Height="1.25*"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+      <GroupBox Header="2,000 virtualized orders">
+        <DataGrid x:Name="OrdersGrid" AutomationProperties.AutomationId="OrdersGrid" AutomationProperties.Name="Orders grid"
+                  AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserDeleteRows="False"
+                  EnableRowVirtualization="True" EnableColumnVirtualization="True" VirtualizingPanel.IsVirtualizing="True"
+                  VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True" SelectionMode="Single" SelectionChanged="Selection_Changed">
+          <DataGrid.RowStyle><Style TargetType="DataGridRow"><Setter Property="AutomationProperties.AutomationId" Value="{Binding Id}"/><Setter Property="AutomationProperties.Name" Value="{Binding Label}"/></Style></DataGrid.RowStyle>
+          <DataGrid.CellStyle>
+            <Style TargetType="DataGridCell">
+              <Setter Property="AutomationProperties.AutomationId"><Setter.Value><MultiBinding StringFormat="Cell-{0}-{1}"><Binding Path="Id"/><Binding Path="Column.Header" RelativeSource="{RelativeSource Self}"/></MultiBinding></Setter.Value></Setter>
+            </Style>
+          </DataGrid.CellStyle>
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Key" Binding="{Binding Id}" Width="125"/>
+            <DataGridTextColumn Header="Description" Binding="{Binding Label}" Width="*"/>
+            <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="110"/>
+          </DataGrid.Columns>
+        </DataGrid>
+      </GroupBox>
+      <GroupBox Grid.Column="1" Header="Tree state">
+        <TreeView x:Name="NavigationTree" AutomationProperties.AutomationId="NavigationTree">
+          <TreeViewItem x:Name="TreeRoot" Header="Projects" AutomationProperties.AutomationId="TreeRoot" Expanded="Tree_Changed" Collapsed="Tree_Changed">
+            <TreeViewItem x:Name="TreeBranch" Header="Release" AutomationProperties.AutomationId="TreeBranch" Expanded="Tree_Changed" Collapsed="Tree_Changed">
+              <TreeViewItem Header="Build 42" AutomationProperties.AutomationId="TreeLeaf"/>
+            </TreeViewItem>
+          </TreeViewItem>
+          <TreeViewItem Header="Standalone leaf" AutomationProperties.AutomationId="StandaloneLeaf"/>
+        </TreeView>
+      </GroupBox>
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <GroupBox Header="Virtualized list">
+          <ListBox x:Name="OrdersList" AutomationProperties.AutomationId="OrdersList" AutomationProperties.Name="Orders list"
+                   VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling" ScrollViewer.CanContentScroll="True" SelectionChanged="Selection_Changed">
+            <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="AutomationProperties.AutomationId" Value="{Binding ListId}"/><Setter Property="AutomationProperties.Name" Value="{Binding Label}"/></Style></ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Label}"/></DataTemplate></ListBox.ItemTemplate>
+          </ListBox>
+        </GroupBox>
+        <GroupBox Grid.Column="1" Header="Typed properties">
+          <StackPanel>
+            <TextBlock Text="Positive quantity"/>
+            <TextBox x:Name="ValidatedQuantity" AutomationProperties.AutomationId="ValidatedQuantity" AutomationProperties.Name="Positive quantity">
+              <TextBox.Text><Binding Path="Quantity" UpdateSourceTrigger="PropertyChanged"><Binding.ValidationRules><local:PositiveNumberRule/></Binding.ValidationRules></Binding></TextBox.Text>
+            </TextBox>
+            <TextBlock Text="Read-only reference"/>
+            <TextBox AutomationProperties.AutomationId="ReadOnlyReference" Text="REFERENCE-42" IsReadOnly="True"/>
+            <TextBlock Text="Password redaction fixture"/>
+            <PasswordBox x:Name="SecretBox" AutomationProperties.AutomationId="SecretBox" Password="fixture-secret-42" Padding="5"/>
+            <Button AutomationProperties.AutomationId="TemplatedAction" Content="Templated action" Click="Template_Click" Margin="0,10,0,0">
+              <Button.Template><ControlTemplate TargetType="Button"><Border Background="#E0E7F3" CornerRadius="5" Padding="8"><StackPanel Orientation="Horizontal"><TextBlock Text="◆ " Foreground="#365C9D"/><ContentPresenter/></StackPanel></Border></ControlTemplate></Button.Template>
+            </Button>
+          </StackPanel>
+        </GroupBox>
+      </Grid>
+      <GroupBox Grid.Row="1" Grid.Column="1" Header="Explicit scroll viewport">
+        <ScrollViewer x:Name="LongDocument" AutomationProperties.AutomationId="LongDocument" AutomationProperties.Name="Long document" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+          <StackPanel x:Name="DocumentContent"/>
+        </ScrollViewer>
+      </GroupBox>
+    </Grid>
+    <StackPanel Grid.Row="3" Margin="0,8,0,0">
+      <TextBlock x:Name="FixtureState" AutomationProperties.AutomationId="FixtureState" TextWrapping="Wrap" FontFamily="Consolas"/>
+      <TextBlock x:Name="SelectionState" AutomationProperties.AutomationId="SelectionState" TextWrapping="Wrap"/>
+      <TextBlock x:Name="FixtureStatus" AutomationProperties.AutomationId="FixtureStatus" Text="Ready"/>
+    </StackPanel>
+  </Grid>
+</Window>

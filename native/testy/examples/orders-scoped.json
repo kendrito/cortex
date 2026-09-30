@@ -1,0 +1,13 @@
+{
+  "id": "orderlab-scoped-shipping",
+  "name": "Apply shipping without changing billing",
+  "intent": "Reset the owned OrderLab fixture, enter AI Shipping only in the Shipping recipient field, apply only the Shipping section, and verify the exact shipping result while Billing remains untouched. Both sections have identically named Recipient and Apply controls; preserve the saved ancestor scopes.",
+  "category": "Scoped selectors",
+  "steps": [
+    { "title": "Reset orders", "action": "click", "selector": "id:ResetOrders", "timeoutMs": 5000 },
+    { "title": "Enter the Shipping recipient", "action": "typeText", "selector": "query:{\"id\":\"Recipient\",\"type\":\"Edit\",\"ancestor\":{\"label\":\"Shipping\"}}", "value": "AI Shipping", "timeoutMs": 5000 },
+    { "title": "Apply only Shipping", "action": "click", "selector": "query:{\"id\":\"ApplyAction\",\"type\":\"Button\",\"label\":\"Apply\",\"ancestor\":{\"label\":\"Shipping\"}}", "timeoutMs": 5000 },
+    { "title": "Verify exact Shipping result", "action": "assertText", "selector": "id:ShippingStatus", "value": "Shipping: AI Shipping", "timeoutMs": 5000 },
+    { "title": "Verify Billing remains untouched", "action": "assertText", "selector": "id:BillingStatus", "value": "Billing not applied", "timeoutMs": 5000 }
+  ]
+}

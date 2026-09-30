@@ -11,6 +11,12 @@ interface ProjectGraph {
   options: ts.CompilerOptions
 }
 
+/**
+ * A compiler face: the two aggregates a repository-wide program may seed from.
+ * The root solution is never one of them.
+ */
+export type CompilerFace = 'host' | 'client'
+
 /** TypeScript config host shared by repository scripts. */
 export const repositoryConfigHost: ts.ParseConfigFileHost = {
   useCaseSensitiveFileNames: ts.sys.useCaseSensitiveFileNames,
@@ -23,31 +29,54 @@ export const repositoryConfigHost: ts.ParseConfigFileHost = {
   },
 }
 
-/**
- * Parse the host aggregate tsconfig and flatten all referenced projects into one
- * semantic graph. Never seed the root solution: flattening host+client into one
- * program collides the cordis Context merges.
- */
-function loadProjectGraph(projectRoot: string): ProjectGraph {
-  const rootConfigPath = resolve(projectRoot, 'tsconfig.host.json')
-  const rootConfig = parseConfig(rootConfigPath)
-  const rootNames = new Set<string>()
-  const visited = new Set<string>()
+/** One compiler face aggregate: its own config and every project it compiles. */
+export interface FaceConfigs {
+  /** The aggregate's `tsconfig.<face>.json`. */
+  readonly root: ts.ParsedCommandLine
+  /** Every config the face compiles, its own aggregate included, keyed by resolved config path. */
+  readonly byPath: ReadonlyMap<string, ts.ParsedCommandLine>
+}
 
-  const collect = (configPath: string, parsed: ts.ParsedCommandLine): void => {
-    if (visited.has(configPath)) return
-    visited.add(configPath)
-    for (const fileName of parsed.fileNames) rootNames.add(fileName)
+/**
+ * Parse one compiler face aggregate and every project it references. Never seed
+ * the root solution: the two faces are separate graphs, and flattening
+ * host+client into one program collides the cordis Context merges.
+ * @param projectRoot - repository root holding `tsconfig.<face>.json`.
+ * @param face - which aggregate to parse.
+ * @returns the aggregate's root config and every config it compiles.
+ */
+export function faceConfigs(projectRoot: string, face: CompilerFace): FaceConfigs {
+  const rootPath = resolve(projectRoot, `tsconfig.${face}.json`)
+  const root = parseConfig(rootPath)
+  const byPath = new Map<string, ts.ParsedCommandLine>([[rootPath, root]])
+  const collect = (parsed: ts.ParsedCommandLine): void => {
     for (const reference of parsed.projectReferences ?? []) {
       const referencePath = ts.resolveProjectReferencePath(reference)
-      collect(referencePath, parseConfig(referencePath))
+      if (byPath.has(referencePath)) continue
+      const referenced = parseConfig(referencePath)
+      byPath.set(referencePath, referenced)
+      collect(referenced)
     }
   }
-  collect(rootConfigPath, rootConfig)
+  collect(root)
+  return { root, byPath }
+}
 
+/**
+ * Flatten one compiler face aggregate into one semantic graph.
+ * @param projectRoot - repository root holding `tsconfig.<face>.json`.
+ * @param face - which aggregate to flatten.
+ * @returns every root name the face compiles, with the aggregate's options.
+ */
+function loadProjectGraph(projectRoot: string, face: CompilerFace): ProjectGraph {
+  const { root, byPath } = faceConfigs(projectRoot, face)
+  const rootNames = new Set<string>()
+  for (const parsed of byPath.values()) {
+    for (const fileName of parsed.fileNames) rootNames.add(fileName)
+  }
   return {
     rootNames: [...rootNames],
-    options: rootConfig.options,
+    options: root.options,
   }
 }
 
@@ -81,8 +110,12 @@ export class TypeScriptProject {
   /** The checker shared by every semantic query in this project. */
   readonly checker: ts.TypeChecker
 
-  constructor(private readonly projectRoot: string) {
-    const graph = loadProjectGraph(projectRoot)
+  /**
+   * @param projectRoot - repository root the program is seeded and reported from.
+   * @param face - which compiler face aggregate to flatten.
+   */
+  constructor(readonly projectRoot: string, face: CompilerFace = 'host') {
+    const graph = loadProjectGraph(projectRoot, face)
     this.program = ts.createProgram(graph.rootNames, semanticCompilerOptions(graph.options))
     this.checker = this.program.getTypeChecker()
   }

@@ -1,7 +1,7 @@
 {
   "name": "@cortex/cordis-plugin-include",
   "description": "Include files in cordis configurations",
-  "version": "1.0.6",
+  "version": "1.0.9",
   "publishConfig": {
     "access": "public"
   },
@@ -30,11 +30,11 @@
   "author": "Shigma <shigma10826@gmail.com>",
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/cordis-plugin-loader": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
-    "@cortex/cosmokit": "workspace:^",
+    "@cortex/cosmokit": "workspace:~",
     "js-yaml": "^4.1.0"
   }
 }

@@ -1,0 +1,9 @@
+{
+  "kind": "openAI",
+  "model": "YOUR_COMPUTER_CAPABLE_MODEL",
+  "endpoint": "https://api.openai.com/v1/responses",
+  "apiKeyEnvironmentVariable": "OPENAI_API_KEY",
+  "aiDirectedExecution": true,
+  "nativeComputerUse": true,
+  "maximumAgentTurns": 30
+}

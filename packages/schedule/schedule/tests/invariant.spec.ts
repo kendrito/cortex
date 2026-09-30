@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
 import InvariantRegistry, { InvariantError } from '@cortex/invariants'
-import SessionStore, { SessionId } from '@cortex/session'
+import SessionStore, { SessionId, SessionLogOffset, SessionSeq } from '@cortex/session'
 import type { SessionEvent } from '@cortex/session'
 import * as scheduleInvariant from '../src/invariant.ts'
 import { ScheduleId } from '../src/domain.ts'
 import type { ScheduleChange } from '../src/types.ts'
 
-function event(data: unknown, seq: number): SessionEvent {
+function event(data: unknown, seq: SessionSeq): SessionEvent {
   return { type: 'schedule/change', seq, time: 1, data } as SessionEvent
 }
 
@@ -18,6 +18,7 @@ function create(id: string): ScheduleChange {
     schedule: {
       id: ScheduleId(id),
       kind: 'after',
+      title: 'check logs',
       prompt: 'check logs',
       afterSeconds: 1,
       scheduledAt: '2026-08-05T12:00:01.000Z',
@@ -32,6 +33,7 @@ function createEvery(id: string): ScheduleChange {
     schedule: {
       id: ScheduleId(id),
       kind: 'every',
+      title: 'check metrics',
       prompt: 'check metrics',
       everySeconds: 300,
       scheduledAt: '2026-08-05T12:05:00.000Z',
@@ -53,17 +55,17 @@ describe('Schedule package invariant', () => {
     const session = ctx.sessions.create(SessionId('schedule-invariant'))
     session.append('turn/start', { turn: 1 })
     session.append('schedule/change', create('schedule-1'))
-    expect(session.events).toHaveLength(2)
+    expect(session.snapshotEvents()).toHaveLength(2)
 
     expect(() => session.append('schedule/change', {
       version: 1,
       operation: 'delete',
       id: ScheduleId('missing'),
     })).toThrow(InvariantError)
-    expect(session.events).toHaveLength(2)
+    expect(session.snapshotEvents()).toHaveLength(2)
 
     session.append('schedule/change', { version: 1, operation: 'dispatch', id: ScheduleId('schedule-1') })
-    expect(session.events).toHaveLength(3)
+    expect(session.snapshotEvents()).toHaveLength(3)
     await ctx.fiber.dispose()
   })
 
@@ -82,7 +84,7 @@ describe('Schedule package invariant', () => {
       id: ScheduleId('schedule-every'),
       acceptedAt: '2026-08-05T12:17:34.000Z',
     })
-    expect(session.events).toHaveLength(2)
+    expect(session.snapshotEvents()).toHaveLength(2)
     await ctx.fiber.dispose()
   })
 
@@ -91,7 +93,7 @@ describe('Schedule package invariant', () => {
     await ctx.plugin(SessionStore)
     await ctx.plugin(InvariantRegistry)
     ctx.sessions.create(SessionId('schedule-invalid-seed'), {
-      seed: [event({ version: 9, operation: 'delete', id: 'schedule-1' }, 0)],
+      seed: [event({ version: 9, operation: 'delete', id: 'schedule-1' }, SessionSeq(0))],
     })
     await expect(ctx.plugin(scheduleInvariant).then(() => undefined)).rejects.toThrow(InvariantError)
     await ctx.fiber.dispose()
@@ -101,7 +103,7 @@ describe('Schedule package invariant', () => {
     const { ctx } = await harness()
     const id = SessionId('schedule-invalid-future-seed')
     expect(() => ctx.sessions.create(id, {
-      seed: [event({ version: 9, operation: 'delete', id: 'schedule-1' }, 0)],
+      seed: [event({ version: 9, operation: 'delete', id: 'schedule-1' }, SessionSeq(0))],
     })).toThrow(InvariantError)
     expect(ctx.sessions.get(id)).toBeUndefined()
     await ctx.fiber.dispose()
@@ -112,12 +114,13 @@ describe('Schedule package invariant', () => {
     await ctx.plugin(SessionStore)
     await ctx.plugin(InvariantRegistry)
     const child = ctx.sessions.create(SessionId('schedule-fork'), {
-      seed: [event({ version: 9, operation: 'delete', id: 'parent' }, 0)],
-      meta: { parentSession: SessionId('parent'), seedLength: 1 },
+      seed: [event({ version: 9, operation: 'delete', id: 'parent' }, SessionSeq(0))],
+      inheritedEventCount: SessionLogOffset(1),
+      meta: { parentSession: SessionId('parent'), isSeeded: true },
     })
     const fiber = await ctx.plugin(scheduleInvariant)
     child.append('schedule/change', create('child'))
-    expect(child.events.at(-1)?.data).toMatchObject({ operation: 'create' })
+    expect(child.snapshotEvents().at(-1)?.data).toMatchObject({ operation: 'create' })
     await fiber.dispose()
     await ctx.fiber.dispose()
   })

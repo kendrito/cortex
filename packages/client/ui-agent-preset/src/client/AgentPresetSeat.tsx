@@ -12,10 +12,12 @@
  * Picking stages; the choice reaches a session when one becomes current.
  */
 
-import { useEffect, useState } from 'react'
-import type { SnapshotStore } from '@cortex/client-runtime/client'
+import { useEffect, useRef, useState } from 'react'
+import type { ObservableSnapshot, SnapshotStore } from '@cortex/client-store'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@cortex/client-ui-slots'
-import { IconAgentPresetOutline16, IconChevronDownOutline14, Menu } from '@cortex/client-ui-primitives'
+import {
+  IconAgentPresetOutlineRegular, IconChevronDownOutlineRegular, IconWarningOutlineRegular, Menu, Toast,
+} from '@cortex/client-ui-primitives'
 // Type-only: pulls the ui-conversation SlotMap merge (the hero seat).
 import type {} from '@cortex/client-ui-conversation/client'
 import type { AgentPresetSeatState } from './seat-store.ts'
@@ -25,13 +27,15 @@ import css from './AgentPresetSeat.module.css'
 /** Registration-side business face for the hero chip. */
 export interface AgentPresetSeatInjected {
   hooks: {
+    /** Shared Developer tools preference; off hides the chip. */
+    developerTools: ObservableSnapshot<boolean>
     /** Seat snapshot bound by the renderer as useAgentPresetSeat. */
     agentPresetSeat: SnapshotStore<AgentPresetSeatState>
   }
   /** Read the roster when the chip first renders. */
   load: () => Promise<void>
-  /** Stage one preset for the next session. */
-  select: (id: string) => Promise<void>
+  /** Stage one preset for the next session; resolves to a refusal, or undefined. */
+  select: (id: string) => Promise<string | undefined>
   /** Clear the one-shot introduce cue once the chip has played it. */
   introduced: () => void
 }
@@ -39,13 +43,16 @@ export interface AgentPresetSeatInjected {
 /* Introduce timeline: the icon eases in first (the CSS animation shares this
    duration); the name's characters start fading up the moment it lands, each
    taking the fade duration to settle. The cue clears after the last one. The
-   stagger is capped twice: per tick for short names, and by one shared
-   reveal window so a long name finishes in the same time as a short one
-   instead of dragging the run out per character. */
+   stagger is capped twice: per tick for short CJK names, and by one shared
+   reveal window so a long Latin name finishes in the same time as its CJK
+   counterpart instead of dragging the run out per character. */
 const INTRO_TEXT_DELAY_MS = 150
 const INTRO_CHAR_STAGGER_MS = 40
 const INTRO_TEXT_REVEAL_MS = 200
 const INTRO_CHAR_FADE_MS = 400
+
+/** Duration of a selection-refusal banner, including a revision becoming unavailable during a pick. */
+const REFUSAL_HOLD_MS = 8000
 
 /**
  * Per-character start offset for the introduce reveal.
@@ -66,15 +73,36 @@ export type AgentPresetSeatProps =
 /**
  * Render the new-session agent-preset chip.
  * @param props - composed slot props.
- * @returns the chip, or null when the deployment composes no presets.
+ * @returns The chip, or null outside the main view, with Developer tools off,
+ * or before the roster provides a preset choice.
  */
-export function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, t }: AgentPresetSeatProps) {
+export function AgentPresetSeat({
+  sessionId, useSessionRetainInfo, load, select, introduced, useAgentPresetSeat, useDeveloperTools, t,
+}: AgentPresetSeatProps) {
+  const developerTools = useDeveloperTools(value => value)
   const state = useAgentPresetSeat(snapshot => snapshot)
+  const main = useSessionRetainInfo(info => sessionId === undefined
+    || (info?.retainedBy.mainView ?? 0) > 0)
   const [open, setOpen] = useState(false)
+  // The seq keys the banner, so picking the same broken preset twice replays
+  // it rather than leaving the first one silently in place.
+  const toastSeq = useRef(0)
+  const [toast, setToast] = useState<{ seq: number; text: string } | null>(null)
+  const pickerVisible = useRef(developerTools)
+  pickerVisible.current = developerTools
 
   useEffect(() => {
     void load()
   }, [load])
+
+  // The component stays registered while hidden, so clear local disclosure
+  // state explicitly; otherwise an external off/on edit can revive an old
+  // menu or refusal banner.
+  useEffect(() => {
+    if (developerTools) return
+    setOpen(false)
+    setToast(null)
+  }, [developerTools])
 
   const chosen = state.options.find(option => option.id === state.current)
   const chosenText = chosen === undefined ? undefined : presetDisplayText(chosen, t)
@@ -103,7 +131,7 @@ export function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, 
 
   // Nothing to choose between: the deployment composes no presets and every
   // session shares the host composition.
-  if (!ready) return null
+  if (!main || !developerTools || !ready) return null
 
   // One wrapper span: the chip is a flex row with a gap, so loose character
   // spans would each pick up the gap between them.
@@ -126,45 +154,74 @@ export function AgentPresetSeat({ load, select, introduced, useAgentPresetSeat, 
     : label
 
   return (
-    <Menu
-      open={open}
-      onClose={() => { setOpen(false) }}
-      items={state.options.map((option) => {
-        const text = presetDisplayText(option, t)
-        return {
-          id: option.id,
-          // Name and description together: the id alone never says what a
-          // preset does, which is why the roster carries display copy.
-          label: (
-            <span className={css.item}>
-              <span className={css.itemName}>{text.name}</span>
-              <span className={css.itemDesc}>{text.description ?? t('noDescription')}</span>
-            </span>
-          ),
-        }
-      })}
-      selectedId={state.current}
-      onSelect={(id) => {
-        setOpen(false)
-        void select(id)
-      }}
-      align="start"
-      portal
-      anchor={(
-        <button
-          type="button"
-          className={css.seat}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          title={state.error ?? t('seatHint')}
-          disabled={state.busy}
-          onClick={() => { setOpen(value => !value) }}
-        >
-          <IconAgentPresetOutline16 className={introducing ? `${css.seatIcon} ${css.introIcon}` : css.seatIcon} />
-          {shownLabel}
-          <IconChevronDownOutline14 className={css.chevron} />
-        </button>
+    <>
+      <Menu
+        open={open}
+        onClose={() => { setOpen(false) }}
+        items={state.options.map((option) => {
+          const text = presetDisplayText(option, t)
+          return {
+            id: option.id,
+            // Name and description together: the id alone never says what a
+            // preset does, which is why the roster carries display copy.
+            label: (
+              <span className={css.item}>
+                <span className={css.itemName}>{text.name}</span>
+                <span className={css.itemDesc}>{text.description ?? t('noDescription')}</span>
+              </span>
+            ),
+          }
+        })}
+        selectedId={state.current}
+        onSelect={(id) => {
+          setOpen(false)
+          const picked = state.options.find(option => option.id === id)
+          // The fallback is for the row shape `find` cannot promise; the menu's
+          // items ARE `state.options`, so an emitted id is always one of them.
+          /* v8 ignore next */
+          const name = picked === undefined ? id : presetDisplayText(picked, t).name
+          void select(id).then((refusal) => {
+            // Announced only for a pick a person just made: `apply()` also runs
+            // when a session becomes current, and a banner over that would
+            // report a refusal nobody asked for.
+            if (refusal === undefined || !pickerVisible.current) return
+            toastSeq.current += 1
+            setToast({ seq: toastSeq.current, text: t('switchRefused', { name, reason: refusal }) })
+          })
+        }}
+        align="start"
+        portal
+        className={css.menuAnchor}
+        anchor={(
+          <button
+            type="button"
+            className={css.seat}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            title={state.error ?? t('seatHint')}
+            disabled={state.busy}
+            onClick={() => { setOpen(value => !value) }}
+          >
+            <IconAgentPresetOutlineRegular className={introducing ? `${css.seatIcon} ${css.introIcon}` : css.seatIcon} />
+            <span className={css.seatLabel}>{shownLabel}</span>
+            <IconChevronDownOutlineRegular className={css.chevron} />
+          </button>
+        )}
+      />
+      {toast !== null && (
+        <Toast
+          key={toast.seq}
+          text={toast.text}
+          icon={<IconWarningOutlineRegular />}
+          holdMs={REFUSAL_HOLD_MS}
+          // The composer card, which is the content column this chip sits
+          // above rather than inside — hence a page query, not `closest`.
+          // Absent, the banner centers on the window, which is off-center
+          // whenever the sidebar is open.
+          anchor={document.querySelector<HTMLElement>('[data-composer-card]')}
+          onDone={() => { setToast(null) }}
+        />
       )}
-    />
+    </>
   )
 }

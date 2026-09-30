@@ -1,7 +1,7 @@
 {
   "name": "@cortex/system-prompt",
   "description": "System prompt assembly registry for the Cortex",
-  "version": "0.1.0-rc.5",
+  "version": "0.2.0-rc.2",
   "publishConfig": {
     "access": "public"
   },
@@ -32,18 +32,18 @@
   ],
   "license": "MIT",
   "peerDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
-    "@cortex/schemastery": "workspace:^"
+    "@cortex/schemastery": "workspace:~"
   },
   "devDependencies": {
-    "@cortex/invariants": "workspace:^",
-    "@cortex/llm": "workspace:^",
-    "@cortex/scope": "workspace:^",
-    "@cortex/cordis": "workspace:^"
+    "@cortex/invariants": "workspace:*",
+    "@cortex/llm": "workspace:*",
+    "@cortex/scope": "workspace:*",
+    "@cortex/cordis": "workspace:~"
   }
 }

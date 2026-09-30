@@ -19,16 +19,18 @@ class CortexHarnessConfig:
     intentionally override or inject variables for a subprocess.
     """
 
-    provider: str = "cortex-official"
-    model: str = "cortex-v4-flash"
+    provider: str = ""
+    model: str = ""
+    reasoning_effort: str | None = None
     max_tokens: int | None = None
     cwd: str | None = None
     runtime_cwd: str | None = None
-    session_root: str | None = None
-    cordis: str | None = None
+    cortex_bin: str | None = None
+    profile: str = "sdk"
+    patches: tuple[str, ...] = ()
+    cortex_home: str | None = None
     env: dict[str, str] = field(default_factory=dict)
-    runtime_bin: str | None = None
-    launch_args_override: tuple[str, ...] | None = None
+    initialize_timeout_seconds: float = 30.0
     request_timeout_seconds: float | None = None
     shutdown_timeout_seconds: float | None = 1.0
     base_url: str | None = None
@@ -42,7 +44,6 @@ class RunResult:
     finish_reason: str | None
     events: list[JsonObject]
     notifications: list[Notification]
-    session_root: str | None = None
 
 
 class CortexHarness:
@@ -53,7 +54,13 @@ class CortexHarness:
     :meth:`close` explicitly when finished, so the subprocess is always reaped.
     """
 
-    def __init__(self, config: CortexHarnessConfig | None = None, **kwargs: object) -> None:
+    def __init__(
+        self,
+        config: CortexHarnessConfig | None = None,
+        *,
+        _launch_args: tuple[str, ...] | None = None,
+        **kwargs: object,
+    ) -> None:
         if config is not None and kwargs:
             raise TypeError("pass either CortexHarnessConfig or keyword options, not both")
         self.config = config or CortexHarnessConfig(**kwargs)
@@ -61,11 +68,6 @@ class CortexHarness:
         runtime_cwd = str(Path(self.config.runtime_cwd).resolve()) if self.config.runtime_cwd is not None else cwd
         self._cwd = cwd
         env = dict(self.config.env)
-        if self.config.session_root is not None:
-            env["CORTEX_SESSION_ROOT"] = self.config.session_root
-        if self.config.cordis is not None:
-            env["CORTEX_CORDIS_CONFIG"] = self.config.cordis
-        env["CORTEX_CWD"] = cwd
         if self.config.base_url is not None:
             env["CORTEX_BASE_URL"] = self.config.base_url
         if self.config.api_key is not None:
@@ -73,13 +75,17 @@ class CortexHarness:
 
         self._client = HarnessClient(
             HarnessConfig(
-                runtime_bin=self.config.runtime_bin,
-                launch_args_override=self.config.launch_args_override,
+                cortex_bin=self.config.cortex_bin,
+                profile=self.config.profile,
+                patches=self.config.patches,
+                cortex_home=self.config.cortex_home,
                 cwd=runtime_cwd,
                 env=env,
+                initialize_timeout_seconds=self.config.initialize_timeout_seconds,
                 request_timeout_seconds=self.config.request_timeout_seconds,
                 shutdown_timeout_seconds=self.config.shutdown_timeout_seconds,
-            )
+            ),
+            _launch_args=_launch_args,
         )
         self._initialized = False
 
@@ -102,6 +108,7 @@ class CortexHarness:
             cwd=self._cwd,
             provider=self.config.provider,
             model=self.config.model,
+            reasoning_effort=self.config.reasoning_effort,
             max_tokens=self.config.max_tokens,
         )
         self._initialized = True
@@ -179,7 +186,6 @@ class Session:
             finish_reason=finish_reason(events),
             events=events,
             notifications=notifications,
-            session_root=self.harness.config.session_root,
         )
 
 

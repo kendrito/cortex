@@ -1,0 +1,104 @@
+# Portable copy of snapshots/acp/escalation-approved/cordis.yml.
+# ACP snapshot-record patch over the shipped `acp` profile. The cortex
+# launcher owns environment loading, plugin resolution, and process shutdown;
+# stdout remains reserved for ACP JSON-RPC.
+
+# Real model calls require an explicit loopback test endpoint and model.
+- id: llm-pi-ai
+  name: '@cortex/llm-pi-ai'
+  config:
+    providers: !!js |
+      (() => {
+        const endpoint = process.env.CORTEX_TEST_BASE_URL;
+        const model = process.env.CORTEX_TEST_MODEL;
+        if (!endpoint || !model) return {};
+        const url = new URL(endpoint);
+        if (!['http:', 'https:'].includes(url.protocol) || !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname) || url.username || url.password || url.search || url.hash) {
+          throw new Error('CORTEX_TEST_BASE_URL must be a loopback HTTP(S) endpoint without credentials, query, or fragment');
+        }
+        return { 'test-local': {
+          api: 'openai-completions', baseURL: url.href,
+          ...(process.env.CORTEX_TEST_API_KEY ? { apiKeyEnv: 'CORTEX_TEST_API_KEY' } : { headers: { Authorization: 'Bearer cortex-local-test' } }),
+          models: [{ id: model, contextWindow: 128000, maxTokens: 8192 }]
+        } };
+      })()
+
+- id: sandbox-policy
+  name: '@cortex/sandbox-policy'
+  config:
+    mode: !!js "process.env.CORTEX_PERMISSION_MODE ?? (process.env.CORTEX_SNAPSHOT === undefined ? 'workspace-write' : 'danger-full-access')"
+    workspaceRoot: !!js process.cwd()
+
+- id: approval
+  name: '@cortex/user-approval'
+  config:
+    policy: !!js "(process.env.CORTEX_PERMISSION_MODE ?? (process.env.CORTEX_SNAPSHOT === undefined ? 'workspace-write' : 'danger-full-access')) === 'danger-full-access' ? 'never' : 'ask'"
+
+- id: session-persistence-jsonl
+  name: '@cortex/session-persistence-jsonl'
+  config:
+    root: !!js process.env.CORTEX_SNAPSHOT_SESSIONS_ROOT ?? cortexHomePath('sessions')
+    compression: !!js "process.env.CORTEX_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: acp
+  name: '@cortex/acp'
+  config:
+    provider: test-local
+    model: !!js process.env.CORTEX_TEST_MODEL ?? 'unconfigured-local-model'
+
+- id: system-prompt
+  name: '@cortex/system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- id: agent-instructions
+  name: '@cortex/agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tool-subagent
+  name: '@cortex/tool-subagent'
+  config:
+    provider: spawn
+    toolName: subagent
+    backgroundMode: continuable
+    maxDepth: 1
+
+# Fork omits model selection so provider/model stay equal to the parent and the
+# inherited history remains eligible for KV Cache reuse. It stays one-shot because
+# a continuable child's `report` tool and prompt section precede that history and
+# invalidate the same prefix. `run_in_background` is off as an explicit foreground-only
+# choice even though the shipped ACP profile mounts the generic Job runtime.
+# See .agents/notes/implemented/feature/2026-08-18-model-selected-subagent-routes.md
+# and .agents/notes/implemented/architecture/2026-08-10-fork-children-stay-one-shot.md.
+- id: tool-subagent-fork
+  name: '@cortex/tool-subagent'
+  config:
+    provider: fork
+    toolName: subagent_fork
+    backgroundMode: one-shot
+    enableRunInBackground: false
+    maxDepth: 1
+
+- id: fs-sandbox
+  name: '@cortex/fs-sandbox'
+  config:
+    cwd: !!js process.cwd()
+
+- insert:
+    - id: hooks-claude-code
+      name: '@cortex/hooks-claude-code'
+      config:
+        configPath: ./hooks.json
+
+    - id: hooks-codex
+      name: '@cortex/hooks-codex'
+      config:
+        configPath: ./codex-hooks.json
+
+- id: session-log-deepseek
+  config:
+    enabled: false

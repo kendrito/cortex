@@ -12,8 +12,8 @@
 
 .title {
   flex: none;
-  font: var(--cortex-font-xs-13);
-  color: var(--cortex-alias-label-primary);
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-primary);
 }
 
 .description {
@@ -22,6 +22,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font: var(--cortex-font-xs-13);
-  color: var(--cortex-alias-label-tertiary);
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-tertiary);
 }

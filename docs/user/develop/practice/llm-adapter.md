@@ -53,7 +53,8 @@ export function apply(ctx: Context, config: Config) {
 `stream()` yields chunks using this protocol:
 
 ```ts
-import { CallId, type StreamChunk } from '@cortex/llm'
+import { brandString } from '@cortex/brand'
+import type { StreamChunk, ToolCallId } from '@cortex/llm'
 
 async function* exampleChunks(): AsyncIterable<StreamChunk> {
   // 1. Start each content block with block-start.
@@ -75,7 +76,7 @@ async function* exampleChunks(): AsyncIterable<StreamChunk> {
   yield {
     type: 'tool-call-delta',
     index: 1,
-    id: CallId('call-123'),
+    id: brandString<ToolCallId>('call-123'),
     name: 'bash',
     argumentsDelta: '{"command":"ls"}',
   }
@@ -84,7 +85,7 @@ async function* exampleChunks(): AsyncIterable<StreamChunk> {
     index: 1,
     block: {
       type: 'tool-call',
-      id: CallId('call-123'),
+      id: brandString<ToolCallId>('call-123'),
       name: 'bash',
       arguments: '{"command":"ls"}',
     },
@@ -144,7 +145,8 @@ The first argument lists provider routes handled by the adapter. `GenerateOption
 
 The repository contains one complete implementation:
 
-- `packages/llm/llm-pi-ai/` — multi-provider adapter over `@earendil-works/pi-ai`; a configured route inherits the wire protocol of the pi-ai catalog provider it names or declares one outright (`openai-completions`, `openai-responses`, or `anthropic-messages`), so the same adapter class serves several provider APIs
+- `packages/llm/llm-deepseek/` — DeepSeek adapter using the Messages API
+- `packages/llm/llm-pi-ai/` — Pi AI adapter using a different API format
 
 Read it alongside this page to see the harness contract implemented over a provider SDK.
 

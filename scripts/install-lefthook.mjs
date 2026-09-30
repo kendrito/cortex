@@ -23,11 +23,10 @@ const OWNERSHIP_MARKER_VERSION = 1
 const OWNERSHIP_MARKER_OWNER = 'cortex worktree-local lefthook hooks'
 const INSTALL_LOCK = 'cortex-lefthook-install.lock'
 const INSTALL_LOCK_TIMEOUT_MS = 30_000
-const INSTALL_LOCK_INITIALIZATION_TIMEOUT_MS = 1_000
+const INSTALL_LOCK_INITIALIZATION_TIMEOUT_MS = 5_000
 const INSTALL_LOCK_POLL_MS = 50
 const ALLOW_HOOKS_PATH_OVERRIDE = 'CORTEX_LEFTHOOK_ALLOW_HOOKS_PATH_OVERRIDE'
 const REPOSITORY_EXTENSION_PATTERN = '^extensions\\.'
-
 function errorCode(error) {
   return typeof error === 'object' && error !== null && 'code' in error
     ? error.code
@@ -365,21 +364,42 @@ function releaseInstallLock(lockPath, ownedRecord, ownedStat) {
   }
 }
 
+/** Hold one opt-in fixture stage until its parent explicitly releases it. */
+async function waitForLockTestBarrier(path) {
+  writeFileSync(`${path}.ready`, '')
+  const deadline = Date.now() + INSTALL_LOCK_TIMEOUT_MS
+  while (!existsSync(`${path}.release`)) {
+    if (Date.now() >= deadline) throw new Error(`timed out waiting for installer test barrier ${path}`)
+    await new Promise(resolveWait => setTimeout(resolveWait, INSTALL_LOCK_POLL_MS))
+  }
+}
+
+/** Windows can deny access to a deleted lock until its last reader closes it. */
+async function accessInstallLock(operation, deadline) {
+  while (true) {
+    try {
+      return operation()
+    } catch (error) {
+      if (process.platform !== 'win32' || errorCode(error) !== 'EPERM' || Date.now() >= deadline) throw error
+      await new Promise(resolveWait => setTimeout(resolveWait, INSTALL_LOCK_POLL_MS))
+    }
+  }
+}
+
 async function acquireInstallLock(commonDirectory) {
   const lockPath = join(commonDirectory, INSTALL_LOCK)
   const deadline = Date.now() + INSTALL_LOCK_TIMEOUT_MS
   const ownedRecord = `${String(process.pid)} ${randomUUID()}\n`
   let initializingLock
+  let observeBarrier = process.env.CORTEX_TEST_LEFTHOOK_LOCK_OBSERVE_BARRIER
   while (true) {
     try {
-      const lockHandle = openSync(lockPath, 'wx', 0o600)
+      const lockHandle = await accessInstallLock(() => openSync(lockPath, 'wx', 0o600), deadline)
       let ownedStat
       try {
         ownedStat = fstatSync(lockHandle)
-        const writeDelay = Number(process.env.CORTEX_TEST_LEFTHOOK_LOCK_WRITE_DELAY_MS ?? 0)
-        if (writeDelay > 0) {
-          await new Promise(resolveWait => setTimeout(resolveWait, writeDelay))
-        }
+        const publicationBarrier = process.env.CORTEX_TEST_LEFTHOOK_LOCK_PUBLISH_BARRIER
+        if (publicationBarrier !== undefined) await waitForLockTestBarrier(publicationBarrier)
         writeFileSync(lockHandle, ownedRecord)
       } finally {
         closeSync(lockHandle)
@@ -397,14 +417,14 @@ async function acquireInstallLock(commonDirectory) {
       return () => releaseInstallLock(lockPath, ownedRecord, ownedStat)
     } catch (error) {
       if (errorCode(error) !== 'EEXIST') throw error
-      const existingStat = installLockStat(lockPath)
+      const existingStat = await accessInstallLock(() => installLockStat(lockPath), deadline)
       if (existingStat === undefined) continue
       if (!existingStat.isFile() || existingStat.isSymbolicLink()) {
         throw manualLockRecoveryError(lockPath, 'invalid')
       }
-      const existingRecord = readInstallLock(lockPath)
+      const existingRecord = await accessInstallLock(() => readInstallLock(lockPath), deadline)
       if (existingRecord === undefined) continue
-      const verifiedStat = installLockStat(lockPath)
+      const verifiedStat = await accessInstallLock(() => installLockStat(lockPath), deadline)
       if (verifiedStat === undefined) continue
       if (!verifiedStat.isFile() || verifiedStat.isSymbolicLink()) {
         throw manualLockRecoveryError(lockPath, 'invalid')
@@ -414,6 +434,11 @@ async function acquireInstallLock(commonDirectory) {
       if (owner === undefined) {
         if (!installLockRecordMayBeIncomplete(existingRecord)) {
           throw manualLockRecoveryError(lockPath, 'invalid')
+        }
+        if (observeBarrier !== undefined) {
+          const barrier = observeBarrier
+          observeBarrier = undefined
+          await waitForLockTestBarrier(barrier)
         }
         const now = Date.now()
         if (
@@ -697,14 +722,19 @@ async function main() {
       runLefthook(root, lefthook)
       updateOwnershipMarker(ownedHooksDirectory.markerPath, hooksPath)
     } catch (error) {
-      if (!pathChanged) throw error
-      try {
-        if (worktreePath === undefined) {
-          git(['config', '--worktree', '--unset-all', 'core.hooksPath'], root)
-        } else {
-          git(['config', '--worktree', 'core.hooksPath', worktreePath], root)
+      const rollbackErrors = []
+      if (pathChanged) {
+        try {
+          if (worktreePath === undefined) {
+            git(['config', '--worktree', '--unset-all', 'core.hooksPath'], root)
+          } else {
+            git(['config', '--worktree', 'core.hooksPath', worktreePath], root)
+          }
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError)
         }
-      } catch (rollbackError) {
+      }
+      if (rollbackErrors.length > 0) {
         throw new AggregateError(
           [error, rollbackError],
           `Lefthook installation failed: ${String(error)}; `

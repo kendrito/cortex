@@ -27,78 +27,67 @@
    badge is a product addition outside that source: a mono superscript pill
    riding the title's top-right. */
 .headline {
-  display: grid;
-  grid-template-columns: 34px auto auto;
+  display: flex;
+  /* Overflow-driven: the fish and the title group are two wrap units sharing
+     one centered line while they fit; squeezed, the fish takes its own line
+     above the group. No breakpoint. */
+  flex-wrap: wrap;
   column-gap: 10px;
+  /* Wrapped, the fish sits on its own line; more air than the 10px side gap
+     keeps it reading as a mark above the title, not a squeezed inline glyph. */
+  row-gap: 12px;
   align-items: center;
   justify-content: center;
   font-size: 26px;
   line-height: 32px;
   font-weight: 500;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
-.headlineText {
-  grid-row: 1;
-  grid-column: 2;
+/* Title text + badge as one wrap unit so the title never breaks mid-text with
+   the badge stranded beside a fragment. When the badge no longer fits beside
+   the title it wraps to its own centered line below; while both fit, the group
+   is content-sized and centering is a no-op, keeping the superscript snug. */
+.titleGroup {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  /* Superscript sits 7 from the title. */
+  column-gap: 7px;
+  row-gap: 4px;
+  min-width: 0;
 }
 
 .previewBadge {
-  grid-row: 1;
-  grid-column: 3;
-  align-self: start;
+  align-self: flex-start;
   margin-top: 2px;
-  margin-left: -3px;
   padding: 1px 7px 0;
-  border: 1px solid var(--cortex-alias-interactive-bg-hover);
-  border-radius: 24px;
-  background: var(--cortex-alias-state-business-tertiary);
-  color: var(--cortex-alias-label-primary-bluish);
-  font-family: var(--cortex-font-family-code);
+  border: 0.5px solid var(--dsw-alias-interactive-bg-hover);
+  border-radius: 999px;
+  corner-shape: round;
+  background: var(--dsw-alias-state-business-tertiary);
+  color: var(--dsw-alias-label-primary-bluish);
+  font-family: var(--ds-font-family-code);
   font-size: 12px;
   line-height: 18px;
   font-weight: 500;
   white-space: nowrap;
 }
 
-/* Keep hover detection on a stationary box while the mark moves within it. */
-.fishHitbox {
-  grid-row: 1;
-  grid-column: 1;
+.brandHitbox {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
 }
 
-/* Keep the hero mark in the same primary ink as its headline. */
-.fish {
-  color: var(--cortex-alias-label-primary);
-  transform-origin: 50% 60%;
+.brandMark {
+  display: block;
+  color: var(--dsw-alias-label-primary);
 }
 
-@keyframes hero-fish-swim {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-
-  35% {
-    transform: translate(-1px, -1px) rotate(-5deg);
-  }
-
-  70% {
-    transform: translate(1px, 0) rotate(3deg);
-  }
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .fishHitbox:hover .fish {
-    animation: hero-fish-swim var(--cortex-transition-duration-slow) var(--cortex-ease-in-out);
-  }
-}
-
-/* Workspace row sits 12px above the input card (figma y80 → y112). The blue
-   glow lives with the owner (ConversationRoot .heroGlow) so it can center on
-   the input card. */
+/* Workspace row sits 12px above the input card (figma y80 → y112). */
 .body {
   position: relative;
   display: flex;
@@ -124,7 +113,10 @@
   padding-left: 8px;
 }
 
-/* Folder + label + chevron — transparent at rest; fill only on hover / open. */
+/* Folder + label + chevron — transparent at rest; fill only on hover / open.
+   Overflow-driven degradation, no breakpoint: the label shrinks with an
+   ellipsis down to nothing, so folder and chevron always sit snug against
+   whatever text remains — full text, ellipsized text, or none. */
 .workspace {
   display: inline-flex;
   align-items: center;
@@ -133,9 +125,9 @@
   min-height: 28px;
   padding: 0 8px;
   border: none;
-  border-radius: 16px;
+  border-radius: var(--dsw-radius-sm);
   background: transparent;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
   font-size: 13px;
   line-height: 20px;
   font-weight: 500;
@@ -144,7 +136,7 @@
 
 .workspace:not(:disabled):hover,
 .workspace[aria-expanded='true'] {
-  background: var(--cortex-alias-interactive-bg-hover);
+  background: var(--dsw-alias-interactive-bg-hover);
 }
 
 /* Locked form (bound guidance state): a static echo — no hover feedback, no
@@ -155,10 +147,11 @@
 
 .folder {
   flex: none;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .workspaceLabel {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -166,10 +159,10 @@
 
 .chevron {
   flex: none;
-  color: var(--cortex-alias-label-caption);
+  color: var(--dsw-alias-label-caption);
 }
 
-/* Dialog field: 44 tall on the modal's 332 content column, r22, hairline
+/* Dialog field: 44 tall on the modal's 332 content column, hairline
    border, pad 14/7, 14/22 wt400 primary text, caption placeholder. Focus
    keeps the resting border (design shows no focus ring). */
 .modalInput {
@@ -177,22 +170,22 @@
   width: 100%;
   height: 44px;
   padding: 7px 14px;
-  border: 1px solid var(--cortex-alias-border-l2);
-  border-radius: 22px;
+  border: 0.5px solid var(--dsw-alias-border-l4);
+  border-radius: var(--dsw-radius-lg);
   outline: none;
   background: transparent;
   font-size: 14px;
   font-weight: 400;
   line-height: 22px;
-  color: var(--cortex-alias-label-primary);
+  color: var(--dsw-alias-label-primary);
 }
 
 .modalInput::placeholder {
-  color: var(--cortex-alias-label-caption);
+  color: var(--dsw-alias-label-caption);
 }
 
 .modalInput:disabled {
-  color: var(--cortex-alias-label-dimmed);
+  color: var(--dsw-alias-label-dimmed);
 }
 
 .modalAction {
@@ -203,5 +196,5 @@
   margin-top: 8px;
   font-size: 12px;
   line-height: 18px;
-  color: var(--cortex-alias-state-error-primary);
+  color: var(--dsw-alias-state-error-primary);
 }

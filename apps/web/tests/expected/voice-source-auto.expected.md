@@ -1,0 +1,17 @@
+- strong: SenseVoiceSmall (INT8)
+- paragraph: Local models will be downloaded to the machine running CORTEX. No Python or compiler is required.
+- term: Disk space
+- definition: Allow about 1 GB for models, runtime, and download caches
+- term: Memory
+- definition: About 1 GB with the model loaded; recognition may use more
+- term: First setup
+- definition: Allow roughly 1–10 minutes, depending on the network and machine
+- text: These are estimates; slow networks may take longer. Downloads are reused; idle models release memory by default.
+- button "First use downloads the local recognition models.":
+  - text: First use downloads the local recognition models.
+  - status
+- text: Model download source
+- combobox "Model download source" [disabled]:
+  - option "Hugging Face" [selected]
+- text: Download only from the selected source. Verified downloaded files are reused.
+- button "Download and prepare"

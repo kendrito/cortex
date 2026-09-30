@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
-import { CallId } from '@cortex/llm'
+import { ToolCallId } from '@cortex/llm'
 import { SessionId } from '@cortex/session'
 import { SpillLocator, SpillStore } from '@cortex/spill'
 import type { SaveTextSpill, SpillRef } from '@cortex/spill'
@@ -29,7 +29,7 @@ class StubStore extends SpillStore {
 function request(content: string): SaveTextSpill {
   return {
     owner: { sessionId: SessionId('s1') },
-    source: { toolName: 'web_fetch', callId: CallId('c1'), label: 'result' },
+    source: { kind: 'tool', toolName: 'web_fetch', callId: ToolCallId('c1'), label: 'result' },
     suggestedName: 'web_fetch.txt',
     content,
   }

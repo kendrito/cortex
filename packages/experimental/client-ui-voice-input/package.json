@@ -1,0 +1,97 @@
+{
+  "name": "@cortex/experimental-client-ui-voice-input",
+  "description": "Record speech and insert editable text into the conversation draft",
+  "version": "0.2.0-rc.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/local/cortex.git",
+    "directory": "packages/experimental/client-ui-voice-input"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {},
+  "peerDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/experimental-api-speech-to-text": "workspace:*",
+    "@cortex/experimental-speech-to-text": "workspace:*",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-ui-plugin-manager": "workspace:*"
+  },
+  "devDependencies": {
+    "@cortex/cordis": "workspace:~",
+    "@cortex/api-remotes": "workspace:*",
+    "@cortex/api-session-controller": "workspace:*",
+    "@cortex/client-locale": "workspace:*",
+    "@cortex/client-ui-conversation": "workspace:*",
+    "@cortex/client-ui-primitives": "workspace:*",
+    "@cortex/client-ui-renderer": "workspace:*",
+    "@cortex/client-ui-session": "workspace:*",
+    "@cortex/client-ui-slots": "workspace:*",
+    "@cortex/session": "workspace:*",
+    "@cortex/typert-protocol": "workspace:*",
+    "@cortex/experimental-api-speech-to-text": "workspace:*",
+    "@cortex/experimental-speech-to-text": "workspace:*",
+    "@cortex/client-test-runtime": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@testing-library/react": "^16.1.0",
+    "@cortex/api-gateway": "workspace:*",
+    "@cortex/client-store": "workspace:*",
+    "@cortex/client-ui-plugin-manager": "workspace:*"
+  },
+  "cortex": {
+    "client": {
+      "inject": [
+        "@cortex/api-remotes",
+        "@cortex/api-session-controller",
+        "@cortex/client-locale",
+        "@cortex/client-ui-conversation",
+        "@cortex/client-ui-primitives",
+        "@cortex/api-gateway",
+        "@cortex/client-ui-plugin-manager"
+      ],
+      "platform": "web",
+      "external": [
+        "@cortex/api-gateway/client"
+      ]
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  }
+}
