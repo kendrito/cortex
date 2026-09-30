@@ -52,3 +52,6 @@ native/system/test/bin/
 /native/testy/**/obj/
 /native/testy/dist/
 /packages/extensions/testy/runtime/
+
+# Tool caches written under a literal 'undefined' directory when TEMP is unset.
+/undefined/
