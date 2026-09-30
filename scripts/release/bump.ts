@@ -1,5 +1,5 @@
 /**
- * Bump one release family's version and commit it, so the published version is
+ * Prepare one release family's version, so the published version is
  * readable from the repository rather than derived inside CI
  * ([rationale](../../.agents/notes/implemented/process/2026-08-10-npm-release-sequences.md)).
  *
@@ -11,8 +11,8 @@
  * never reuses an unchanged member's existing version from a different
  * repository state.
  *
- * The version lands in the manifests, the lockfile follows, and a human creates
- * the tag after the commit merges. CI never writes to the repository.
+ * The version lands in unstaged manifests and the lockfile. A human reviews and
+ * commits the changes, then creates an annotated tag after the commit merges to main.
  */
 
 import { globSync, readFileSync, writeFileSync } from 'node:fs'
@@ -345,7 +345,7 @@ function planPerPackage(
 }
 
 /**
- * Bump the family named by `--family` and commit; `--dry-run` only reports the
+ * Prepare the family named by `--family` without staging or committing; `--dry-run` only reports the
  * plan. `--prerelease rc.1` makes the vendored family publish a rehearsal
  * version, which never takes the stable dist-tag.
  */
@@ -362,6 +362,14 @@ function main(): void {
 
   const family = releaseFamily(values.family)
   const root = process.cwd()
+  const dryRun = values['dry-run']
+  const repositoryOverride = ['GIT_DIR', 'GIT_COMMON_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE'].find(name => process.env[name] !== undefined)
+  if (!dryRun && repositoryOverride !== undefined) {
+    throw new Error(`release bump: unset ${repositoryOverride} before preparing a version so Git inspects this checkout and its normal index.`)
+  }
+  if (!dryRun && capture('git', ['status', '--porcelain=v1', '--untracked-files=all', '--ignore-submodules=none']) !== '') {
+    throw new Error('release bump: start from a clean working tree and index; commit or set aside tracked, staged, and untracked changes before preparing a version. Use --dry-run to inspect the plan without writing.')
+  }
   const members = family.members(root)
   family.verifyVersions(members)
 
@@ -389,11 +397,10 @@ function main(): void {
     return
   }
 
-  const dryRun = values['dry-run']
   if (!dryRun) {
     for (const entry of planned) writeVersion(root, entry.manifestPath, entry.from, entry.to)
     const [pnpm, ...pnpmArgs] = pnpmCommand()
-    capture(pnpm, [...pnpmArgs, 'install', '--lockfile-only'])
+    capture(pnpm, [...pnpmArgs, 'install', '--lockfile-only', '--ignore-scripts'])
   }
 
   const summary = sharedVersion
@@ -405,11 +412,10 @@ function main(): void {
     console.log('release bump: dry run, nothing written')
     return
   }
-  capture('git', ['add', 'pnpm-lock.yaml', ...planned.map(entry => entry.manifestPath)])
-  capture('git', ['commit', '-m', `release(${family.id}): ${summary}`])
-  console.log('release bump: committed. After this merges to master, tag it:')
+  console.log('release bump: prepared unstaged changes. Review, validate, and commit them; after the tested commit merges to main, create and push its annotated tag:')
   for (const tag of [...new Set(planned.map(entry => entry.tag).filter(tag => tag !== undefined))]) {
-    console.log(`  git tag ${tag} <merge commit> && git push origin ${tag}`)
+    console.log(`  git tag -a ${tag} <tested-main-commit> -m "Release ${tag}"`)
+    console.log(`  git push origin ${tag}`)
   }
 }
 

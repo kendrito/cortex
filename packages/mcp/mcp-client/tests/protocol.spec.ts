@@ -2,9 +2,10 @@ import { z } from 'zod'
 /** Real SDK negotiation, subscription, and cancellation through the connection supervisor. */
 
 import { describe, expect, it, onTestFinished, vi } from 'vitest'
+import { readFile } from 'node:fs/promises'
 import { Context } from '@cortex/cordis'
 import { InMemoryTransport, type Transport } from '@modelcontextprotocol/client'
-import { McpServer } from '@modelcontextprotocol/server'
+import { CLIENT_INFO_META_KEY, McpServer } from '@modelcontextprotocol/server'
 import { serveStdio } from '@modelcontextprotocol/server/stdio'
 import { ToolCallId } from '@cortex/llm'
 import SystemPrompt from '@cortex/system-prompt'
@@ -54,9 +55,11 @@ describe('modern MCP connections', () => {
 
   it('keeps shared resource tools for a configured server without resource capability', async () => {
     const server = new McpServer({ name: 'tools-only', version: '1' })
-    server.registerTool('ping', { inputSchema: z.object({}) }, async () => ({
-      content: [{ type: 'text', text: 'pong' }],
-    }))
+    const envelopes: unknown[] = []
+    server.registerTool('ping', { inputSchema: z.object({}) }, async (_args, context) => {
+      envelopes.push(context.mcpReq.envelope)
+      return { content: [{ type: 'text', text: 'pong' }] }
+    })
     const ctx = await connect(server, { resources: true })
     const names = ctx.tools.schemas().map(tool => tool.name)
     expect(names.toSorted()).toEqual([
@@ -84,6 +87,10 @@ describe('modern MCP connections', () => {
       callId: ToolCallId('ping-after-resource-errors'), signal: new AbortController().signal,
     })
     expect(ping).toMatchObject({ isError: false, value: { content: [{ type: 'text', text: 'pong' }] } })
+    const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
+    expect(envelopes).toEqual([expect.objectContaining({
+      [CLIENT_INFO_META_KEY]: { name: 'cortex-mcp-client', version: manifest.version },
+    })])
   })
 
   it('reads resources and preserves explicit list and template cursors through the SDK', async () => {

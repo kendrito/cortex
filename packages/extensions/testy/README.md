@@ -41,6 +41,8 @@ Desktop packages keep the complete native runtime outside ASAR, including its JS
 
 The host starts one owned stdio MCP process with a scrubbed environment. The UI uses Cortex's authenticated Remote API; model tools use the normal tool registry and persisted tool results. Testy's own process-scoped driver and assertion evaluator remain responsible for UI actions and test verdicts. Revision checks protect saved tests from concurrent UI and chat edits.
 
+The MCP client identifies itself as Cortex Testy with the manifest-derived Cortex product version.
+
 AI requests reach a bearer-authenticated, loopback-only bridge with a host-issued operation context. The bridge dispatches through `ctx.llm`, admits screenshots through Cortex's attachment store, and logs exact requests and settlements in a dedicated, durably stored Cortex Session. Provider credentials stay in Cortex. Child-supplied provider routes, remote image URLs, and unsupported request fields are rejected.
 
 Automatic discovery selects only from a bounded inventory of visible processes and executables found under the trusted initiating workspace. The host supplies that workspace as MCP metadata; tool arguments cannot replace it. The engine validates a selected process's identity again before attaching. Ambiguous or invalid selections perform no application actions.

@@ -36,6 +36,8 @@ Configuration lives in `$CORTEX_HOME` (default `~/.cortex`). The active profile'
 
 Start with [development](docs/development.md) and [architecture](docs/architecture.md). `pnpm run typecheck`, `pnpm run lint`, and `pnpm run test` cover separate validation surfaces. Real model fixture recording requires an explicitly configured local test gateway; it is not part of a keyless test run.
 
+Cortex repository versions use annotated `cortex-v<version>` tags. See [preparing and tagging a version](docs/cortex-releases.md) for the version update and GitHub tagging procedure.
+
 ## Licence
 
 [MIT](LICENSE). Upstream and third-party attribution remains in the source tree.

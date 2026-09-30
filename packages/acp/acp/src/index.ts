@@ -17,7 +17,7 @@ import { isAbsolute, resolve } from 'node:path'
 import { Readable, Writable } from 'node:stream'
 import Schema from '@cortex/schemastery'
 import { brandString } from '@cortex/brand'
-import { errorChain } from '@cortex/llm'
+import { APP_IDENTITY, errorChain } from '@cortex/llm'
 import {
   agent as createAcpAgentApp,
   methods,
@@ -179,7 +179,7 @@ export function apply(ctx: Context, config: AcpConfig): void {
       imagePromptEnabled = await supportsAcpImagePrompts(ctx, config.provider, config.model)
       return {
         protocolVersion: PROTOCOL_VERSION,
-        agentInfo: { name: 'cortex-acp', version: '0.0.1' },
+        agentInfo: { name: 'cortex-acp', version: APP_IDENTITY.version },
         agentCapabilities: {
           mcpCapabilities: { http: true },
           promptCapabilities: { image: imagePromptEnabled, audio: false, embeddedContext: false },

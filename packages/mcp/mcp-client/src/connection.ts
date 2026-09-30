@@ -17,6 +17,7 @@
 
 import { Client, type Transport } from '@modelcontextprotocol/client'
 import type { Context } from '@cortex/cordis'
+import { APP_IDENTITY } from '@cortex/llm'
 import { assertNever, type JsonValue } from '@cortex/util-values'
 import type { ServerContext } from './server-context.ts'
 import { MAX_TIMER_DELAY_MS } from '@cortex/timeout'
@@ -256,7 +257,7 @@ export function startConnection(ctx: Context, config: Config, policy: ResolvedRe
    */
   async function connectGeneration(startup: boolean): Promise<void> {
     const generation = new Client(
-      { name: 'cortex-mcp-client', version: '0.0.1' },
+      { name: 'cortex-mcp-client', version: APP_IDENTITY.version },
       {
         capabilities: {},
         versionNegotiation: { mode: 'auto' },

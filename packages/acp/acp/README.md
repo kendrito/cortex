@@ -56,6 +56,8 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 <a id="protocol-contract"></a><a id="standard-acp-v1-surface"></a>
 ### Protocol contract
 
+The `initialize` response identifies `cortex-acp` with the manifest-derived Cortex product version. The negotiated ACP protocol revision remains independent of that product identity.
+
 One connection can run several sessions at once, each independent. The calls a client makes:
 
 | Call | What you get |

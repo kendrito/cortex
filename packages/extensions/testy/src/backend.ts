@@ -1,5 +1,6 @@
 /** Owned stdio connection to the packaged Windows Testy engine. */
 import { Client } from '@modelcontextprotocol/client'
+import { APP_IDENTITY } from '@cortex/llm'
 import { scrubbedParentEnv } from '@cortex/subprocess'
 import { z } from 'zod'
 import type { JsonValue, TestyToolResult } from './types.ts'
@@ -31,7 +32,7 @@ export type BackendTool = Awaited<ReturnType<Client['listTools']>>['tools'][numb
 
 /** Single child process shared by the Testy pane and chat tools. */
 export class TestyBackend {
-  private readonly client = new Client({ name: 'Cortex Testy', version: '0.2.0-rc.2' }, { capabilities: {} })
+  private readonly client = new Client({ name: 'Cortex Testy', version: APP_IDENTITY.version }, { capabilities: {} })
   private readonly transport: TestyStdioTransport
   private closing = false
   private disposal: Promise<void> | undefined

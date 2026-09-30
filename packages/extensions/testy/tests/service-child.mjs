@@ -14,6 +14,7 @@ const tasks = new Map()
 let stalled = false
 let lateResponseCalls = 0
 let lateResponseId
+let clientInfo
 const lines = createInterface({ input: process.stdin })
 const send = (id, result) => process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, result })}\n`)
 const result = data => ({ content: [{ type: 'text', text: JSON.stringify(data) }], structuredContent: data })
@@ -31,9 +32,12 @@ lines.on('line', async (line) => {
   const request = JSON.parse(line)
   if (request.id === undefined) return
   try {
-    if (request.method === 'initialize') return send(request.id, {
-      protocolVersion: request.params.protocolVersion, capabilities: { tools: {}, resources: {} }, serverInfo: { name: 'Testy fixture', version: '1' },
-    })
+    if (request.method === 'initialize') {
+      clientInfo = request.params.clientInfo
+      return send(request.id, {
+        protocolVersion: request.params.protocolVersion, capabilities: { tools: {}, resources: {} }, serverInfo: { name: 'Testy fixture', version: '1' },
+      })
+    }
     if (request.method === 'tools/list') return send(request.id, { tools })
     if (request.method === 'resources/read') return send(request.id, { contents: [{ uri: request.params.uri, text: 'fixture report', mimeType: 'text/plain' }] })
     if (request.method !== 'tools/call') return send(request.id, {})
@@ -78,7 +82,10 @@ lines.on('line', async (line) => {
     if (name === 'screenshot') return send(request.id, {
       content: [{ type: 'image', mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADElEQVQImWNgZGIGAAAOAAeCcsnOAAAAAElFTkSuQmCC' }],
     })
-    return send(request.id, result({ name, args, hasModelContext: context !== undefined, workspace: meta?.['cortex/workspace'] ?? null, pid: process.pid, lateResponseCalls }))
+    return send(request.id, result({
+      name, args, clientInfo, hasModelContext: context !== undefined,
+      workspace: meta?.['cortex/workspace'] ?? null, pid: process.pid, lateResponseCalls,
+    }))
   } catch (error) {
     process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id: request.id, error: { code: -32603, message: String(error) } })}\n`)
   }

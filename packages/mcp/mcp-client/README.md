@@ -26,6 +26,8 @@ kind: "package-reference"
 
 Add `cortex-mcp-client` when the model should call tools from an external MCP server as if they were native. Give each server a unique name and transport. The official SDK selects the 2026-07-28 protocol when available and falls back to supported legacy revisions. Choose stdio for a local program and Streamable HTTP for a service; stdio negotiation starts a temporary probe process before the serving process.
 
+The client identifies itself as `cortex-mcp-client` with the manifest-derived Cortex product version. Protocol revision negotiation is independent of that product identity.
+
 ### Minimal configuration
 
 Add one entry per server; nothing else is required. After the harness starts, the server's tools appear in the model's tool list.

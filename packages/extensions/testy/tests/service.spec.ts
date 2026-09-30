@@ -87,6 +87,8 @@ async function setup() {
 
 it.skipIf(process.platform !== 'win32')('loads the real plugin, excludes human-only tools, and projects screenshot attachments', async () => {
   const { ctx, call } = await setup()
+  const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
+  expect((await call('echo')).structuredContent).toMatchObject({ clientInfo: { name: 'Cortex Testy', version: manifest.version } })
   expect(ctx.tools.get('mcp__testy__ask')).toBeDefined()
   expect(ctx.tools.get('mcp__testy__save_project')).toBeUndefined()
   const denied = await ctx.tools.execute({ callId: ToolCallId('human-only'), name: 'mcp__testy__save_project', arguments: {}, signal: new AbortController().signal })
