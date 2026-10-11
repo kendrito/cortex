@@ -41,7 +41,7 @@
     "@cortex/brand": "workspace:*",
     "@cortex/util-values": "workspace:*",
     "@cortex/schemastery": "workspace:~",
-    "@earendil-works/pi-ai": "^0.87.1"
+    "@earendil-works/pi-ai": "1.0.2"
   },
   "devDependencies": {
     "@cortex/cordis": "workspace:~",

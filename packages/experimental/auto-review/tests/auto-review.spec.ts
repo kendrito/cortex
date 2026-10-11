@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
 import type { Agent } from '@cortex/agent'
+import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@cortex/agent-loop-testkit'
 import type {} from '@cortex/agent-instructions'
 import { compactCheckpointSource, CompactionId } from '@cortex/compaction'
 import LlmRuntime, {
@@ -27,8 +28,7 @@ import SessionStore, {
 import SessionProjectionRegistry from '@cortex/session-projection'
 import SubagentRuntime, {
   NO_START_CAPABILITIES,
-  resolveChildCwd,
-  snapshotSubagentDescriptor,
+  SUBAGENT_DESCRIPTOR_VERSION,
   type ResolvedSubagentStartRequest,
 } from '@cortex/subagent'
 import type {} from '@cortex/shell'
@@ -129,14 +129,19 @@ function reasoningDecisionChunks(text: string): StreamChunk[] {
 async function harness(
   script: ReviewScript[],
   permissionConfig: NonNullable<Parameters<typeof PermissionPresetService.Config>[0]> = { presets: PRESETS, defaultPreset: 'workspace-write' },
+  options: { realAgents?: boolean } = {},
 ): Promise<{ ctx: Context; adapter: RecordingAdapter; auto: PluginFiber }> {
   const ctx = new Context()
   contexts.push(ctx)
-  await ctx.plugin(LlmRuntime)
-  await ctx.plugin(SessionStore)
-  await ctx.plugin(SessionProjectionRegistry)
-  await ctx.plugin(SystemPrompt, {})
-  await ctx.plugin(ToolRuntime)
+  if (options.realAgents) {
+    await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
+  } else {
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(SessionStore)
+    await ctx.plugin(SessionProjectionRegistry)
+    await ctx.plugin(SystemPrompt, {})
+    await ctx.plugin(ToolRuntime)
+  }
   ctx.provide('shell', {
     sandboxMode: 'workspace-write',
     resolve() { throw new Error('auto-review tests do not execute shell requests') },
@@ -548,10 +553,11 @@ describe('native review request', () => {
     setApprovalPolicy(session, 'never')
     const agent = agentFor(session)
     appendHeader(session, [{ name: 'probe', description: 'probe', parameters: { type: 'object' } }])
-    session.append('subagent/descriptor', snapshotSubagentDescriptor({
+    session.append('subagent/descriptor', {
+      version: SUBAGENT_DESCRIPTOR_VERSION,
       mode: 'one-shot',
       provider: 'in-process',
-    }))
+    })
     appendUser(session, 'Delete target as the delegated child task.', { kind: 'user' })
     appendUser(session, 'A later unattributed user-role fact.', { kind: 'user' })
     appendUser(session, 'Do not delete target.', {
@@ -1207,7 +1213,8 @@ describe('out-of-process delegation boundary', () => {
     const { ctx, adapter } = await harness([
       scriptedDecision('deny', 'deny'),
       scriptedDecision('allow', 'allow'),
-    ])
+    ], undefined, { realAgents: true })
+    const loop = await mountAgentLoopTestHarness(ctx)
     await ctx.plugin(SubagentRuntime)
     let providerRequest: ResolvedSubagentStartRequest | undefined
     ctx.subagents.registerProvider({
@@ -1219,7 +1226,6 @@ describe('out-of-process delegation boundary', () => {
         providerRequest = request
         return {
           id: SessionId('remote-boundary-child'),
-          localAgent: undefined,
           result: Promise.resolve({
             output: [{ type: 'text', text: 'remote child completed' }],
             stopReason: 'completed',
@@ -1231,11 +1237,15 @@ describe('out-of-process delegation boundary', () => {
     await ctx.plugin(ToolSubagent, {
       provider: 'remote-boundary',
       toolName: 'delegate_remote',
-      enableRunInBackground: false,
       maxDepth: 'provider-managed',
     })
 
-    const { session, agent } = autoSession(ctx, 'remote-delegation', process.cwd())
+    const agent = await loop.create(
+      SessionId('remote-delegation'), { provider: 'review', model: 'same-model' }, { cwd: process.cwd() },
+    )
+    const session = agent.session
+    ctx.permissionPresets.set(session, AUTO_PRESET)
+    expect(ctx.agents.get(agent.id)).toBe(agent)
     setApprovalPolicy(session, 'never')
     const schema = ctx.tools.schemas(agent).find(item => item.name === 'delegate_remote')
     if (schema === undefined) throw new Error('remote delegation tool schema is missing')
@@ -1291,11 +1301,7 @@ describe('out-of-process delegation boundary', () => {
     expect(timeline).toEqual(['review:deny', 'review:allow', 'provider:start'])
     expect(adapter.requests).toHaveLength(2)
     expect(providerRequest?.parent).toBe(agent)
-    expect(resolveChildCwd(
-      'remote-boundary',
-      undefined,
-      providerRequest?.parent.session.header.cwd,
-    )).toBe(process.cwd())
+    expect(providerRequest?.cwd).toBe(process.cwd())
     expect(providerRequest?.agentOptions).toBeUndefined()
     expect(providerRequest?.maxDepth).toBeUndefined()
     expect(providerRequest?.persona).toBeUndefined()

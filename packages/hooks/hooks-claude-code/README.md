@@ -24,6 +24,8 @@ kind: "package-reference"
 <a id="use-this-package"></a>
 ## Use this package
 
+Hook processes and their payload `cwd` use the Session's current working directory when each hook point starts. `CLAUDE_PROJECT_DIR` follows it unless `projectDir` is configured.
+
 Mount this package, point `configPath` at your hook config, and the hooks you already have start firing at the corresponding moments in agent runs. There is nothing else to set up before the first hook works.
 
 ### When to choose it
@@ -64,7 +66,7 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 ### How hooks run and fail
 
-- Hooks run in your project directory — the agent's session workspace — so `pwd` and relative paths in your hooks refer to your project, not the server's launch directory.
+- Hooks run in the agent's current Session directory; `pwd`, payload `cwd`, and relative paths agree.
 - `${CLAUDE_PLUGIN_ROOT}` and `${CLAUDE_PROJECT_DIR}` in command strings are replaced from your config, and `CLAUDE_PROJECT_DIR` is set for every hook process.
 - One config applies to the whole process: it is read once at startup, and a relative `configPath` resolves from the directory that launched the process.
 - Hooks on the same event run one after another, in config order.

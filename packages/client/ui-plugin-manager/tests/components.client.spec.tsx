@@ -34,6 +34,7 @@ function pkg(overrides: Partial<PackageView> = {}): PackageView {
     version: '0.16.0',
     installed: true,
     optional: false,
+    removable: true,
     enabled: true,
     rows: [],
     ...overrides,
@@ -380,12 +381,12 @@ describe('PluginManagerPage', () => {
       packages: [
         pkg({ meta: { description: { en: 'A sidebar.' } } }),
         pkg({ name: 'cortex-broken', enabled: false, error: { code: 'not-bundle' } }),
-        pkg({ name: '@cortex/web-app', installed: false }),
+        pkg({ name: '@cortex/web-app', installed: false, removable: false }),
         pkg({ name: 'cortex-protected', readOnlyReason: 'management-required' }),
         pkg({ name: '@acme/cortex-tool', enabled: false }),
         // Selected by the profile but not a bundle: a problem the person can switch off, in the profile's own group.
         pkg({ name: 'cortex-selected', installed: false, error: { code: 'not-bundle' } }),
-        pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true, enabled: false }),
+        pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true, removable: false, enabled: false }),
       ],
       busy: ['cortex-protected'],
     })
@@ -425,7 +426,7 @@ describe('PluginManagerPage', () => {
         ].map(name => pkg({ name })),
         pkg({ name: '@acme/cortex-base', readOnlyReason: 'management-required' }),
         pkg({ name: 'cortex-better-sidebar' }),
-        pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true }),
+        pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true, removable: false }),
       ],
     })
     expect(screen.getAllByRole('listitem').map(card => card.getAttribute('data-plugin-package'))).toEqual([
@@ -445,10 +446,20 @@ describe('PluginManagerPage', () => {
     expect(document.querySelectorAll('[data-plugin-count]')).toHaveLength(0)
   })
 
+  it('offers uninstall for a selected bundle that no dependency holds', () => {
+    const { actions } = renderTab({
+      packages: [pkg({ name: 'cortex-retired', installed: false, removable: true, error: { code: 'operation-error', diagnostic: 'cannot resolve' } })],
+    })
+    fireEvent.click(screen.getByRole('button', { name: en.openDetail.replace('{name}', 'cortex-retired') }))
+    const detail = document.querySelector('[data-plugin-detail]') as HTMLElement
+    fireEvent.click(within(detail).getByRole('button', { name: en.uninstallLabel.replace('{name}', 'cortex-retired') }))
+    expect(actions.uninstall).toHaveBeenCalledExactlyOnceWith('cortex-retired')
+  })
+
   it('opens an official bundle\'s page with its beta tag and no uninstall, and switches it on', () => {
     const title = 'Agent Teams'
     const { actions } = renderTab({
-      packages: [pkg({ name: '@cortex/experimental-agent-team-profile', meta: { title }, installed: false, optional: true, enabled: false })],
+      packages: [pkg({ name: '@cortex/experimental-agent-team-profile', meta: { title }, installed: false, optional: true, removable: false, enabled: false })],
     })
     fireEvent.click(screen.getByRole('button', { name: en.openDetail.replace('{name}', title) }))
     const detail = document.querySelector('[data-plugin-detail]') as HTMLElement
@@ -741,7 +752,7 @@ describe('PluginManagerPage', () => {
 
     it('lists an official plugin after the official bundles with its summary, and opens its page', () => {
       renderTab(
-        { packages: [pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true, enabled: false })] },
+        { packages: [pkg({ name: '@cortex/experimental-agent-team-profile', installed: false, optional: true, removable: false, enabled: false })] },
         { items: [{ id: 'bash', label: 'Shell' }] },
         bodies,
       )
@@ -862,7 +873,7 @@ describe('PluginManagerPage', () => {
     })
 
     it('leaves the version out of a bundle the Host reports none for', () => {
-      const unversioned: PackageView = { name: 'cortex-better-sidebar', installed: true, optional: false, enabled: true, rows: [] }
+      const unversioned: PackageView = { name: 'cortex-better-sidebar', installed: true, optional: false, removable: true, enabled: true, rows: [] }
       renderTab({ packages: [unversioned] }, {}, bodies)
       fireEvent.click(screen.getByRole('button', { name: en.openDetail.replace('{name}', 'cortex-better-sidebar') }))
       expect(subjects.at(-1)).toEqual({ kind: 'bundle', pkg: { name: 'cortex-better-sidebar', installed: true, enabled: true, rows: [] } })

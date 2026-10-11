@@ -6,4 +6,3 @@
       config:
         provider: spawn
         toolName: subagent_one_shot
-        backgroundMode: one-shot

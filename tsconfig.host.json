@@ -411,7 +411,6 @@
     { "path": "./packages/subagent/subagent" },
     { "path": "./packages/subagent/tool-subagent" },
     { "path": "./packages/subagent/tool-subagent-control" },
-    { "path": "./packages/subagent/subagent-in-process-driver" },
     { "path": "./packages/subagent/subagent-spawn-in-process" },
     { "path": "./packages/subagent/subagent-fork-in-process" },
     { "path": "./packages/subagent/subagent-acp" },
@@ -457,6 +456,10 @@
     { "path": "./packages/lsp/lsp" },
     { "path": "./packages/lsp/lsp-stdio" },
     { "path": "./packages/lsp/tool-lsp" },
+    { "path": "./packages/session/working-directory" },
+    { "path": "./packages/session/tool-working-directory" },
+    { "path": "./packages/experimental/worktree" },
+    { "path": "./packages/experimental/tool-worktree" },
     { "path": "./apps/cli" },
     { "path": "./apps/desktop-host" },
     { "path": "./apps/desktop/tsconfig.host.json" }

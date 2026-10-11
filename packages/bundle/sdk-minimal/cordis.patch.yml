@@ -24,6 +24,9 @@
     - id: sandbox
       name: '@cortex/sandbox-local'
 
+    - id: fs-local
+      name: '@cortex/fs-local'
+
     # Shared projection registry: sandbox-policy and terminal-bash fold
     # sandbox-mode state through its units and require it as a hard injection.
     - id: session-projection
@@ -64,6 +67,12 @@
 
     - id: session
       name: '@cortex/session'
+
+    - id: working-directory
+      name: '@cortex/working-directory'
+
+    - id: tool-working-directory
+      name: '@cortex/tool-working-directory'
 
     - id: session-title
       name: '@cortex/session-title'

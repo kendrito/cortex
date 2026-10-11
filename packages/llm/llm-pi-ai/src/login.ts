@@ -17,6 +17,13 @@ import type { PiAiAuthInjection } from './adapter.ts'
 import { createModels } from './models.ts'
 
 /**
+ * pi-ai's ChatGPT login requires a stable app installation UUID through
+ * LoginOptions.getDeviceId. Cortex supplies no third-party installation ID,
+ * so this route offers its API key login instead.
+ */
+const UNSERVED_OAUTH: ReadonlySet<string> = new Set(['openai'])
+
+/**
  * The login methods one catalog provider offers.
  *
  * A method appears only when pi-ai can actually run it: `oauth` always carries
@@ -28,7 +35,7 @@ import { createModels } from './models.ts'
  */
 function loginMethods(provider: Provider | undefined): AuthorizationMethod[] {
   const methods: AuthorizationMethod[] = []
-  const oauth = provider?.auth.oauth
+  const oauth = provider === undefined || UNSERVED_OAUTH.has(provider.id) ? undefined : provider.auth.oauth
   if (oauth !== undefined) methods.push({ id: 'oauth', label: oauth.loginLabel ?? oauth.name })
   const apiKey = provider?.auth.apiKey
   if (apiKey?.login !== undefined) methods.push({ id: 'api-key', label: apiKey.name })

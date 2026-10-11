@@ -93,6 +93,7 @@
     "@cortex/plugin-manager": "workspace:*",
     "@cortex/client-ui-plugin-manager": "workspace:*",
     "@cortex/office-to-pdf": "workspace:*",
-    "@cortex/deepseek-account": "workspace:*"
+    "@cortex/deepseek-account": "workspace:*",
+    "@cortex/skill": "workspace:*"
   }
 }

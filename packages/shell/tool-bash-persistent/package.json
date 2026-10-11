@@ -31,7 +31,8 @@
     "@cortex/terminal": "workspace:*",
     "@cortex/timeout": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/schemastery": "workspace:~"
@@ -53,6 +54,7 @@
     "@cortex/timeout": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

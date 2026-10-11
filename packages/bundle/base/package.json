@@ -115,7 +115,9 @@
     "@cortex/config-editor": "workspace:*",
     "@cortex/settings": "workspace:*",
     "@cortex/subagent-codex": "workspace:*",
-    "@cortex/subagent-claude-code": "workspace:*"
+    "@cortex/subagent-claude-code": "workspace:*",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/tool-working-directory": "workspace:*"
   },
   "peerDependencies": {
     "@cortex/cordis": "workspace:~"

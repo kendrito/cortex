@@ -46,13 +46,13 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/subagent": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/subagent-spawn-in-process": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/workflow": "workspace:*",
     "@cortex/workflow-ptc": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*"
   }
 }

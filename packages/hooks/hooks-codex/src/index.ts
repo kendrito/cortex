@@ -11,6 +11,7 @@
 // Each dialect bridge keeps its complete dependency list visible at the entry
 // point; a cross-package facade for imports alone would add indirection.
 /* jscpd:ignore-start */
+import type {} from '@cortex/working-directory'
 import { readFileSync } from 'node:fs'
 import type { Context } from '@cortex/cordis'
 import z from '@cortex/schemastery'
@@ -44,7 +45,7 @@ import { parseCodexConfig, type CodexHookConfig } from './config.ts'
 /* jscpd:ignore-end */
 
 export const name = 'hooks-codex'
-export const inject = ['shell', 'sessionProjections']
+export const inject = ['shell', 'sessionProjections', 'workingDirectory']
 
 /** Plugin config: where the Codex hooks.json lives + the model name for payloads. */
 export interface Config {
@@ -119,7 +120,7 @@ export function apply(ctx: Context, config: Config): void {
   async function runPoint(
     point: string,
     matchQuery: string,
-    payload: unknown,
+    payload: Record<string, unknown>,
     opts: {
       agent?: Agent
       turn?: number
@@ -127,14 +128,12 @@ export function apply(ctx: Context, config: Config): void {
       plainStdoutAsContext?: boolean
     },
   ): Promise<MergedHookOutcome> {
-    const groups: MatcherGroup[] = parsed[point] ?? []
+    const groups: MatcherGroup[] = (parsed[point] ?? []).filter(group =>
+      group.hooks.length > 0 && matchesMatcher(group.matcher, matchQuery, 'codex'))
+    if (groups.length === 0) return mergeHookOutputs([])
     const outputs: HookOutput[] = []
-    // Run hooks in the agent's session workspace so relative paths address the
-    // user's project rather than the server launch directory.
-    const workdir = opts.agent?.session.header.cwd
+    const workdir = opts.agent === undefined ? undefined : await ctx.workingDirectory.ensure(opts.agent, opts.signal)
     for (const group of groups) {
-      // Codex always interprets matchers as regexes; it has no literal fast path.
-      if (!matchesMatcher(group.matcher, matchQuery, 'codex')) continue
       for (const hook of group.hooks) {
         const handlerId = nextHandlerId(point)
         const session = opts.agent?.session
@@ -145,7 +144,7 @@ export function apply(ctx: Context, config: Config): void {
           })
         }
         const { output, durationMs } = await runHook(ctx.shell, hook, {
-          payload,
+          payload: { ...payload, cwd: workdir ?? process.cwd() },
           defaultTimeoutMs,
           ...workdir !== undefined ? { cwd: workdir } : {},
           signal: opts.signal,
@@ -300,7 +299,6 @@ function base(agent: Agent | undefined, event: string, model: string): Record<st
     // The persistence seam exposes no artifact path; the field stays null
     // (a durable consumer gap recorded in this package's README).
     transcript_path: null,
-    cwd: agent?.session.header.cwd ?? process.cwd(),
     hook_event_name: event,
     model,
     permission_mode: 'default',

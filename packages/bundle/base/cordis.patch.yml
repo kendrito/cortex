@@ -37,6 +37,12 @@
     - id: session
       name: '@cortex/session'
 
+    - id: working-directory
+      name: '@cortex/working-directory'
+
+    - id: tool-working-directory
+      name: '@cortex/tool-working-directory'
+
     - id: typert
       name: '@cortex/typert-registry'
 
@@ -317,8 +323,8 @@
     - id: subagent-claude-code
       name: '@cortex/subagent-claude-code'
 
-    # Continuable background children are selected per delegation tool. The
-    # separately loaded follow-up tool registers the one global `send_message`.
+    # The runtime owns managed child activations and their completion delivery.
+    # The separately loaded follow-up tool registers the global `send_message`.
     - id: tool-subagent-control
       name: '@cortex/tool-subagent-control'
 
@@ -330,20 +336,15 @@
       config:
         provider: spawn
         toolName: subagent
-        backgroundMode: continuable
 
     # Fork omits model selection so provider/model stay equal to the parent and
-    # the inherited history remains eligible for KV Cache reuse. This base row
-    # stays one-shot; preset layers may select continuable mode without adding a
-    # child-only system-prompt section or tool schema ahead of that history.
-    # See .agents/notes/implemented/feature/2026-08-18-model-selected-subagent-routes.md
-    # and .agents/notes/implemented/architecture/2026-08-10-fork-children-stay-one-shot.md.
+    # the inherited history remains eligible for KV Cache reuse. Parent and child
+    # share messaging tools; return guidance follows the inherited history.
     - id: tool-subagent-fork
       name: '@cortex/tool-subagent'
       config:
         provider: fork
         toolName: subagent_fork
-        backgroundMode: one-shot
 
     - id: ptc-runtime
       name: '@cortex/ptc-runtime-node'

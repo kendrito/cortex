@@ -59,7 +59,7 @@ describe('Cortex browser composition privacy', () => {
       const row = rows.find(candidate => candidate.id === `tool-subagent-${provider}`)
       expect(row?.name).toBe('@cortex/tool-subagent')
       expect(row?.disabled).toBeUndefined()
-      expect(row?.config).toMatchObject({ provider, backgroundMode: 'one-shot', maxDepth: 'provider-managed' })
+      expect(row?.config).toMatchObject({ provider, maxDepth: 'provider-managed' })
     }
   })
 })

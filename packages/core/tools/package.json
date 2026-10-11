@@ -51,7 +51,8 @@
     "@cortex/system-prompt": "workspace:*",
     "@cortex/user-approval": "workspace:*",
     "@cortex/sandbox": "workspace:*",
-    "@cortex/sandbox-policy": "workspace:*"
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/brand": "workspace:*",
@@ -70,6 +71,8 @@
     "@cortex/system-prompt": "workspace:*",
     "@cortex/user-approval": "workspace:*",
     "@cortex/sandbox": "workspace:*",
-    "@cortex/sandbox-policy": "workspace:*"
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*"
   }
 }

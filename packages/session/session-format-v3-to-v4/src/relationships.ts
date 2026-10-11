@@ -367,8 +367,11 @@ function titleSources(
   const message = record(messages[0], 'title message')
   const content = array(message['content'], 'title content')
   const block = content[0]
+  // The producer retains its persisted DSH identity across the product rename;
+  // also admit the Cortex identity already accepted by this V4 reader.
+  const sourceKind = record(message['source'], 'title source')['kind']
   if (references.length === 0 || messages.length !== 1 || message['role'] !== 'user'
-    || record(message['source'], 'title source')['kind'] !== 'cortex-session-title-llm'
+    || (sourceKind !== 'dsh-session-title-llm' && sourceKind !== 'cortex-session-title-llm')
     || content.length !== 1 || !isSessionFormatJsonObject(block) || block['type'] !== 'text') {
     throw new SessionFormatError('session/title-llm-request messages do not represent messageSeqs')
   }

@@ -275,9 +275,9 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
         parameters: [{ name: 'id', description: 'a registered theme id or `system`; unknown ids throw.' }],
       },
       {
-        signature: 'setFontSize(px: number): void',
-        description: 'Change the conversation content font size — the only font-size write entry. Accepted values are written through the settings scope and emit `theme/change`.',
-        parameters: [{ name: 'px', description: 'integer px within FONT_SIZE_MIN..FONT_SIZE_MAX; out-of-range or fractional values throw.' }],
+        signature: 'setFontSize(role: FontRole, px: number): void',
+        description: 'Change one role\'s font size — the only font-size write entry. Accepted values are written through the settings scope and emit `theme/change`.',
+        parameters: [{ name: 'role', description: 'font role.' }, { name: 'px', description: 'integer px within the role\'s `FONT_SIZE_SPECS` range; out-of-range or fractional values throw.' }],
       },
       {
         signature: 'register(definition: ThemeDefinition): () => void',
@@ -602,6 +602,18 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'FactoryRegistrationPropsOf',
     declaration: 'export type FactoryRegistrationPropsOf<F extends keyof SlotFactoryMap & string> = FactoryRenderPropsOf<F> & PropsStore<FactoryStoreOf<F>> & InjectFace<FactoryInjectOf<F>> & PropsLocale<FactoryLocaleOf<F>> & PropsRenderFactories;',
+  },
+  {
+    name: 'FontFamilies',
+    declaration: 'export type FontFamilies = Readonly<Record<FontRole, string>>;',
+  },
+  {
+    name: 'FontRole',
+    declaration: 'export type FontRole = typeof FONT_ROLES[number];',
+  },
+  {
+    name: 'FontSizes',
+    declaration: 'export type FontSizes = Readonly<Record<FontRole, number>>;',
   },
   {
     name: 'GlobalStandardProps',
@@ -1009,7 +1021,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'ThemeSnapshot',
-    declaration: 'export interface ThemeSnapshot {\n    preference: ThemePreference;\n    fontSize: number;\n    active: ThemeDefinition;\n    themes: readonly ThemeDefinition[];\n    revision: number;\n}',
+    declaration: 'export interface ThemeSnapshot {\n    preference: ThemePreference;\n    fontSizes: FontSizes;\n    fontFamilies: FontFamilies;\n    active: ThemeDefinition;\n    themes: readonly ThemeDefinition[];\n    revision: number;\n}',
   },
   {
     name: 'ThemeTokenModes',

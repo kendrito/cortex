@@ -55,6 +55,8 @@ This pairing is not a second source of business truth. Host controllers decide d
 
 ## Conversation and presentation
 
+[`ui-theme`](../../packages/client/ui-theme/README.md) publishes `ThemeSnapshot.fontSizes` and `fontFamilies` for the `text`, `code`, and `terminal` roles. `setFontSize(role, px)` validates the role's integer range; `setFontFamily(role, value)` normalizes installed font names. Both write through the local settings scope and emit `theme/change`; `ui-layout` applies their CSS variables, and the terminal renderer changes font metrics without replacing its shell. Font selection causes no network requests.
+
 Web and desktop share the [Coding Tools preference](../../packages/client/ui-settings/README.md#use-this-package). It controls diagnostic Views, new-session preset selection, changed-file cards, and the builtin HTML preview policy without changing Session records.
 
 `ui-session` installs the Session scope adapter and publishes `useSessions`, `useSessionStatus`, `useSessionRetainInfo`, `useSession`, `sessionId`, and `useProjection`. `SessionProvider` inherits an outer binding or binds an explicit `SessionReference`, so concurrent subtrees can target different Sessions. Domain adapters add further standard sources without putting React hooks on the model objects.

@@ -1538,6 +1538,16 @@
     },
     {
       "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentActivationSpec",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
+      "symbol": "SubagentActivation",
+      "source": "packages/subagent/subagent/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/subagent.md",
       "symbol": "SubagentStartRequest",
       "source": "packages/subagent/subagent/src/types.ts"
     },
@@ -1573,11 +1583,6 @@
     },
     {
       "doc": "docs/subsystems/subagent.md",
-      "symbol": "ContinuableStart",
-      "source": "packages/subagent/subagent/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/subagent.md",
       "symbol": "ContinuableCreateRequest",
       "source": "packages/subagent/subagent/src/types.ts"
     },
@@ -1605,36 +1610,6 @@
       "doc": "docs/subsystems/subagent.md",
       "symbol": "SubagentProvider",
       "source": "packages/subagent/subagent/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebSearchRequest",
-      "source": "packages/web/web/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebSearchResult",
-      "source": "packages/web/web/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebSearchSource",
-      "source": "packages/web/web/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebFetchRequest",
-      "source": "packages/web/web/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebFetchResult",
-      "source": "packages/web/web/src/types.ts"
-    },
-    {
-      "doc": "docs/subsystems/web.md",
-      "symbol": "WebFetchBody",
-      "source": "packages/web/web/src/types.ts"
     },
     {
       "doc": "docs/subsystems/spill.md",
@@ -2358,14 +2333,29 @@
       "source": "packages/deliverables/workspace-changes/src/types.ts"
     },
     {
-      "doc": "docs/subsystems/product-telemetry.md",
-      "symbol": "ProductTelemetryScalar",
-      "source": "packages/host/product-telemetry-otel/src/index.ts"
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecordType",
+      "source": "packages/core/session/src/types.ts"
     },
     {
-      "doc": "docs/subsystems/product-telemetry.md",
-      "symbol": "ProductTelemetryRecord",
-      "source": "packages/host/product-telemetry-otel/src/index.ts"
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecordMap",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/session.md",
+      "symbol": "PluginRecord",
+      "source": "packages/core/session/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/worktrees.md",
+      "symbol": "CreateWorktreeRequest",
+      "source": "packages/experimental/worktree/src/types.ts"
+    },
+    {
+      "doc": "docs/subsystems/worktrees.md",
+      "symbol": "CreatedWorktree",
+      "source": "packages/experimental/worktree/src/types.ts"
     }
   ]
 }

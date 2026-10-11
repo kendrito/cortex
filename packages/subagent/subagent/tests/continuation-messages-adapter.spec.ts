@@ -1,3 +1,4 @@
+import { mountWorkingDirectoryFixture } from './working-directory-fixture.ts'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -45,9 +46,10 @@ it('continues the parent through a local pi-ai route after a reasoning-bearing c
       resolveApiKey: () => Promise.resolve('test-key'),
       auth: memoryAuth(),
     })
-    await mountAgentLoopTestDependencies(ctx)
+    await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
     await ctx.plugin(JsonlSessionPersistence, { root })
     await ctx.plugin(AgentLoop, { agents: [] })
+    await mountWorkingDirectoryFixture(ctx)
     await ctx.plugin(SubagentRuntime)
     await ctx.plugin(SubagentSpawn, { providerName: 'spawn' })
     ctx.llm.registerAdapter(['local'], adapter)
@@ -59,7 +61,8 @@ it('continues the parent through a local pi-ai route after a reasoning-bearing c
       settled.resolve(undefined)
     })
 
-    const started = await ctx.subagents.startContinuable({
+    const started = await ctx.subagents.startActivation({
+      delivery: 'parent',
       provider: 'spawn',
       label: 'child task',
       request: { parent, prompt: [{ type: 'text', text: 'child task' }] },
@@ -79,11 +82,12 @@ it('continues the parent through a local pi-ai route after a reasoning-bearing c
     expect(requests).toHaveLength(2)
     expect(http.paths).toEqual(['/chat/completions', '/chat/completions'])
     const notice = parent.session.deriveMessages().find(message => message.source.kind === 'subagent-settled')
-    expect(notice?.content).toEqual([
+    const closingContent = [
       { type: 'text', text: `Background subagent ${started.childId} finished and will do no further work unless you send it more.` },
       { type: 'text', text: 'Its closing message:' },
       { type: 'text', text: 'child answer' },
-    ])
+    ]
+    expect(notice?.content).toEqual(closingContent)
     const noticeText = notice?.content.filter(block => block.type === 'text').map(block => block.text).join('')
     expect((requests[1] as { messages: unknown[] }).messages).toContainEqual({ role: 'user', content: noticeText })
 

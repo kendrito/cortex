@@ -101,7 +101,6 @@
     "@cortex/subagent": "workspace:*",
     "@cortex/subagent-acp": "workspace:*",
     "@cortex/subagent-fork-in-process": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/subagent-spawn-in-process": "workspace:*",
     "@cortex/subprocess": "workspace:*",
     "@cortex/subprocess-local": "workspace:*",

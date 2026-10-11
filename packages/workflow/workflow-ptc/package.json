@@ -36,7 +36,8 @@
     "@cortex/workflow": "workspace:*",
     "@cortex/ptc-runtime": "workspace:*",
     "@cortex/sandbox": "workspace:*",
-    "@cortex/sandbox-policy": "workspace:*"
+    "@cortex/sandbox-policy": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/brand": "workspace:*",
@@ -67,6 +68,7 @@
     "@cortex/subprocess": "workspace:*",
     "@cortex/subprocess-local": "workspace:*",
     "@cortex/sandbox-local": "workspace:*",
-    "@cortex/llm-pi-ai": "workspace:*"
+    "@cortex/llm-pi-ai": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

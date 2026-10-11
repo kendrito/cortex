@@ -79,6 +79,9 @@
     },
     {
       "path": "../../llm/llm-pi-ai"
+    },
+    {
+      "path": "../../session/working-directory"
     }
   ]
 }

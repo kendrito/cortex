@@ -34,7 +34,9 @@
     "@cortex/session-projection": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/fs-local": "workspace:*"
   },
   "dependencies": {},
   "devDependencies": {
@@ -45,6 +47,8 @@
     "@cortex/session-projection": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/fs-local": "workspace:*"
   }
 }

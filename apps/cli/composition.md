@@ -18,12 +18,12 @@ flowchart LR
   cfg --> plugin_cortex_base_hmr
   plugin_cortex_base_llm["llm<br/>@cortex/llm"]
   cfg --> plugin_cortex_base_llm
-  plugin_cortex_base_deepseek_llm_api_extensions["deepseek-llm-api-extensions<br/>@cortex/deepseek-llm-api-extensions"]
-  cfg --> plugin_cortex_base_deepseek_llm_api_extensions
   plugin_cortex_base_session["session<br/>@cortex/session"]
   cfg --> plugin_cortex_base_session
-  plugin_cortex_base_session_log_deepseek["session-log-deepseek<br/>@cortex/session-log-deepseek"]
-  cfg --> plugin_cortex_base_session_log_deepseek
+  plugin_cortex_base_working_directory["working-directory<br/>@cortex/working-directory"]
+  cfg --> plugin_cortex_base_working_directory
+  plugin_cortex_base_tool_working_directory["tool-working-directory<br/>@cortex/tool-working-directory"]
+  cfg --> plugin_cortex_base_tool_working_directory
   plugin_cortex_base_typert["typert<br/>@cortex/typert-registry"]
   cfg --> plugin_cortex_base_typert
   plugin_cortex_base_typert_loader["typert-loader<br/>@cortex/typert-loader"]
@@ -38,8 +38,6 @@ flowchart LR
   cfg --> plugin_cortex_base_user_questions
   plugin_cortex_base_agent["agent<br/>@cortex/agent"]
   cfg --> plugin_cortex_base_agent
-  plugin_cortex_base_plugin_package_inventory_deepseek["plugin-package-inventory-deepseek<br/>@cortex/plugin-package-inventory-deepseek"]
-  cfg --> plugin_cortex_base_plugin_package_inventory_deepseek
   plugin_cortex_base_agent_default_model["agent-default-model<br/>@cortex/agent-default-model"]
   cfg --> plugin_cortex_base_agent_default_model
   plugin_cortex_base_jobs["jobs<br/>@cortex/jobs-local"]
@@ -52,8 +50,6 @@ flowchart LR
   cfg --> plugin_cortex_base_settings
   plugin_cortex_base_authorization["authorization<br/>@cortex/authorization"]
   cfg --> plugin_cortex_base_authorization
-  plugin_cortex_base_deepseek_account["deepseek-account<br/>@cortex/deepseek-account-platform"]
-  cfg --> plugin_cortex_base_deepseek_account
   plugin_cortex_base_credentials["credentials<br/>@cortex/credentials-local"]
   cfg --> plugin_cortex_base_credentials
   plugin_cortex_base_llm_pi_ai["llm-pi-ai<br/>@cortex/llm-pi-ai"]
@@ -74,10 +70,6 @@ flowchart LR
   cfg --> plugin_cortex_base_storage_domain
   plugin_cortex_base_session_projection_cache["session-projection-cache<br/>@cortex/session-projection-cache"]
   cfg --> plugin_cortex_base_session_projection_cache
-  plugin_cortex_base_otel["otel<br/>@cortex/otel"]
-  cfg --> plugin_cortex_base_otel
-  plugin_cortex_base_session_telemetry_otel["session-telemetry-otel<br/>@cortex/session-telemetry-otel"]
-  cfg --> plugin_cortex_base_session_telemetry_otel
   plugin_cortex_base_subprocess["subprocess<br/>@cortex/subprocess-local"]
   cfg --> plugin_cortex_base_subprocess
   plugin_cortex_base_sandbox["sandbox<br/>@cortex/sandbox-local"]
@@ -140,6 +132,8 @@ flowchart LR
   cfg --> plugin_cortex_base_subagent_fork_in_process
   plugin_cortex_base_subagent_codex["subagent-codex<br/>@cortex/subagent-codex"]
   cfg --> plugin_cortex_base_subagent_codex
+  plugin_cortex_base_subagent_claude_code["subagent-claude-code<br/>@cortex/subagent-claude-code"]
+  cfg --> plugin_cortex_base_subagent_claude_code
   plugin_cortex_base_tool_subagent_control["tool-subagent-control<br/>@cortex/tool-subagent-control"]
   cfg --> plugin_cortex_base_tool_subagent_control
   plugin_cortex_base_tool_subagent_list_agents["tool-subagent-list-agents<br/>@cortex/tool-subagent-control/list-agents"]
@@ -174,14 +168,6 @@ flowchart LR
   cfg --> plugin_cortex_base_tool_ralph
   plugin_cortex_base_repeat_tool_reminder["repeat-tool-reminder<br/>@cortex/repeat-tool-reminder"]
   cfg --> plugin_cortex_base_repeat_tool_reminder
-  plugin_cortex_base_web["web<br/>@cortex/web"]
-  cfg --> plugin_cortex_base_web
-  plugin_cortex_base_web_search_deepseek["web-search-deepseek<br/>@cortex/web-search-deepseek"]
-  cfg --> plugin_cortex_base_web_search_deepseek
-  plugin_cortex_base_web_fetch_http["web-fetch-http<br/>@cortex/web-fetch-http"]
-  cfg --> plugin_cortex_base_web_fetch_http
-  plugin_cortex_base_tool_web["tool-web<br/>@cortex/tool-web"]
-  cfg --> plugin_cortex_base_tool_web
   plugin_cortex_base_mcp_resources["mcp-resources<br/>@cortex/mcp-resources"]
   cfg --> plugin_cortex_base_mcp_resources
   plugin_cortex_base_tools["tools<br/>@cortex/tools"]
@@ -192,10 +178,6 @@ flowchart LR
   cfg --> plugin_cortex_base_agent_loop
   plugin_cortex_base_fs_sandbox["fs-sandbox<br/>@cortex/fs-sandbox"]
   cfg --> plugin_cortex_base_fs_sandbox
-  plugin_cortex_base_llm_deepseek["llm-deepseek<br/>@cortex/llm-deepseek-api-key"]
-  cfg --> plugin_cortex_base_llm_deepseek
-  plugin_cortex_base_llm_deepseek_account["llm-deepseek-account<br/>@cortex/llm-deepseek-account"]
-  cfg --> plugin_cortex_base_llm_deepseek_account
 ```
 
 | Plugin id | Package / module |
@@ -205,9 +187,9 @@ flowchart LR
 | `timer` | `@cortex/cordis-plugin-timer` |
 | `hmr` | `@cortex/hmr` |
 | `llm` | `@cortex/llm` |
-| `deepseek-llm-api-extensions` | `@cortex/deepseek-llm-api-extensions` |
 | `session` | `@cortex/session` |
-| `session-log-deepseek` | `@cortex/session-log-deepseek` |
+| `working-directory` | `@cortex/working-directory` |
+| `tool-working-directory` | `@cortex/tool-working-directory` |
 | `typert` | `@cortex/typert-registry` |
 | `typert-loader` | `@cortex/typert-loader` |
 | `typert-gateway` | `@cortex/api-gateway` |
@@ -215,14 +197,12 @@ flowchart LR
 | `session-title-llm` | `@cortex/session-title-first-prompt-llm` |
 | `user-questions` | `@cortex/user-questions` |
 | `agent` | `@cortex/agent` |
-| `plugin-package-inventory-deepseek` | `@cortex/plugin-package-inventory-deepseek` |
 | `agent-default-model` | `@cortex/agent-default-model` |
 | `jobs` | `@cortex/jobs-local` |
 | `llm-retry` | `@cortex/llm-retry` |
 | `config-editor` | `@cortex/config-editor` |
 | `settings` | `@cortex/settings` |
 | `authorization` | `@cortex/authorization` |
-| `deepseek-account` | `@cortex/deepseek-account-platform` |
 | `credentials` | `@cortex/credentials-local` |
 | `llm-pi-ai` | `@cortex/llm-pi-ai` |
 | `session-persistence-jsonl` | `@cortex/session-persistence-jsonl` |
@@ -233,8 +213,6 @@ flowchart LR
 | `storage-json` | `@cortex/storage-json` |
 | `storage-domain` | `@cortex/storage-domain` |
 | `session-projection-cache` | `@cortex/session-projection-cache` |
-| `otel` | `@cortex/otel` |
-| `session-telemetry-otel` | `@cortex/session-telemetry-otel` |
 | `subprocess` | `@cortex/subprocess-local` |
 | `sandbox` | `@cortex/sandbox-local` |
 | `sandbox-policy` | `@cortex/sandbox-policy` |
@@ -266,6 +244,7 @@ flowchart LR
 | `subagent-spawn-in-process` | `@cortex/subagent-spawn-in-process` |
 | `subagent-fork-in-process` | `@cortex/subagent-fork-in-process` |
 | `subagent-codex` | `@cortex/subagent-codex` |
+| `subagent-claude-code` | `@cortex/subagent-claude-code` |
 | `tool-subagent-control` | `@cortex/tool-subagent-control` |
 | `tool-subagent-list-agents` | `@cortex/tool-subagent-control/list-agents` |
 | `tool-subagent` | `@cortex/tool-subagent` |
@@ -283,17 +262,11 @@ flowchart LR
 | `tool-goal` | `@cortex/tool-goal` |
 | `tool-ralph` | `@cortex/tool-ralph` |
 | `repeat-tool-reminder` | `@cortex/repeat-tool-reminder` |
-| `web` | `@cortex/web` |
-| `web-search-deepseek` | `@cortex/web-search-deepseek` |
-| `web-fetch-http` | `@cortex/web-fetch-http` |
-| `tool-web` | `@cortex/tool-web` |
 | `mcp-resources` | `@cortex/mcp-resources` |
 | `tools` | `@cortex/tools` |
 | `system-prompt` | `@cortex/system-prompt` |
 | `agent-loop` | `@cortex/agent-loop` |
 | `fs-sandbox` | `@cortex/fs-sandbox` |
-| `llm-deepseek` | `@cortex/llm-deepseek-api-key` |
-| `llm-deepseek-account` | `@cortex/llm-deepseek-account` |
 
 Source config: [`packages/bundle/base/cordis.patch.yml`](../../packages/bundle/base/cordis.patch.yml).
 

@@ -10,12 +10,12 @@ Enqueue is synchronous and does not acknowledge delivery. The SDK owns batching 
 
 ## Record types
 
-```ts type-equiv
+```ts
 /** Scalar values accepted in product attributes. */
 type ProductTelemetryScalar = OTelEventScalar
 ```
 
-```ts type-equiv
+```ts
 /** Caller-selected ordinary analytics record. */
 type ProductTelemetryRecord = OTelEventRecord
 ```

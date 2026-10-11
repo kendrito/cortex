@@ -1,3 +1,4 @@
+import { provideWorkingDirectoryFixture } from '@cortex/agent-loop-testkit'
 import { describe, expect, it, vi } from 'vitest'
 import { Context } from '@cortex/cordis'
 import Loader from '@cortex/cordis-plugin-loader'
@@ -81,6 +82,7 @@ async function setup(options?: SetupOptions) {
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(SessionProjectionRegistry)
+  provideWorkingDirectoryFixture(ctx)
   await ctx.plugin(SubagentRuntime)
   const provider = options?.provider === false ? undefined : options?.provider ?? new StubProvider()
   if (provider !== undefined) ctx.subagents.registerProvider(provider)

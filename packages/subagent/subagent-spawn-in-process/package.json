@@ -28,7 +28,6 @@
   "license": "MIT",
   "peerDependencies": {
     "@cortex/subagent": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
@@ -45,10 +44,10 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/subagent": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/tool-bash": "workspace:*",
     "@cortex/tool-subagent": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*"
   }
 }

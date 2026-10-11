@@ -80,7 +80,8 @@
     "@cortex/user-approval": "workspace:*",
     "@cortex/util-time": "workspace:*",
     "@cortex/permission-presets": "workspace:*",
-    "@cortex/workspace": "workspace:*"
+    "@cortex/workspace": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@cortex/agent-preset-registry": {
@@ -143,6 +144,14 @@
     "@cortex/typert-protocol": "workspace:*",
     "@cortex/user-approval": "workspace:*",
     "@cortex/util-time": "workspace:*",
-    "@cortex/workspace": "workspace:*"
+    "@cortex/workspace": "workspace:*",
+    "@cortex/cordis-plugin-include": "workspace:~",
+    "@cortex/cordis-plugin-loader": "workspace:~",
+    "@cortex/agent-loop": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*",
+    "@cortex/fs-sandbox": "workspace:*",
+    "@cortex/tool-fs": "workspace:*",
+    "@cortex/session-persistence-jsonl": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

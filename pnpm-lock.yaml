@@ -11,7 +11,7 @@ overrides:
 
 patchedDependencies:
   '@browserbasehq/stagehand@4.1.0': eba48dbe42ccca052f9ac42626b5dc36821caf4ce8e7b172badfcb3c606bb4e7
-  '@earendil-works/pi-ai@0.87.1': b9bcce474fb2ac44633dff0fa722816a5bff5451b4575d5874035ea14ba70a4f
+  '@earendil-works/pi-ai@1.0.2': 1cc211bc358d30cb58bd975f39c03e296f8a277c3de845514d12f9ae77ebab5f
   '@electron/osx-sign@1.3.3': 280e7b2816caf01423097d24e79107a66afeb563a348630ce9928ae8499a5861
   '@fortune-sheet/core@1.0.4': 8791a230763dbf853fd65d627c68c31de37209992851377855e16cf08ea70532
   '@fortune-sheet/react@1.0.4': 2932e52e79afcd4ced08cfa123b5eded786c85043da32f622f3e80af6fc96c37
@@ -248,6 +248,9 @@ importers:
       '@cortex/experimental-schedule-bundle':
         specifier: workspace:*
         version: link:../../packages/experimental/schedule-bundle
+      '@cortex/experimental-tool-worktree':
+        specifier: workspace:*
+        version: link:../../packages/experimental/tool-worktree
       '@cortex/experimental-voice-input-bundle':
         specifier: workspace:*
         version: link:../../packages/experimental/voice-input-bundle
@@ -1211,6 +1214,9 @@ importers:
       '@cortex/settings':
         specifier: workspace:*
         version: link:../../settings/settings
+      '@cortex/skill':
+        specifier: workspace:*
+        version: link:../../skill/skill
       '@cortex/subagent':
         specifier: workspace:*
         version: link:../../subagent/subagent
@@ -1365,6 +1371,9 @@ importers:
       '@cortex/util-workspace-path':
         specifier: workspace:*
         version: link:../../util/workspace-path
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
       '@cortex/workspace':
         specifier: workspace:*
         version: link:../../workspace/workspace
@@ -1827,6 +1836,9 @@ importers:
       '@cortex/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      chokidar:
+        specifier: ^4.0.3
+        version: 4.0.3
 
   packages/browser-use/browser-use:
     devDependencies:
@@ -2086,6 +2098,9 @@ importers:
       '@cortex/tool-workflow':
         specifier: workspace:*
         version: link:../../workflow/tool-workflow
+      '@cortex/tool-working-directory':
+        specifier: workspace:*
+        version: link:../../session/tool-working-directory
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
@@ -2104,6 +2119,9 @@ importers:
       '@cortex/workflow-ptc':
         specifier: workspace:*
         version: link:../../workflow/workflow-ptc
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
     devDependencies:
       '@cortex/cordis':
         specifier: workspace:~
@@ -2157,6 +2175,9 @@ importers:
       '@cortex/session-query':
         specifier: workspace:*
         version: link:../../session-query/session-query
+      '@cortex/subagent':
+        specifier: workspace:*
+        version: link:../../subagent/subagent
 
   packages/bundle/sdk-app:
     dependencies:
@@ -2200,6 +2221,9 @@ importers:
       '@cortex/credentials-local':
         specifier: workspace:*
         version: link:../../credentials/credentials-local
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
       '@cortex/invariants':
         specifier: workspace:*
         version: link:../../runtime-diagnostics/invariants
@@ -2263,9 +2287,15 @@ importers:
       '@cortex/tool-pwsh-persistent':
         specifier: workspace:*
         version: link:../../shell/tool-pwsh-persistent
+      '@cortex/tool-working-directory':
+        specifier: workspace:*
+        version: link:../../session/tool-working-directory
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
     devDependencies:
       '@cortex/cordis':
         specifier: workspace:~
@@ -6267,6 +6297,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/context/file-reference:
     devDependencies:
@@ -6292,12 +6325,21 @@ importers:
       '@cortex/file-reference':
         specifier: workspace:*
         version: link:../file-reference
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@cortex/session-projection':
+        specifier: workspace:*
+        version: link:../../session/session-projection
       '@cortex/system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/context/session-reference:
     dependencies:
@@ -6682,6 +6724,9 @@ importers:
       '@cortex/agent':
         specifier: workspace:*
         version: link:../agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
@@ -6715,6 +6760,9 @@ importers:
       '@cortex/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/credentials/authorization:
     devDependencies:
@@ -6829,6 +6877,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/deliverables/workspace-changes:
     dependencies:
@@ -7736,6 +7787,64 @@ importers:
         specifier: workspace:*
         version: link:../../core/tools
 
+  packages/experimental/tool-worktree:
+    dependencies:
+      '@cortex/experimental-worktree':
+        specifier: workspace:*
+        version: link:../worktree
+    devDependencies:
+      '@cortex/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@cortex/agent-loop':
+        specifier: workspace:*
+        version: link:../../core/agent-loop
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
+      '@cortex/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@cortex/cordis-plugin-include':
+        specifier: workspace:~
+        version: link:../../../vendor/include
+      '@cortex/cordis-plugin-loader':
+        specifier: workspace:~
+        version: link:../../../vendor/loader
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@cortex/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@cortex/sandbox':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox
+      '@cortex/sandbox-local':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox-local
+      '@cortex/sandbox-policy':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox-policy
+      '@cortex/session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@cortex/session-projection':
+        specifier: workspace:*
+        version: link:../../session/session-projection
+      '@cortex/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+      '@cortex/system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@cortex/tools':
+        specifier: workspace:*
+        version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
+
   packages/experimental/voice-input-bundle:
     dependencies:
       '@cortex/experimental-api-speech-to-text':
@@ -7885,6 +7994,58 @@ importers:
       chokidar:
         specifier: ^5.0.0
         version: 5.0.0
+
+  packages/experimental/worktree:
+    dependencies:
+      '@cortex/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      '@cortex/timeout':
+        specifier: workspace:*
+        version: link:../../util/timeout
+    devDependencies:
+      '@cortex/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
+      '@cortex/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@cortex/fs':
+        specifier: workspace:*
+        version: link:../../fs/fs
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@cortex/sandbox':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox
+      '@cortex/sandbox-local':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox-local
+      '@cortex/sandbox-policy':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox-policy
+      '@cortex/session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@cortex/session-projection':
+        specifier: workspace:*
+        version: link:../../session/session-projection
+      '@cortex/subprocess':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess
+      '@cortex/subprocess-local':
+        specifier: workspace:*
+        version: link:../../subprocess/subprocess-local
+      '@cortex/system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/extensions/cordis-client-runner:
     devDependencies:
@@ -8386,6 +8547,9 @@ importers:
       '@cortex/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/fs/tool-fs-search:
     dependencies:
@@ -8399,6 +8563,9 @@ importers:
       '@cortex/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
@@ -8432,6 +8599,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/fs/tool-str-replace-editor:
     dependencies:
@@ -8761,6 +8931,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/hooks/hooks-codex:
     dependencies:
@@ -8807,6 +8980,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/host/directory-picker:
     devDependencies:
@@ -9300,8 +9476,8 @@ importers:
         specifier: workspace:*
         version: link:../../util/values
       '@earendil-works/pi-ai':
-        specifier: ^0.87.1
-        version: 0.87.1(patch_hash=b9bcce474fb2ac44633dff0fa722816a5bff5451b4575d5874035ea14ba70a4f)(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)(ws@8.21.0)(zod@4.4.3)
+        specifier: 1.0.2
+        version: 1.0.2(patch_hash=1cc211bc358d30cb58bd975f39c03e296f8a277c3de845514d12f9ae77ebab5f)(@aws-sdk/credential-provider-node@3.972.84)(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(@smithy/signature-v4@5.7.4)(supports-color@9.4.0)(undici@8.10.0)(ws@8.21.0)(zod@4.4.3)
     devDependencies:
       '@cortex/attachment':
         specifier: workspace:*
@@ -9496,6 +9672,9 @@ importers:
       '@cortex/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
@@ -9529,6 +9708,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/mcp/mcp-client:
     dependencies:
@@ -10135,6 +10317,9 @@ importers:
       '@cortex/subagent':
         specifier: workspace:*
         version: link:../../subagent/subagent
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/session-query/session-log-export:
     dependencies:
@@ -10708,6 +10893,9 @@ importers:
       '@cortex/session':
         specifier: workspace:*
         version: link:../../core/session
+      '@cortex/session-format-catalog':
+        specifier: workspace:*
+        version: link:../session-format-catalog
       '@cortex/session-projection':
         specifier: workspace:*
         version: link:../session-projection
@@ -10767,6 +10955,88 @@ importers:
       '@cortex/session-projection':
         specifier: workspace:*
         version: link:../session-projection
+
+  packages/session/tool-working-directory:
+    devDependencies:
+      '@cortex/agent-loop':
+        specifier: workspace:*
+        version: link:../../core/agent-loop
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
+      '@cortex/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@cortex/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@cortex/session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@cortex/session-projection':
+        specifier: workspace:*
+        version: link:../session-projection
+      '@cortex/system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@cortex/tools':
+        specifier: workspace:*
+        version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../working-directory
+
+  packages/session/working-directory:
+    dependencies:
+      '@cortex/schemastery':
+        specifier: link:../../../vendor/schemastery
+        version: link:../../../vendor/schemastery
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@cortex/agent':
+        specifier: workspace:*
+        version: link:../../core/agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
+      '@cortex/cordis':
+        specifier: workspace:~
+        version: link:../../../vendor/cordis
+      '@cortex/fs':
+        specifier: workspace:*
+        version: link:../../fs/fs
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
+      '@cortex/llm':
+        specifier: workspace:*
+        version: link:../../llm/llm
+      '@cortex/sandbox-policy':
+        specifier: workspace:*
+        version: link:../../sandbox/sandbox-policy
+      '@cortex/session':
+        specifier: workspace:*
+        version: link:../../core/session
+      '@cortex/session-projection':
+        specifier: workspace:*
+        version: link:../session-projection
+      '@cortex/system-prompt':
+        specifier: workspace:*
+        version: link:../../core/system-prompt
+      '@cortex/tool-working-directory':
+        specifier: workspace:*
+        version: link:../tool-working-directory
+      '@cortex/tools':
+        specifier: workspace:*
+        version: link:../../core/tools
+      '@cortex/user-approval':
+        specifier: workspace:*
+        version: link:../../interaction/user-approval
 
   packages/settings/settings:
     dependencies:
@@ -11021,6 +11291,9 @@ importers:
       '@cortex/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/shell/tool-bash-persistent:
     dependencies:
@@ -11079,6 +11352,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/shell/tool-pwsh:
     dependencies:
@@ -11101,6 +11377,9 @@ importers:
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
       '@cortex/jobs':
         specifier: workspace:*
         version: link:../../jobs/jobs
@@ -11146,6 +11425,9 @@ importers:
       '@cortex/user-approval':
         specifier: workspace:*
         version: link:../../interaction/user-approval
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/shell/tool-pwsh-persistent:
     dependencies:
@@ -11207,6 +11489,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/skill/skill:
     dependencies:
@@ -11310,6 +11595,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/skill/tool-workspace-dependencies:
     dependencies:
@@ -11657,6 +11945,12 @@ importers:
       '@cortex/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@cortex/agent-loop':
+        specifier: workspace:*
+        version: link:../../core/agent-loop
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
       '@cortex/agent-preset-registry':
         specifier: workspace:*
         version: link:../../preset/agent-preset-registry
@@ -11666,6 +11960,15 @@ importers:
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
+      '@cortex/cordis-plugin-include':
+        specifier: workspace:~
+        version: link:../../../vendor/include
+      '@cortex/cordis-plugin-loader':
+        specifier: workspace:~
+        version: link:../../../vendor/loader
+      '@cortex/fs-sandbox':
+        specifier: workspace:*
+        version: link:../../fs/fs-sandbox
       '@cortex/invariants':
         specifier: workspace:*
         version: link:../../runtime-diagnostics/invariants
@@ -11699,6 +12002,9 @@ importers:
       '@cortex/session-persistence':
         specifier: workspace:*
         version: link:../../session/session-persistence
+      '@cortex/session-persistence-jsonl':
+        specifier: workspace:*
+        version: link:../../session/session-persistence-jsonl
       '@cortex/session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
@@ -11717,6 +12023,9 @@ importers:
       '@cortex/system-prompt':
         specifier: workspace:*
         version: link:../../core/system-prompt
+      '@cortex/tool-fs':
+        specifier: workspace:*
+        version: link:../../fs/tool-fs
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
@@ -11729,6 +12038,9 @@ importers:
       '@cortex/util-time':
         specifier: workspace:*
         version: link:../../util/time
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
       '@cortex/workspace':
         specifier: workspace:*
         version: link:../../workspace/workspace
@@ -11795,7 +12107,7 @@ importers:
     dependencies:
       '@anthropic-ai/claude-agent-sdk':
         specifier: 0.3.263
-        version: 0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)
+        version: 0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)
       '@anthropic-ai/sdk':
         specifier: 0.93.0
         version: 0.93.0(zod@4.4.3)
@@ -11806,8 +12118,8 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
       '@modelcontextprotocol/sdk':
-        specifier: ^1.29.0
-        version: 1.29.0(supports-color@9.4.0)(zod@4.4.3)
+        specifier: ^1.31.0
+        version: 1.32.1(supports-color@9.4.0)(zod@4.4.3)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -11815,6 +12127,9 @@ importers:
       '@cortex/agent':
         specifier: workspace:*
         version: link:../../core/agent
+      '@cortex/agent-loop-testkit':
+        specifier: workspace:*
+        version: link:../../test-support/agent-loop-testkit
       '@cortex/app-boot':
         specifier: workspace:*
         version: link:../../boot/app-boot
@@ -12031,73 +12346,9 @@ importers:
       '@cortex/subagent':
         specifier: workspace:*
         version: link:../subagent
-      '@cortex/subagent-in-process-driver':
-        specifier: workspace:*
-        version: link:../subagent-in-process-driver
       '@cortex/subagent-spawn-in-process':
         specifier: workspace:*
         version: link:../subagent-spawn-in-process
-
-  packages/subagent/subagent-in-process-driver:
-    dependencies:
-      '@cortex/brand':
-        specifier: workspace:*
-        version: link:../../util/brand
-    devDependencies:
-      '@cortex/agent':
-        specifier: workspace:*
-        version: link:../../core/agent
-      '@cortex/agent-loop':
-        specifier: workspace:*
-        version: link:../../core/agent-loop
-      '@cortex/agent-loop-testkit':
-        specifier: workspace:*
-        version: link:../../test-support/agent-loop-testkit
-      '@cortex/agent-preset-registry':
-        specifier: workspace:*
-        version: link:../../preset/agent-preset-registry
-      '@cortex/cordis':
-        specifier: workspace:~
-        version: link:../../../vendor/cordis
-      '@cortex/cordis-plugin-include':
-        specifier: workspace:~
-        version: link:../../../vendor/include
-      '@cortex/cordis-plugin-loader':
-        specifier: workspace:~
-        version: link:../../../vendor/loader
-      '@cortex/fs-sandbox':
-        specifier: workspace:*
-        version: link:../../fs/fs-sandbox
-      '@cortex/invariants':
-        specifier: workspace:*
-        version: link:../../runtime-diagnostics/invariants
-      '@cortex/llm':
-        specifier: workspace:*
-        version: link:../../llm/llm
-      '@cortex/sandbox-policy':
-        specifier: workspace:*
-        version: link:../../sandbox/sandbox-policy
-      '@cortex/session':
-        specifier: workspace:*
-        version: link:../../core/session
-      '@cortex/session-projection':
-        specifier: workspace:*
-        version: link:../../session/session-projection
-      '@cortex/subagent':
-        specifier: workspace:*
-        version: link:../subagent
-      '@cortex/system-prompt':
-        specifier: workspace:*
-        version: link:../../core/system-prompt
-      '@cortex/tool-fs':
-        specifier: workspace:*
-        version: link:../../fs/tool-fs
-      '@cortex/tools':
-        specifier: workspace:*
-        version: link:../../core/tools
-      '@cortex/user-approval':
-        specifier: workspace:*
-        version: link:../../interaction/user-approval
 
   packages/subagent/subagent-spawn-in-process:
     dependencies:
@@ -12132,15 +12383,15 @@ importers:
       '@cortex/session':
         specifier: workspace:*
         version: link:../../core/session
+      '@cortex/session-persistence-jsonl':
+        specifier: workspace:*
+        version: link:../../session/session-persistence-jsonl
       '@cortex/session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
       '@cortex/subagent':
         specifier: workspace:*
         version: link:../subagent
-      '@cortex/subagent-in-process-driver':
-        specifier: workspace:*
-        version: link:../subagent-in-process-driver
       '@cortex/subprocess-local':
         specifier: workspace:*
         version: link:../../subprocess/subprocess-local
@@ -12291,6 +12542,9 @@ importers:
         specifier: 1.2.0-beta.15
         version: 1.2.0-beta.15(patch_hash=f742cddfcdc822ef86009a571726ffd4da2f32028c11391376c45b7c1293c366)
     devDependencies:
+      '@cortex/app-boot':
+        specifier: workspace:*
+        version: link:../../boot/app-boot
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
@@ -12380,6 +12634,9 @@ importers:
       '@cortex/terminal':
         specifier: workspace:*
         version: link:../terminal
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/terminal/tool-terminal:
     dependencies:
@@ -12444,6 +12701,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/test-support/agent-loop-testkit:
     devDependencies:
@@ -12456,6 +12716,9 @@ importers:
       '@cortex/cordis':
         specifier: workspace:~
         version: link:../../../vendor/cordis
+      '@cortex/fs-local':
+        specifier: workspace:*
+        version: link:../../fs/fs-local
       '@cortex/llm':
         specifier: workspace:*
         version: link:../../llm/llm
@@ -12471,6 +12734,9 @@ importers:
       '@cortex/tools':
         specifier: workspace:*
         version: link:../../core/tools
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/test-support/client-runtime:
     dependencies:
@@ -13065,15 +13331,15 @@ importers:
       '@cortex/session':
         specifier: workspace:*
         version: link:../../core/session
+      '@cortex/session-persistence-jsonl':
+        specifier: workspace:*
+        version: link:../../session/session-persistence-jsonl
       '@cortex/session-projection':
         specifier: workspace:*
         version: link:../../session/session-projection
       '@cortex/subagent':
         specifier: workspace:*
         version: link:../../subagent/subagent
-      '@cortex/subagent-in-process-driver':
-        specifier: workspace:*
-        version: link:../../subagent/subagent-in-process-driver
       '@cortex/subagent-spawn-in-process':
         specifier: workspace:*
         version: link:../../subagent/subagent-spawn-in-process
@@ -13247,6 +13513,9 @@ importers:
       '@cortex/workflow':
         specifier: workspace:*
         version: link:../workflow
+      '@cortex/working-directory':
+        specifier: workspace:*
+        version: link:../../session/working-directory
 
   packages/workspace/workspace:
     dependencies:
@@ -13569,9 +13838,6 @@ importers:
       '@cortex/subagent-fork-in-process':
         specifier: workspace:*
         version: link:../../packages/subagent/subagent-fork-in-process
-      '@cortex/subagent-in-process-driver':
-        specifier: workspace:*
-        version: link:../../packages/subagent/subagent-in-process-driver
       '@cortex/subagent-spawn-in-process':
         specifier: workspace:*
         version: link:../../packages/subagent/subagent-spawn-in-process
@@ -13869,8 +14135,8 @@ packages:
       '@modelcontextprotocol/sdk': ^1.29.0
       zod: ^4.0.0
 
-  '@anthropic-ai/sdk@0.124.0':
-    resolution: {integrity: sha512-cN5O8i9UVxHeOQAzj/XjshWXG8KiibJDw9OGpH2Z/eR3n/RBxdoLxDJOcfqAJWvjaMDFfHTBADU04hWRJVkDyA==}
+  '@anthropic-ai/sdk@0.129.0':
+    resolution: {integrity: sha512-MH7LB20kNpGLUpPTe2OG5XvL/KhX8HUO9XyBaFjgFk6TLS4Xjt0VPIuMKywe7POKKPslX+QxSlVok9e+8kG5Nw==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -14181,13 +14447,13 @@ packages:
     engines: {node: '>=22.19.0'}
     hasBin: true
 
-  '@earendil-works/pi-ai@0.87.1':
-    resolution: {integrity: sha512-X/3PfQBnnoeVdO9Cv8zHghUMglzlgNZYGNzoPnbRoGnHl3Rw3TlA2UKSUB7BRHUOxMryHXYa8dnjWZlbRheDZA==}
+  '@earendil-works/pi-ai@1.0.2':
+    resolution: {integrity: sha512-JP59xGlSAQ/HhQ6EHN5qmneBlWfDyu6FPPryAvAaSo8A38ubAsEpS9YisCM5Jbbns0srrDffLZonE0OXorHI5A==}
     engines: {node: '>=22.19.0'}
     hasBin: true
 
-  '@earendil-works/pi-telemetry@0.87.1':
-    resolution: {integrity: sha512-MC6TRQH5lgMXpcN+Vku2WMI2T8BsiUPzMQHGo81uqFZD3/9O79WWJAysEDGuzduP6R4tvtgwMLwmqIxynM10JQ==}
+  '@earendil-works/pi-telemetry@1.1.0':
+    resolution: {integrity: sha512-8gAK05/2pPozZZz6hCLOi8x2vsqzvsmO9gG92kbvuvTPm0qMHaFlaXX98ndXsrOi5pmzha7vNLguuG4+0Rgxjw==}
     engines: {node: '>=22.19.0'}
 
   '@electron-internal/extract-zip@1.0.5':
@@ -15061,6 +15327,16 @@ packages:
 
   '@modelcontextprotocol/sdk@1.29.0':
     resolution: {integrity: sha512-zo37mZA9hJWpULgkRpowewez1y6ML5GsXJPY8FI0tBBCd77HEvza4jDqRKOXgHNn867PVGCyTdzqpz0izu5ZjQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cfworker/json-schema': ^4.1.1
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      '@cfworker/json-schema':
+        optional: true
+
+  '@modelcontextprotocol/sdk@1.32.1':
+    resolution: {integrity: sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -19049,12 +19325,25 @@ packages:
     resolution: {integrity: sha512-++Zlftm0kVLPmzC06t6epuWmcRMDbI4z5P3NNX979WA/k23+NtSOynEGzsVfZwguKw2mi5umVgnBlJQMwRz4Pg==}
     engines: {node: '>=20'}
 
-  openai@6.40.0:
-    resolution: {integrity: sha512-MWtTjd/gQt4jpbji61NTgFWJLoY/PdRJ6wG9/ZDRMYNMlBKrCrSlkLI+KgHP1vR1qT6LKSAyAqIxno6lcK9JiA==}
+  openai@7.19.0:
+    resolution: {integrity: sha512-MX2s3u2L5racTO0CC/SWpCOasJQBCJrqLKXK+l82cAhdeF8mPMBEe/gxMm0ZFa2xpKpOFLRjxv5afYEZbBXmbQ==}
+    engines: {node: '>=22.0.0'}
     peerDependencies:
-      ws: ^8.18.0
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      undici: '>=5 <9'
+      ws: ^8.21.0
       zod: ^3.25 || ^4.0
     peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      undici:
+        optional: true
       ws:
         optional: true
       zod:
@@ -20561,10 +20850,10 @@ snapshots:
   '@anthropic-ai/claude-agent-sdk-win32-x64@0.3.263':
     optional: true
 
-  '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)':
+  '@anthropic-ai/claude-agent-sdk@0.3.263(@anthropic-ai/sdk@0.93.0(zod@4.4.3))(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(zod@4.4.3)':
     dependencies:
       '@anthropic-ai/sdk': 0.93.0(zod@4.4.3)
-      '@modelcontextprotocol/sdk': 1.29.0(supports-color@9.4.0)(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.32.1(supports-color@9.4.0)(zod@4.4.3)
       zod: 4.4.3
     optionalDependencies:
       '@anthropic-ai/claude-agent-sdk-darwin-arm64': 0.3.263
@@ -20576,7 +20865,7 @@ snapshots:
       '@anthropic-ai/claude-agent-sdk-win32-arm64': 0.3.263
       '@anthropic-ai/claude-agent-sdk-win32-x64': 0.3.263
 
-  '@anthropic-ai/sdk@0.124.0(zod@4.4.3)':
+  '@anthropic-ai/sdk@0.129.0(zod@4.4.3)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
@@ -21009,28 +21298,32 @@ snapshots:
       '@deepseek-ai/libreoffice-kit-win32-arm64': 0.1.1
       '@deepseek-ai/libreoffice-kit-win32-x64': 0.1.1
 
-  '@earendil-works/pi-ai@0.87.1(patch_hash=b9bcce474fb2ac44633dff0fa722816a5bff5451b4575d5874035ea14ba70a4f)(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)(ws@8.21.0)(zod@4.4.3)':
+  '@earendil-works/pi-ai@1.0.2(patch_hash=1cc211bc358d30cb58bd975f39c03e296f8a277c3de845514d12f9ae77ebab5f)(@aws-sdk/credential-provider-node@3.972.84)(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(@smithy/signature-v4@5.7.4)(supports-color@9.4.0)(undici@8.10.0)(ws@8.21.0)(zod@4.4.3)':
     dependencies:
-      '@anthropic-ai/sdk': 0.124.0(zod@4.4.3)
+      '@anthropic-ai/sdk': 0.129.0(zod@4.4.3)
       '@aws-sdk/client-bedrock-runtime': 3.1127.0
-      '@earendil-works/pi-telemetry': 0.87.1
-      '@google/genai': 2.21.0(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)
+      '@earendil-works/pi-telemetry': 1.1.0
+      '@google/genai': 2.21.0(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)
       '@smithy/node-http-handler': 4.12.1
       http-proxy-agent: 9.1.0(supports-color@9.4.0)
       https-proxy-agent: 9.1.0(supports-color@9.4.0)
-      openai: 6.40.0(ws@8.21.0)(zod@4.4.3)
+      openai: 7.19.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(undici@8.10.0)(ws@8.21.0)(zod@4.4.3)
       partial-json: 0.1.7
       typebox: 1.3.27
     transitivePeerDependencies:
+      - '@aws-sdk/credential-provider-node'
       - '@modelcontextprotocol/sdk'
+      - '@smithy/hash-node'
+      - '@smithy/signature-v4'
       - bufferutil
       - kerberos
       - supports-color
+      - undici
       - utf-8-validate
       - ws
       - zod
 
-  '@earendil-works/pi-telemetry@0.87.1': {}
+  '@earendil-works/pi-telemetry@1.1.0': {}
 
   '@electron-internal/extract-zip@1.0.5': {}
 
@@ -21401,14 +21694,14 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
       regenerator-runtime: 0.14.1
 
-  '@google/genai@2.21.0(@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)':
+  '@google/genai@2.21.0(@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3))(supports-color@9.4.0)':
     dependencies:
       google-auth-library: 10.7.0(supports-color@9.4.0)
       p-retry: 4.6.2
       protobufjs: 7.6.4
       ws: 8.21.0
     optionalDependencies:
-      '@modelcontextprotocol/sdk': 1.29.0(supports-color@9.4.0)(zod@4.4.3)
+      '@modelcontextprotocol/sdk': 1.32.1(supports-color@9.4.0)(zod@4.4.3)
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -21773,6 +22066,28 @@ snapshots:
       hono: 4.12.29
 
   '@modelcontextprotocol/sdk@1.29.0(supports-color@9.4.0)(zod@4.4.3)':
+    dependencies:
+      '@hono/node-server': 1.19.14(hono@4.12.29)
+      ajv: 8.20.0
+      ajv-formats: 3.0.1(ajv@8.20.0)
+      content-type: 1.0.5
+      cors: 2.8.6
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.1.0
+      express: 5.2.1(supports-color@9.4.0)
+      express-rate-limit: 8.5.2(express@5.2.1(supports-color@9.4.0))
+      hono: 4.12.29
+      jose: 6.2.3
+      json-schema-typed: 8.0.2
+      pkce-challenge: 5.0.1
+      raw-body: 3.0.2
+      zod: 4.4.3
+      zod-to-json-schema: 3.25.2(zod@4.4.3)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@modelcontextprotocol/sdk@1.32.1(supports-color@9.4.0)(zod@4.4.3)':
     dependencies:
       '@hono/node-server': 1.19.14(hono@4.12.29)
       ajv: 8.20.0
@@ -25930,8 +26245,11 @@ snapshots:
       powershell-utils: 0.2.1
       wsl-utils: 1.0.0
 
-  openai@6.40.0(ws@8.21.0)(zod@4.4.3):
+  openai@7.19.0(@aws-sdk/credential-provider-node@3.972.84)(@smithy/signature-v4@5.7.4)(undici@8.10.0)(ws@8.21.0)(zod@4.4.3):
     optionalDependencies:
+      '@aws-sdk/credential-provider-node': 3.972.84
+      '@smithy/signature-v4': 5.7.4
+      undici: 8.10.0
       ws: 8.21.0
       zod: 4.4.3
 

@@ -30,7 +30,6 @@
     "@cortex/agent": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/subagent": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/cordis": "workspace:~"
   },
   "dependencies": {
@@ -45,7 +44,6 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/subagent": "workspace:*",
-    "@cortex/subagent-in-process-driver": "workspace:*",
     "@cortex/subagent-spawn-in-process": "workspace:*",
     "@cortex/cordis": "workspace:~",
     "@cortex/session-projection": "workspace:*"

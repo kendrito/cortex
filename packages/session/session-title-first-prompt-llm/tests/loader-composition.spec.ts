@@ -11,6 +11,7 @@ import type { GenerateOptions, StreamChunk } from '@cortex/llm'
 import SessionStore, { SessionId } from '@cortex/session'
 import SessionProjectionRegistry from '@cortex/session-projection'
 import SessionTitleService from '@cortex/session-title'
+import { sessionFormatCatalog } from '@cortex/session-format-catalog'
 import * as providerPlugin from '@cortex/session-title-first-prompt-llm'
 
 let root: string | undefined
@@ -118,5 +119,22 @@ describe('session-title Loader composition', () => {
         model: { provider: 'title-route', model: 'title-model' },
       },
     })
+
+    // Replay the real producer's physical records through the same current
+    // reader used after restart; a fixture-only title source can drift.
+    const restore = sessionFormatCatalog.createRestore(
+      sessionFormatCatalog.encodeCurrentHeader({
+        ...session.header,
+        isSeeded: false,
+        delegationDepth: 0,
+      }, 0),
+      { recovery: 'strict', validation: 'current' },
+    )
+    const events = session.snapshotEvents()
+    for (const event of events) {
+      const physicalRow: unknown = JSON.parse(JSON.stringify(event))
+      restore.decodeRow(physicalRow)
+    }
+    expect(restore.finish().events).toEqual(events)
   })
 })

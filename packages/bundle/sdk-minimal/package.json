@@ -59,7 +59,10 @@
     "@cortex/tool-pwsh-persistent": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/llm-pi-ai": "workspace:*",
-    "@cortex/credentials-local": "workspace:*"
+    "@cortex/credentials-local": "workspace:*",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/tool-working-directory": "workspace:*",
+    "@cortex/fs-local": "workspace:*"
   },
   "peerDependencies": {
     "@cortex/cordis": "workspace:~"

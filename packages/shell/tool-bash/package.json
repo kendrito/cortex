@@ -37,7 +37,8 @@
     "@cortex/jobs": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/user-approval": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/schemastery": "workspace:~"
@@ -62,6 +63,7 @@
     "@cortex/tools": "workspace:*",
     "@cortex/user-approval": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

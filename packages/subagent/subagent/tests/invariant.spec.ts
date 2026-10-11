@@ -11,12 +11,14 @@ import type {
 import * as SubagentInvariant from '@cortex/subagent/invariant'
 import InvariantRegistry from '@cortex/invariants'
 import SessionProjectionRegistry from '@cortex/session-projection'
+import { mountWorkingDirectoryFixture } from './working-directory-fixture.ts'
 
 async function setup(): Promise<Context> {
   const ctx = new Context()
   // The registry is a required injection of SubagentRuntime (its projection
   // units register in the constructor).
   await ctx.plugin(SessionProjectionRegistry)
+  await mountWorkingDirectoryFixture(ctx)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(InvariantRegistry)
   await ctx.plugin(SubagentInvariant)

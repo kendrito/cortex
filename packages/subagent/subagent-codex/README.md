@@ -38,6 +38,8 @@ cortex --profile <name>
 
 Removing the package withdraws the provider and its private runtime closure on the next Profile start. Installation controls Host availability, not model permission: the model can only reach the provider through a delegation tool row you compose.
 
+The runtime manager runs each accepted external activation independently, closes it before returning its result, and sends a parent settlement notice when the caller selects parent delivery. The provider bundle remains independent of the model-facing tool configuration.
+
 ### Configuration
 
 | Field | Default | Meaning |
@@ -58,7 +60,7 @@ The generated [configuration catalog](../../../docs/config-catalog.md#deepseek-a
 
 ### Cortex privacy policy
 
-Every child starts with command-line overrides disabling built-in web search (including cached search and page fetching through that tool), analytics, feedback submission, OpenTelemetry logs/traces/metrics, prompt export, startup update checks, and response storage. These overrides take precedence over user and project Codex configuration and cannot be changed by the delegation prompt or Profile `env`. Native authentication and configured model routing remain available. The provider does not impose a network firewall on shell commands or user-installed MCP tools; those remain subject to the native sandbox and the user's explicit configuration.
+Every child starts with command-line overrides disabling built-in web search (including cached search and page fetching through that tool), native Codex plugins (including curated repository synchronization, marketplace upgrades, and featured-plugin downloads), analytics, feedback submission, OpenTelemetry logs/traces/metrics, prompt export, startup update checks, and response storage. These overrides take precedence over user and project Codex configuration and cannot be changed by the delegation prompt or Profile `env`. Cortex's own plugins, native authentication, and configured model routing remain available. The provider does not impose a network firewall on shell commands or user-installed MCP tools; those remain subject to the native sandbox and the user's explicit configuration.
 
 The supported switches and precedence are documented in the [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) and [configuration basics](https://learn.chatgpt.com/docs/config-file/config-basic).
 
@@ -143,7 +145,7 @@ Read these pages when the package-level contract is not enough. They move from t
 
 #### What the model sees
 
-The Codex child receives the standalone text blocks as one turn in a fresh ephemeral thread. Its workspace is the parent Session cwd; the selected Provider instance fixes any configured model, environment, non-interactive approval policy, and sandbox mode, while an omitted model comes from native Codex configuration and the privacy restrictions below remain enforced. The executable version comes from the Bundle's pinned platform payload.
+The Codex child receives the standalone text blocks as one turn in a fresh ephemeral thread. Its workspace is the selected child working directory; the selected Provider instance fixes any configured model, environment, non-interactive approval policy, and sandbox mode, while an omitted model comes from native Codex configuration and the privacy restrictions below remain enforced. The executable version comes from the Bundle's pinned platform payload.
 
 #### Token effect
 
@@ -180,7 +182,7 @@ These limits define when this provider is a poor fit or needs special operationa
 - **The native platform payload is required at delegation time** — installs that omit optional dependencies, unsupported platforms, and missing or damaged payloads fail at the first run; there is no host-CLI fallback.
 - **Compatibility is pinned by development evidence** — upgrading from the verified 0.153.4 protocol baseline requires regenerating upstream schema evidence and rerunning handshake, answer-selection, approval, cancellation, keyless real-product, and credentialed DeepSeek nonce tests.
 - **No human approval path** — known unattended approval requests are denied and unknown server requests fail closed; the three Profile modes never create a CORTEX interaction channel or per-call allow policy.
-- **Assistant payload is final text only** — a failed run may additionally expose the separate safe diagnostic; reasoning, commentary, intermediate messages, tool traffic, usage, raw stderr, and workspace diffs remain outside the parent Session, while generic Job ids, notices, and status come from the shared job runtime.
+- **Assistant payload is final text only** — a failed run may additionally expose the separate safe diagnostic; reasoning, commentary, intermediate messages, tool traffic, usage, raw stderr, and workspace diffs remain outside the parent Session, while the activation manager owns task identity, terminal results, and settlement notices.
 - **No optional shared capabilities** — `agentOptions`, output schemas, child personas, tool filtering, and harness depth enforcement are rejected by the shared service for this provider.
 - **No wall-clock timeout or side-effect rollback** — the caller cancels long work, and files or external systems changed before cancellation are not restored.
 

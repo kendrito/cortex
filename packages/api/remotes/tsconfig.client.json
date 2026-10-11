@@ -101,9 +101,11 @@
     {
       "path": "../../document/office-to-pdf"
     },
-
     {
       "path": "../../credentials/deepseek-account"
+    },
+    {
+      "path": "../../skill/skill"
     }
   ]
 }

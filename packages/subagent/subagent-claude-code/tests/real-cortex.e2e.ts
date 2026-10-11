@@ -1,3 +1,5 @@
+import { mountWorkingDirectoryFixture } from '../../subagent/tests/working-directory-fixture.ts'
+import { startExternalActivation } from '../../subagent/tests/external-activation-helpers.ts'
 import { execFile } from 'node:child_process'
 import { randomUUID } from 'node:crypto'
 import {
@@ -12,8 +14,9 @@ import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
 import { Context } from '@cortex/cordis'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Agent } from '@cortex/agent'
+import { mountAgentLoopTestDependencies, mountAgentLoopTestHarness } from '@cortex/agent-loop-testkit'
 import SubagentRuntime from '@cortex/subagent'
+import { SessionId } from '@cortex/session'
 import type { SubprocessHandle } from '@cortex/subprocess'
 import LocalSubprocessRuntime from '@cortex/subprocess-local'
 import * as claudeCode from '../src/index.ts'
@@ -113,6 +116,9 @@ describe.skipIf(!process.env.CORTEX_API_KEY)(
       }
       const ctx = new Context()
       contexts.push(ctx)
+      await mountAgentLoopTestDependencies(ctx, { workingDirectory: true })
+      const harness = await mountAgentLoopTestHarness(ctx)
+      await mountWorkingDirectoryFixture(ctx)
       await ctx.plugin(SubagentRuntime)
       await ctx.plugin(LocalSubprocessRuntime)
       const handles: SubprocessHandle[] = []
@@ -133,11 +139,8 @@ describe.skipIf(!process.env.CORTEX_API_KEY)(
       expect(version.stdout.trim()).toBe('2.1.220 (Claude Code)')
 
       const nonce = `CORTEX_CLAUDE_CORTEX_${randomUUID()}`
-      const parent = {
-        id: 'cortex-e2e-parent',
-        session: { header: { cwd: workspace } },
-      } as unknown as Agent
-      const run = await ctx.subagents.start('claude-code', {
+      const parent = await harness.create(SessionId('cortex-e2e-parent'), {}, { cwd: workspace })
+      const run = await startExternalActivation(ctx, 'claude-code', {
         prompt: [{
           type: 'text',
           text: `Reply with exactly ${nonce} and nothing else. Do not use tools.`,

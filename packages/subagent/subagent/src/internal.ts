@@ -9,7 +9,7 @@ import type { ContentBlock, MessageId, MessageSource } from '@cortex/llm'
 import type { SessionId } from '@cortex/session'
 import type { ToolDefinition } from '@cortex/tools'
 import type SubagentRuntime from './index.ts'
-import type { SubagentDelivery } from './inbox.ts'
+import type { SubagentDelivery } from './control-types.ts'
 
 /** Process-stable identity carried only by the standard adjacent-Agent messaging tool. */
 export const adjacentAgentSendMessageTool = Symbol.for('cortex.subagent.adjacentAgentSendMessageTool')

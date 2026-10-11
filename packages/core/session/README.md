@@ -64,6 +64,10 @@ Saved logs retain the type-only records of removed integrations, including Atlas
 
 Session log positions use two numeric types. `SessionSeq` identifies an existing event or inclusive event watermark; `SessionLogOffset` identifies a gap, prefix length, or read boundary and may equal the event count. `SessionSeqCursor` adds the `-1` “no event yet” value, while `OptionalSessionSeq` uses `null` when absence is data. The constructors validate non-negative safe integers, and the brands disappear at runtime, so durable JSON and wire values remain ordinary numbers.
 
+### Write experimental plugin records
+
+`appendPluginRecord(session, type, data)` writes typed experimental plugin state as an `ignorable: true` log event in the `plugin:` namespace. Owners augment `PluginRecordMap`, validate restored payloads, and read records with `pluginRecordOf(event)`. Unknown records remain in the log but never enter model history; fork and resume retain them, while format migrations preserve them on a best-effort basis. Released model-facing facts belong in `SessionEventMap` instead. The experimental plugin record catalog lists these declarations separately from released persistence schemas.
+
 ### Fork a session
 
 `ctx.sessions.fork(source, boundary?, childSessionId?)` copies an exact inclusive event prefix (default: the last event) from a live source. `buildForkSeed` in `cortex-session/fork` places an inherited marker after the copied events, adds missing error tool results only for the open step, and closes that step and turn with a `forked` reason. Closed steps and turns remain unchanged, including historical missing results. The marker and closers belong to the child; `inheritedEventCount` counts only the copied prefix.

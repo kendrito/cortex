@@ -41,7 +41,8 @@
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/user-approval": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   },
   "devDependencies": {
     "@cortex/agent": "workspace:*",
@@ -61,6 +62,7 @@
     "@cortex/cordis": "workspace:~",
     "@cortex/session-projection": "workspace:*",
     "@cortex/scope": "workspace:*",
-    "@cortex/ptc-runtime": "workspace:*"
+    "@cortex/ptc-runtime": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

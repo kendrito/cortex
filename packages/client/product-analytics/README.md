@@ -9,3 +9,5 @@ No model input, token use, or KV-cache effect.
 ## Known Limitations and Deferred Work
 
 The declarations intentionally provide no runtime implementation.
+
+No runtime invariant companion is published because this package retains only compatibility types and owns no live service or state.

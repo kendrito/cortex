@@ -133,6 +133,16 @@ describe('Remote event Host source', () => {
       value: { event: 'schedule/changed', args: [] },
     })
 
+    // Catalog edits invalidate every connected client's slash menu without
+    // claiming that its selected preset or connection identity changed.
+    ctx.emit('skills/change')
+    await expect(first.next()).resolves.toEqual({
+      done: false, value: { event: 'skills/change', args: [] },
+    })
+    await expect(second.next()).resolves.toEqual({
+      done: false, value: { event: 'skills/change', args: [] },
+    })
+
     const firstDone = first.next()
     firstAbort.abort(new Error('first Client disconnected'))
     emitRaw(ctx, 'commands/change', [])

@@ -1,3 +1,4 @@
+import { provideWorkingDirectoryFixture } from '@cortex/agent-loop-testkit'
 import { chmod, mkdtemp, mkdir, rm, stat, symlink, utimes, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { tmpdir } from 'node:os'
@@ -69,6 +70,7 @@ const sk = (directory: string, candidateName: string): string => candidateScopeK
 
 const testToolSignal = new AbortController().signal
 const isolatedInboxCtx = new Context()
+provideWorkingDirectoryFixture(isolatedInboxCtx)
 await mountAgentLoopTestDependencies(isolatedInboxCtx)
 const isolatedAgentLoop = await mountAgentLoopTestHarness(isolatedInboxCtx)
 let nextStubSession = 1
@@ -211,6 +213,7 @@ class BlockingReadFileSystem extends RecordingFileSystem {
 }
 
 async function mountAgentInstructionsPlugin(ctx: Context, config: AgentInstructions.Config): Promise<Awaited<ReturnType<Context['plugin']>>> {
+  if (ctx.get('workingDirectory') === undefined) provideWorkingDirectoryFixture(ctx)
   if (ctx.get('sessionProjections') === undefined) await ctx.plugin(SessionProjectionRegistry)
   ctx.sessionProjections.register(turnBoundaryProjectionDefinition)
   return ctx.plugin(AgentInstructions, config)
@@ -1040,11 +1043,13 @@ describe('workspace context request injection', () => {
   it('requires an explicit maxBytes configuration', async () => {
     const ctx = new Context()
 
+    provideWorkingDirectoryFixture(ctx)
     await expect(mountAgentInstructionsPlugin(ctx, {} as AgentInstructions.Config)).rejects.toThrow(/maxBytes/)
   })
 
   it('mounts without requiring a filesystem provider', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
     } finally {
@@ -1053,11 +1058,12 @@ describe('workspace context request injection', () => {
   })
 
   it('requires projections without making the optional filesystem a static dependency', () => {
-    expect(AgentInstructions.inject).toEqual(['sessionProjections'])
+    expect(AgentInstructions.inject).toEqual(['sessionProjections', 'workingDirectory'])
   })
 
   it('rejects a file-touch projection when the turn boundary unit is absent', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     await ctx.plugin(SessionProjectionRegistry)
     await ctx.plugin(AgentInstructions, { maxBytes: 65536 })
     const exec = stubToolExecution({
@@ -1079,6 +1085,7 @@ describe('workspace context request injection', () => {
 
   it('does not inject baseline context when no filesystem provider is present', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
       const agent = await stubAgent('/virtual/repo')
@@ -1182,6 +1189,7 @@ describe('workspace context request injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -1271,7 +1279,9 @@ describe('workspace context request injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const originalCtx = new Context()
+    provideWorkingDirectoryFixture(originalCtx)
     const resumedCtx = new Context()
+    provideWorkingDirectoryFixture(resumedCtx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'agents rule')
@@ -1319,8 +1329,11 @@ describe('workspace context request injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const agentsCtx = new Context()
+    provideWorkingDirectoryFixture(agentsCtx)
     const claudeCtx = new Context()
+    provideWorkingDirectoryFixture(claudeCtx)
     const restoredCtx = new Context()
+    provideWorkingDirectoryFixture(restoredCtx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'agents rule')
@@ -1375,7 +1388,9 @@ describe('workspace context request injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const originalCtx = new Context()
+    provideWorkingDirectoryFixture(originalCtx)
     const resumedCtx = new Context()
+    provideWorkingDirectoryFixture(resumedCtx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'agents rule')
@@ -1514,7 +1529,9 @@ describe('workspace context request injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const originalCtx = new Context()
+    provideWorkingDirectoryFixture(originalCtx)
     const resumedCtx = new Context()
+    provideWorkingDirectoryFixture(resumedCtx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'repo rule')
@@ -2053,6 +2070,7 @@ describe('workspace context request injection', () => {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'node fs rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2075,6 +2093,7 @@ describe('workspace context request injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2099,6 +2118,7 @@ describe('workspace context request injection', () => {
     const cwd = join(root, 'pkg')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2122,6 +2142,7 @@ describe('workspace context request injection', () => {
     const root = resolve('/virtual/no-signal-repo')
     const home = resolve('/virtual/no-signal-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2141,6 +2162,7 @@ describe('workspace context request injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2164,6 +2186,7 @@ describe('workspace context request injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2189,6 +2212,7 @@ describe('workspace context request injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(BlockingReadFileSystem)
       const fs = ctx.fs as BlockingReadFileSystem
@@ -2223,6 +2247,7 @@ describe('workspace context request injection', () => {
       await write(join(home, 'AGENTS.md'), 'node global rule')
       await write(join(root, 'CLAUDE.md'), 'node claude rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2250,6 +2275,7 @@ describe('workspace context request injection', () => {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'node fs rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2273,6 +2299,7 @@ describe('workspace context request injection', () => {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'node fs rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2296,6 +2323,7 @@ describe('workspace context request injection', () => {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'AGENTS.md'), 'node fs rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2317,6 +2345,7 @@ describe('workspace context request injection', () => {
     const home = await tempRepo()
     try {
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.entries.set(join(root, '.git'), { type: 'directory' })
@@ -2342,6 +2371,7 @@ describe('workspace context request injection', () => {
     const home = await tempRepo()
     try {
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
       fs.throwOnStat.add(join(cwd, '.git'))
@@ -2397,6 +2427,7 @@ describe('workspace context request injection', () => {
       await write(join(root, 'AGENTS.md'), 'root schema default rule')
       await write(join(cwd, 'AGENTS.md'), 'child schema default rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(LocalFileSystem, { cwd: '/' })
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
       const agent = await stubAgent(cwd)
@@ -2418,6 +2449,7 @@ describe('workspace context request injection', () => {
       await write(join(root, 'AGENTS.md'), 'base rule')
       await write(join(root, 'AGENTS.local.md'), 'local rule')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       await ctx.plugin(LocalFileSystem, { cwd: '/' })
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
       const agent = await stubAgent(root)
@@ -2629,6 +2661,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'pkg/AGENTS.md'), 'nested rule survives an aborted tool batch')
@@ -2723,6 +2756,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -2807,6 +2841,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'pkg/AGENTS.md'), 'nested package rule')
@@ -2980,6 +3015,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
@@ -3018,6 +3054,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
@@ -3063,6 +3100,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
@@ -3214,6 +3252,7 @@ describe('dynamic nested workspace context injection', () => {
       const root = join(await tempRepo(), 'virtual-repo')
       const home = join(await tempRepo(), 'virtual-home')
       const ctx = new Context()
+      provideWorkingDirectoryFixture(ctx)
       try {
         await ctx.plugin(RecordingFileSystem)
         const fs = ctx.fs as RecordingFileSystem
@@ -3253,6 +3292,7 @@ describe('dynamic nested workspace context injection', () => {
           const warmCache: InstructionVersionCache = new WeakMap()
           warmCache.set(agent.session, new Map(loaded.versions))
           const options = {
+            cwd: root,
             authorityMessages,
             scopeMessages: [createUserMessage({
               content: [{ type: 'text', text: 'pending baseline duplicate' }],
@@ -3285,6 +3325,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -3309,6 +3350,7 @@ describe('dynamic nested workspace context injection', () => {
       const cache: InstructionVersionCache = new WeakMap()
       cache.set(agent.session, new Map(loaded.versions))
       const options = {
+        cwd: root,
         authorityMessages: [],
         scopeMessages: [],
         touchedPaths: [],
@@ -3330,6 +3372,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -3352,6 +3395,7 @@ describe('dynamic nested workspace context injection', () => {
       })
 
       const result = await reconcileInstructionContext(agent, resolved, new WeakMap(), fs, {
+        cwd: root,
         authorityMessages: [],
         scopeMessages: [],
         touchedPaths: [],
@@ -3370,6 +3414,7 @@ describe('dynamic nested workspace context injection', () => {
   it('loads one transition when user-global and project scopes resolve to the same file', async () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -3384,6 +3429,7 @@ describe('dynamic nested workspace context injection', () => {
       })
 
       const result = await reconcileInstructionContext(agent, resolved, new WeakMap(), fs, {
+        cwd: root,
         authorityMessages: [],
         scopeMessages: [],
         touchedPaths: [],
@@ -3600,6 +3646,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
@@ -3977,6 +4024,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       const nested = join(root, 'pkg/AGENTS.md')
       await ctx.plugin(SystemPrompt)
@@ -4114,6 +4162,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'pkg/AGENTS.md'), 'nested package rule')
@@ -4166,6 +4215,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await mkdir(join(root, '.git'), { recursive: true })
       await write(join(root, 'pkg/AGENTS.md'), 'nested package rule')
@@ -4287,6 +4337,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -4318,6 +4369,7 @@ describe('dynamic nested workspace context injection', () => {
 
   it('ignores failed, aborted, agentless, and non-file final results', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
@@ -4367,6 +4419,7 @@ describe('dynamic nested workspace context injection', () => {
 
   it('warns when an asynchronous file-result projection fails', { timeout: 20_000 }, async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       await mountAgentInstructionsPlugin(ctx, { maxBytes: 65536 })
@@ -4425,6 +4478,7 @@ describe('dynamic nested workspace context injection', () => {
     const root = join(await tempRepo(), 'virtual-repo')
     const home = join(await tempRepo(), 'virtual-home')
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(SystemPrompt)
       await ctx.plugin(ToolRuntime)
@@ -4552,6 +4606,7 @@ describe('workspace context inbox synchronization', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -4627,6 +4682,7 @@ describe('workspace context inbox synchronization', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem
@@ -4667,6 +4723,7 @@ describe('workspace context inbox synchronization', () => {
     const root = await tempRepo()
     const home = await tempRepo()
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     try {
       await ctx.plugin(RecordingFileSystem)
       const fs = ctx.fs as RecordingFileSystem

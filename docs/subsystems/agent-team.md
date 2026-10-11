@@ -28,7 +28,7 @@ Every member starts in `provisioning` and reaches exactly one terminal roster ph
 The Lead Session first stores the complete queued message. A target receipt is acknowledged only after its pending inbox item or recorded user message is durable, leaving queued-minus-delivered as the recovery mailbox.
 
 ```ts type-equiv
-/** One peer message retained until its target Session records it. */
+/** One peer message recorded by the historical Team mailbox. */
 interface TeamMessageSnapshot {
   readonly id: TeamMessageId
   readonly senderId: SessionId
@@ -43,7 +43,7 @@ Every message attempts Steer delivery. A running target receives it at the neare
 The target Session keeps message identity and sender attribution on both the pending inbox item and the eventual user message. Folding that source across inbox and history is the target-side de-duplication key; the model-visible framing repeats the id and sender.
 
 ```ts type-equiv
-/** Source retained by the target Session for durable mailbox de-duplication. */
+/** Source recorded by a target Session for one historical Team mailbox delivery. */
 interface TeamMessageSource {
   readonly kind: 'team-message'
   readonly teamId: TeamId
@@ -162,10 +162,10 @@ listMembers(agent: Agent): TeamMemberView[]
 async spawnTeammate(caller: Agent, request: SpawnTeammateRequest): Promise<SpawnTeammateResult>
 
 /**
- * Queue one durable peer message, then attempt immediate delivery.
+ * Steer one peer message into the target inbox or reject the attempt.
  * @param caller - exact live sending Team member.
- * @param request - target name, content, and pre-queue cancellation.
- * @returns durable message identity and immediate-delivery observation.
+ * @param request - target name, content, and cancellation before acceptance.
+ * @returns accepted inbox identity; acceptance follows normal Agent persistence and does not await model processing.
  */
 async sendMessage(caller: Agent, request: SendTeamMessageRequest): Promise<SendTeamMessageResult>
 

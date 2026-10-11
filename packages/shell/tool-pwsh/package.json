@@ -37,7 +37,8 @@
     "@cortex/shell-env": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/user-approval": "workspace:*"
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/schemastery": "workspace:~"
@@ -62,6 +63,8 @@
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tool-jobs": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/user-approval": "workspace:*"
+    "@cortex/user-approval": "workspace:*",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/fs-local": "workspace:*"
   }
 }

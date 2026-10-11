@@ -175,6 +175,17 @@ describe('mandatory V4 dependent event restoration', () => {
     }
   })
 
+  it.each(['dsh-session-title-llm', 'cortex-session-title-llm'])('restores persisted title source %s without rewriting it', (kind) => {
+    const requestTitle = row('session/title-llm-request', { messageSeqs: [0], messages: [user(kind)] })
+    const { artifact } = reopen([input(), requestTitle])
+    expect(artifact.events[1]?.data).toEqual(requestTitle.data)
+  })
+
+  it.each(['user', 'external', 'dsh-other-plugin', 'cortex-other-plugin'])('rejects unrelated title source %s', (kind) => {
+    const requestTitle = row('session/title-llm-request', { messageSeqs: [0], messages: [user(kind)] })
+    expect(() => reopen([input(), requestTitle])).toThrow('messages do not represent messageSeqs')
+  })
+
   it('requires titles and durable title requests to cite earlier human messages', () => {
     const title = row('session/title', { title: 'Example', source: { kind: 'generated' }, messageSeqs: [0] })
     const requestTitle = row('session/title-llm-request', { messageSeqs: [0], messages: [{ ...user('cortex-session-title-llm'), content: [{ type: 'text', text: 'historical frame with original coordinates' }] }] })

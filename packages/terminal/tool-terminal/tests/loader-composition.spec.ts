@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { provideWorkingDirectoryFixture, unsupportedInbox } from '@cortex/agent-loop-testkit'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -20,7 +21,6 @@ import SessionProjectionRegistry from '@cortex/session-projection'
 import LocalSubprocessRuntime from '@cortex/subprocess-local'
 import * as TerminalLocal from '@cortex/terminal-bash'
 import * as ToolPty from '@cortex/tool-terminal'
-import { unsupportedInbox } from '@cortex/agent-loop-testkit'
 
 let root: string | undefined
 let context: Context | undefined
@@ -90,6 +90,8 @@ suite('terminal real Loader composition through cordis.yml', () => {
     ].join('\n'))
 
     context = new Context()
+
+    provideWorkingDirectoryFixture(context)
     context.baseUrl = pathToFileURL(root).href + '/'
     await context.plugin(Loader)
     context.loader.builtins.include = Include

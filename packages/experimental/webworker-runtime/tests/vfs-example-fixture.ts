@@ -16,7 +16,7 @@ import {
 } from '@cortex/session-persistence-jsonl/src/format.ts'
 import { projectionCacheDomainSpec } from '@cortex/session-projection-cache'
 import { scheduleDomain } from '@cortex/schedule'
-import { snapshotSubagentDescriptor } from '@cortex/subagent'
+import { snapshotSubagentDescriptor, SUBAGENT_DESCRIPTOR_VERSION } from '@cortex/subagent'
 
 /** Root copied by the preview image's repository adapter. */
 export const VFS_EXAMPLE_ROOT = fileURLToPath(new URL('./fixtures/vfs-example', import.meta.url))
@@ -374,9 +374,9 @@ function oneShotLog(seed: readonly SessionEvent[]): SessionEvent[] {
   log.add(userMessage('preview-review-user', 'Review whether the preview fixture is isolated from future WebFS data.'))
   log.add({
     type: 'subagent/descriptor',
-    data: snapshotSubagentDescriptor({
-      mode: 'one-shot', provider: 'fork', label: 'Review preview architecture',
-    }),
+    data: {
+      version: SUBAGENT_DESCRIPTOR_VERSION, mode: 'one-shot', provider: 'fork', label: 'Review preview architecture',
+    },
   })
   log.add({ type: 'step/start', data: { turn, step: 1 } })
   log.add(assistantMessage('preview-review-assistant', turn, 1, [{

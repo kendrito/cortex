@@ -30,6 +30,8 @@ The `ralph` tool runs a fixed foreground loop: one fresh child per round works o
 
 The model submits `{ objective, maxRounds? }` and the call blocks until the whole run settles. The deployment config's `maxRounds` is both the default and a ceiling on a call override. The terminal result is `complete`, `blocked`, or `budget-limited`, carrying the last bounded report and the number of rounds started; an ordinary child failure returns an error naming the failed round and retaining the last successful handoff when one exists.
 
+Rounds use the runtime's managed activation API with caller delivery. Each result waits for its child and descendants to settle and release resources; the parent receives the bounded Ralph result without an extra background completion notice for each round.
+
 ### What each round sees
 
 Each child receives only the immutable objective, its current round and cap, a shared-workspace-as-authority instruction, and the previous structured handoff; parent conversation and prior child sessions are never seeded. The workspace is the long-term memory across rounds. Reports carry a status (`continue`, `complete`, or `blocked`), a non-empty summary, evidence, next steps, and blocker text; invalid or oversized reports fail the workflow instead of being truncated or mistaken for cap exhaustion.

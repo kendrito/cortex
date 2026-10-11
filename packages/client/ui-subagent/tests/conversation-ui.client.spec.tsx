@@ -287,6 +287,29 @@ describe('SubagentHeaderLineage', () => {
     expect(translate).toHaveBeenCalledWith('count.total.one', { count: 1 })
   })
 
+  it('shows provider-managed children as disabled leaves without local conversation actions', () => {
+    const input = props(catalog({ entries: [
+      { id: CHILD, mode: 'external', label: 'remote worker', activity: 'inactive' },
+    ] }), {}, {})
+    render(<HeaderCatalog {...input} />)
+    const trigger = screen.getByRole('button', { name: '1 个子智能体' })
+    hoverCatalog(trigger)
+
+    const row = screen.getByRole('treeitem', { name: 'remote worker 由外部提供方管理' })
+    expect(row.getAttribute('aria-disabled')).toBe('true')
+    expect(row.getAttribute('tabindex')).toBe('-1')
+    expect(row.hasAttribute('aria-expanded')).toBe(false)
+    expect(within(row).queryByRole('button')).toBeNull()
+    expect(row.querySelector('[data-state]')).toBeNull()
+    fireEvent.click(row)
+    fireEvent.keyDown(row, { key: 'Enter' })
+    fireEvent.keyDown(row, { key: 'ArrowRight' })
+    expect(input.openChild).not.toHaveBeenCalled()
+    expect(input.openChildAside).not.toHaveBeenCalled()
+    expect(input.refreshProjection).not.toHaveBeenCalled()
+    expect(screen.getByRole('tree')).toBeTruthy()
+  })
+
   it('removes the disclosure column from branchless catalog levels', () => {
     render(<HeaderCatalog {...props(catalog({
       entries: catalog().entries.slice(0, 1),

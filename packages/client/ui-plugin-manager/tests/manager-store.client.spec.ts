@@ -116,7 +116,7 @@ describe('packageView', () => {
   it('joins a bundle with the entries its rows run as', () => {
     expect(packageView(BUNDLE, PLUGINS)).toEqual({
       name: 'cortex-better-sidebar', version: '0.16.0', description: 'A sidebar.',
-      installed: true, optional: false, enabled: false,
+      installed: true, optional: false, removable: true, enabled: false,
       rows: [
         { rowId: 'sidebar', moduleName: 'cortex-better-sidebar', entryId: ROW_ENTRY, enabled: true, phase: 'active' },
         { rowId: 'theme', moduleName: 'cortex-better-sidebar/theme', enabled: false, phase: null },
@@ -130,7 +130,7 @@ describe('packageView', () => {
       overrides: [],
     }
     expect(packageView(protectedBundle, PLUGINS)).toEqual({
-      name: '@cortex/base', installed: false, optional: false, enabled: true, readOnlyReason: 'management-required',
+      name: '@cortex/base', installed: false, optional: false, removable: false, enabled: true, readOnlyReason: 'management-required',
       error: { code: 'operation-error', diagnostic: 'broken' },
       rows: [
         { rowId: 'core', moduleName: '@cortex/base', entryId: 'include:core', enabled: true, phase: 'active', readOnlyReason: 'management-required' },

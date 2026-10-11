@@ -3,6 +3,15 @@
 - id: system-prompt
   name: '@cortex/system-prompt'
 
+- id: fs
+  name: '@cortex/fs-local'
+
+- id: session-projections
+  name: '@cortex/session-projection'
+
+- id: working-directory
+  name: '@cortex/working-directory'
+
 - id: tools
   name: '@cortex/tools'
 

@@ -233,7 +233,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'session',
     title: 'In-memory session store',
     mode: 'core',
-    consumers: ['agent-loop', 'agent', 'session-persistence', 'session-query', 'session-query-sqlite', 'subagent-in-process-driver', 'invariants', 'message-feedback'],
+    consumers: ['agent-loop', 'agent', 'session-persistence', 'session-query', 'session-query-sqlite', 'subagent', 'invariants', 'message-feedback'],
     note: 'Owns append-only Session instances and emits the durable session event feed.',
   },
   {
@@ -559,7 +559,7 @@ const SERVICE_ROLES: ServiceRole[] = [
     pkg: 'agent',
     title: 'Agent service',
     mode: 'core',
-    consumers: ['agent-loop', 'acp', 'subagent-in-process-driver'],
+    consumers: ['agent-loop', 'acp', 'subagent'],
     note: 'Owns live Agent handles, the create/resume factory seam, and process-local initiator propagation.',
   },
   {
@@ -774,6 +774,26 @@ const SERVICE_ROLES: ServiceRole[] = [
     consumers: ['client-hmr'],
     note: 'Composes the __CORTEX_BOOT__ entry graph from an incremental cortex.client scan, serves plugin bundles, and notifies rebuilt/graph-changed subscribers.',
   },
+  {
+    key: 'workingDirectory',
+    pkg: 'working-directory',
+    title: 'Session working directory',
+    mode: 'seam',
+    implementations: ['working-directory'],
+    consumers: ['tool-working-directory', 'tool-fs', 'tool-bash', 'tool-pwsh', 'subagent', 'sdk-jsonrpc-server'],
+    note: 'One Session projection owns the effective execution directory. The filesystem validates changes; user context reports them while original metadata and write grants stay fixed.',
+  },
+
+  {
+    key: 'worktrees',
+    pkg: 'experimental-worktree',
+    title: 'Git worktree creation',
+    mode: 'seam',
+    implementations: ['experimental-worktree'],
+    consumers: ['experimental-tool-worktree'],
+    note: 'Explicit experimental creation from a pinned local commit. Existing write permissions govern checkout and shared Git metadata; the working-directory service owns the resulting Session directory.',
+  },
+
   {
     key: 'workflowEngine',
     pkg: 'workflow',
@@ -1395,6 +1415,12 @@ function listenerPackages(listeners: Set<string>, pkgsByShort: Map<string, Pkg>)
   return [...listeners].sort().map(pkg => pkgLink(pkgsByShort.get(pkg), pkg)).join(', ')
 }
 
+/** Account-provider vocabulary retained by Cortex without shipping its network implementation. */
+const COMPATIBILITY_EVENTS: Readonly<Record<string, string>> = {
+  'deepseek-account/session-expired': 'packages/credentials/deepseek-account/src/types.ts',
+  'deepseek-account/signed-out': 'packages/credentials/deepseek-account/src/index.ts',
+}
+
 function renderEventRelations(pkgs: Pkg[], events: readonly EventEntry[]): string {
   const relations = collectEventRelations()
   const pkgsByShort = new Map(pkgs.map(pkg => [pkg.short, pkg]))
@@ -1402,6 +1428,8 @@ function renderEventRelations(pkgs: Pkg[], events: readonly EventEntry[]): strin
   const lines = generatedHeader('Event Producer And Consumer Matrix')
   lines.push(
     'This matrix shows which packages dispatch each harness-owned event and which packages listen to it. Events are many-to-many, so the dense relation data is presented as a table rather than one large graph. Receiver and event-name types also cover contained dispatch sites that deliberately bypass `ctx.emit`, such as subagent lifecycle containment.',
+    '',
+    'Cortex retains `deepseek-account/session-expired` and `deepseek-account/signed-out` declarations for compatibility; their network account implementation is excluded, so they have no live dispatcher.',
     '',
   )
   const rows = ['| Event | Mode | Declared in | Dispatchers | Listeners |', '| --- | --- | --- | --- | --- |']
@@ -1416,8 +1444,11 @@ function renderEventRelations(pkgs: Pkg[], events: readonly EventEntry[]): strin
   // aggregate program only (host+client cannot share one program — the cordis
   // Context merges collide), so client dispatch sites are structurally
   // invisible here; their rows stay in the table for the declarations' sake.
+  // Two exact account declarations are retained compatibility vocabulary in Cortex.
+  // Both name and owning source must match; unrelated dead events still fail.
   const undispatched = [...events]
     .filter(event => !event.source.startsWith('packages/client/'))
+    .filter(event => COMPATIBILITY_EVENTS[event.name] !== event.source.split(':')[0])
     .filter(event => (relations.get(event.name)?.dispatchers.size ?? 0) === 0)
     .map(event => event.name)
     .sort()
@@ -1620,7 +1651,7 @@ function renderDocs(): GraphDoc[] {
   ]
   docs.unshift({ rel: 'docs/graph-atlas.md', content: renderIndex(docs) })
   const events = docs.find(doc => doc.rel === 'docs/event-producer-consumer.md')
-  if (events !== undefined) docs.push(spliceChineseRegions(events))
+  if (events !== undefined && existsSync(resolve(root, events.rel.replace(/\.md$/, '.zh.md')))) docs.push(spliceChineseRegions(events))
   return docs
 }
 

@@ -11,6 +11,7 @@ import type {} from '@cortex/deepseek-account/types'
 import type {} from '@cortex/permission-presets/types'
 import type {} from '@cortex/plugin-manager/types'
 import type {} from '@cortex/schedule/client'
+import type {} from '@cortex/skill'
 import type { TypertForwardableEventEntry } from '@cortex/typert-protocol'
 
 /**
@@ -26,6 +27,7 @@ export const API_REMOTE_FORWARDED_EVENTS = [
   { event: 'api-session/removed', mode: 'emit' },
   { event: 'api-session/status', mode: 'emit' },
   { event: 'commands/change', mode: 'emit' },
+  { event: 'skills/change', mode: 'emit' },
   { event: 'deepseek-account/session-expired', mode: 'emit' },
   { event: 'deepseek-account/model-sign-in-required', mode: 'emit' },
   { event: 'credentials/record-updated', mode: 'emit' },

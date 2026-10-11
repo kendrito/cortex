@@ -56,7 +56,7 @@ Invalid metadata, an unparseable body, an unavailable provider route or a per-ru
 
 ### File policy and cancellation
 
-The engine resolves the calling Session's standing file policy and cwd for PTC execution. The VM retains the documented helper API, but it is not a security boundary: code that reaches Node remains subject to the selected OS file policy. The program-visible environment is empty. Network access is not restricted by the file policy.
+The engine captures the calling Session's effective working directory and standing file policy separately. The PTC process and every child started by that workflow retain the captured directory when the parent later moves. The VM retains the documented helper API, but it is not a security boundary: code that reaches Node remains subject to the selected OS file policy. The program-visible environment is empty. Network access is not restricted by the file policy.
 
 The workflow requests `timeoutMs: null` from PTC. Its initial VM slice still has `syncTimeoutMs`, and a caller's abort signal still applies, including an enclosing tool deadline. Cancellation immediately aborts the PTC process and pending or active subagents. The caller must dispose every run and await child cleanup; there is no separate workflow cleanup timer.
 
@@ -91,7 +91,9 @@ One self-contained guest program runs the existing VM and workflow helpers insid
 
 The guest materializes outbound values as lossless JSON before PTC transport. Exotic prototypes, functions, symbols, cycles, sparse arrays, non-finite numbers and nested `undefined` are rejected. Child results cross back as JSON; same-process observer events retain their own cloning and callback-containment rules.
 
-The host tracks pending provider starts separately from published children. A shared abort signal closes both paths; a child that becomes ready after cancellation is disposed. Each published child's disposal is shared by all cleanup paths. In-flight host bindings remain the workflow adapter's responsibility after PTC stops the program.
+The host starts children through `startActivation()` with `delivery: 'caller'`. The workflow collects each child's result without waking the parent with a settlement notice, while local children retain durable catalog entries. The selected effective working directory is captured when the workflow starts and applies to both the program and its later children.
+
+The host tracks pending activation starts separately from published children. A shared abort signal closes both paths; a child that becomes ready after cancellation is disposed. Each published child's disposal is shared by all cleanup paths, and its result waits for managed descendants and resource release. In-flight host bindings remain the workflow adapter's responsibility after PTC stops the program.
 
 ### Cancellation and outcomes
 

@@ -119,6 +119,36 @@ function makeHandle(pty: FakePty, inspector: ProcessInspector, graceMs: number):
 }
 
 describe('LocalTerminalHandle', () => {
+  it('retains initial output and captures the process identity after an asynchronous connection', async () => {
+    const pty = new FakePty()
+    pty.pid = 0
+    const inspector = new FakeInspector()
+    const handle = makeHandle(pty, inspector, 10)
+    let ready = false
+    const connected = handle.ready().then(() => { ready = true })
+    pty.emitData('initial prompt')
+    await new Promise<void>(resolve => setImmediate(resolve))
+    expect(ready).toBe(false)
+    expect(inspector.captures).toBe(0)
+    pty.pid = 123
+    await connected
+    expect(handle.pid).toBe(123)
+    expect(inspector.captures).toBe(1)
+    expect(handle.output.read()?.toString()).toBe('initial prompt')
+    await handle.terminate()
+  })
+
+  it('rejects an asynchronous connection that exits before a process id exists', async () => {
+    const pty = new FakePty()
+    pty.pid = 0
+    const handle = makeHandle(pty, new FakeInspector(), 10)
+    const ready = expect(handle.ready()).rejects.toThrow('before its process id became available')
+    pty.emitExit(1)
+    await ready
+    await expect(handle.done).resolves.toEqual({ exitCode: 1, signal: null })
+    await handle.terminate()
+  })
+
   it('retains ownership after shell exit when /proc cannot be enumerated', async () => {
     const pty = new FakePty()
     let readable = false

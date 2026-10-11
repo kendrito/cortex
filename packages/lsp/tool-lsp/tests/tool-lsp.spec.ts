@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { provideWorkingDirectoryFixture } from '@cortex/agent-loop-testkit'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Context } from '@cortex/cordis'
@@ -32,6 +33,7 @@ async function mount(
   config: ToolLsp.Config = {},
 ): Promise<{ ctx: Context }> {
   const ctx = new Context()
+  provideWorkingDirectoryFixture(ctx)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(Lsp)

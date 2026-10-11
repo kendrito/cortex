@@ -354,6 +354,25 @@ describe('catalog cache', () => {
     expect(payloads[2]).toEqual({ sessionId: 's1' })
   })
 
+  it('skills/change refreshes every cached catalog and notifies open slash menus', async () => {
+    let catalog = CATALOG
+    const list = vi.fn<ListFn>(() => listOk(catalog)({}))
+    const { source, remote } = await bench(list)
+    await source.candidates(proj('s1'), req(''))
+    await source.candidates(proj('s2'), req(''))
+    const changed = vi.fn()
+    const off = source.subscribeLexicon!(proj('s1'), changed)
+    catalog = [{ name: 'installed-now', description: 'Newly installed local skill', modelInvocable: true }]
+    remote.emit('skills/change', [])
+    expect(changed).toHaveBeenCalledOnce()
+    expect(source.lexicon!(proj('s1'))).toBeUndefined()
+    expect(source.lexicon!(proj('s2'))).toBeUndefined()
+    expect((await source.candidates(proj('s1'), req(''))).map(item => item.name)).toEqual(['installed-now'])
+    expect((await source.candidates(proj('s2'), req(''))).map(item => item.name)).toEqual(['installed-now'])
+    expect(list).toHaveBeenCalledTimes(4)
+    off()
+  })
+
   it('connection/reset clears every cached session', async () => {
     const { list, payloads } = countingList()
     const { ctx, source } = await bench(list)
@@ -501,7 +520,7 @@ describe('reference preview', () => {
     expect(list.mock.calls.map(([payload]) => payload)).toEqual([{ sessionId: 'first' }, { sessionId: 'second' }])
   })
 
-  it.each(['reset', 'preset', 'dispose'] as const)('cancels a pending preview on %s even if the RPC completes late', async (reason) => {
+  it.each(['reset', 'preset', 'skills', 'dispose'] as const)('cancels a pending preview on %s even if the RPC completes late', async (reason) => {
     const gate = Promise.withResolvers<ListResult>()
     const { ctx, source, remote, fiber, openResource } = await bench(() => gate.promise)
     const session = proj('preview')
@@ -511,6 +530,7 @@ describe('reference preview', () => {
     const completion = expect(source.candidates(session, req(''))).rejects.toThrow()
     if (reason === 'reset') ctx.emit('connection/reset')
     else if (reason === 'preset') remote.emit('agent-preset/selected', [session.sessionId, 'minimal'])
+    else if (reason === 'skills') remote.emit('skills/change', [])
     else await fiber.dispose()
     expect(listener).toHaveBeenCalledTimes(1)
     gate.resolve({ ok: true, value: { skills: rows } })

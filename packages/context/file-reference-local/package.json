@@ -39,13 +39,17 @@
     "@cortex/file-reference": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   },
   "devDependencies": {
     "@cortex/agent": "workspace:*",
     "@cortex/file-reference": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/fs-local": "workspace:*",
+    "@cortex/session-projection": "workspace:*"
   }
 }

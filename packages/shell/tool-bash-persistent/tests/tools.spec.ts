@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { provideWorkingDirectoryFixture, unsupportedInbox } from '@cortex/agent-loop-testkit'
 import { Context } from '@cortex/cordis'
 import { ToolCallId } from '@cortex/llm'
 import { SESSION_FORMAT_VERSION, Session, SessionId } from '@cortex/session'
@@ -18,7 +19,6 @@ import type {
 import SystemPrompt from '@cortex/system-prompt'
 import ToolRuntime from '@cortex/tools'
 import * as ToolBashPersistent from '@cortex/tool-bash-persistent'
-import { unsupportedInbox } from '@cortex/agent-loop-testkit'
 
 const contexts: Context[] = []
 let callNumber = 0
@@ -303,6 +303,7 @@ async function setup(
   initialMode: StubMode = 'normal',
 ) {
   const ctx = new Context()
+  provideWorkingDirectoryFixture(ctx)
   contexts.push(ctx)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
@@ -710,6 +711,7 @@ describe('tool-bash-persistent', () => {
 
   it('cancels and awaits a pending shell spawn when the plugin is disposed', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     contexts.push(ctx)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)

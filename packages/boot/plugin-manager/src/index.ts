@@ -288,8 +288,10 @@ export class PluginManager extends TypertRemoteService {
     for (const name of names) {
       const installed = dependencies.includes(name)
       const optional = OPTIONAL_BUNDLES.includes(name)
-      const removable = installed && !Object.hasOwn(installation.dependencies ?? {}, name)
       const enabled = selected.includes(name)
+      const shipped = Object.hasOwn(installation.dependencies ?? {}, name)
+      // A selection neither the profile nor the installation holds is removed by deselecting it.
+      const removable = (installed || enabled) && !shipped
       const readOnlyReason = this.protectsManager(name) ? 'management-required' as const : undefined
       try {
         const info = bundleManifest(name, this.profile.dir, this.profile.installAnchor)
@@ -445,7 +447,9 @@ export class PluginManager extends TypertRemoteService {
   setBundleEnabled(name: string, enabled: boolean): Promise<ChangeResult> {
     return this.change(result => this.configure(async () => {
       await this.selectBundle(name, enabled)
+      if (enabled) await this.refreshPackages()
       result.warnings = await this.reload(enabled ? this.bundleRows(name).map(row => row.id) : [])
+      if (!enabled && this.ownerContext.get('hmr') !== undefined) await this.refreshPackages()
     }), { stage: 'enable', target: name, enabled }, 'bundle')
   }
 
@@ -561,6 +565,7 @@ export class PluginManager extends TypertRemoteService {
       return this.configure(async () => {
         if (options?.enabled !== false) await this.selectBundle(name, true)
         if (Object.hasOwn(before, name)) return 'restart-required'
+        await this.refreshPackages()
         if (options?.enabled !== false) result.warnings = await this.reload()
       })
     }, { stage: 'install', target: spec, enabled: options?.enabled !== false }, 'install')
@@ -595,14 +600,15 @@ export class PluginManager extends TypertRemoteService {
     return { status: 'cancelled' }
   }
 
-  /** Unload and remove a profile-owned bundle dependency through cortex plugin's pnpm path.
-   * @param name Installed dependency name.
+  /** Unload and remove a profile-owned bundle dependency through cortex plugin's pnpm path; a selected name no
+   * dependency holds is only deselected.
+   * @param name Installed dependency or selected bundle name.
    * @returns Removal diagnostics and the remaining profile state.
    */
   @Remote
   removeBundle(name: string): Promise<ChangeResult> {
     return this.change(async (result) => {
-      await this.configure(async () => {
+      const installed = await this.configure(async () => {
         const bundle = (await this.listBundles()).find(item => item.name === name)
         if (bundle === undefined || !bundle.removable) throw new ManagementFailure('not-removable')
         if (this.ownerContext.get('hmr') === undefined && (this.profile.startedBundles.includes(name)
@@ -619,11 +625,14 @@ export class PluginManager extends TypertRemoteService {
           && contributions.some(row => row.id === entry.options.id && row.name === entry.options.name))) {
           throw new ManagementFailure('bundle-in-use')
         }
+        return bundle.installed
       })
+      if (!installed) return
       result.packageResult = await this.runPnpm(['remove', name])
       if (result.packageResult.exitCode !== 0 || result.packageResult.timedOut === true) {
         throw new Error(result.packageResult.output)
       }
+      await this.configure(() => this.refreshPackages())
     }, { stage: 'remove', target: name }, 'remove')
   }
 
@@ -759,6 +768,15 @@ export class PluginManager extends TypertRemoteService {
     const hmr = this.ownerContext.get('hmr')
     const apply = () => { this.abort.signal.throwIfAborted(); return operation() }
     return hmr === undefined ? apply() : hmr.runExclusive(apply)
+  }
+
+  private async refreshPackages(): Promise<void> {
+    if (this.ownerContext.get('hmr') === undefined) {
+      const selected = readProfileManifest('cortex', this.profile.dir).cortex?.profile?.bundles ?? []
+      // Deselected startup bundles still run without HMR and need the existing package table.
+      if (this.profile.startedBundles.some(name => !selected.includes(name))) return
+    }
+    await this.ownerContext.get('pluginPackages')?.refresh()
   }
 
   private async reload(requiredIds: readonly string[] = []): Promise<string[]> {

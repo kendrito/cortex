@@ -24,6 +24,33 @@ interface UserMessage extends MessageBase {
  * compact raw streams so persistence stores one durable settlement per attempt.
  */
 interface SessionEventMap {
+  /** Historical grounding request retained for lossless restoration; Cortex has no grounding provider or live writer. */
+  'web/deepseek-search-llm-request': {
+    readonly endpoint: string
+    readonly apiVersion: string
+    readonly body: {
+      readonly model: string
+      readonly max_tokens: number
+      readonly messages: readonly [{
+        readonly role: 'user'
+        readonly content: readonly [{ readonly type: 'text'; readonly text: string }]
+      }]
+      readonly tools: readonly [{
+        readonly type: 'web_search_20250305'
+        readonly name: 'web_search'
+        readonly max_uses: number
+      }]
+    }
+  }
+  /** Historical upload receipt retained for lossless restoration; Cortex has no uploader or live writer. */
+  'session-log-deepseek/delivery-accepted': {
+    /** Original receipt owner; inherited fork records retain the parent Session id. */
+    sessionId: SessionId
+    /** Accepted format generation; omission identifies version 0. */
+    sessionFormatVersion?: number
+    /** Last canonical event covered by the historical receipt. */
+    throughSeq: SessionSeq
+  }
   /**
    * Opens turn `turn` before the loop claims queued input or runs pre-step.
    * Rejection, empty input, cancellation, or failure may close it with no
@@ -750,6 +777,48 @@ A plugin may declaration-merge extra `SessionEventMap` types. These are **log-on
 When several events in one plugin-owned family assemble into one Web Client Conversation Node, every start, update, result, resource, or interruption event in that family carries or independently derives the same stable business id. This requirement applies to correlated Node families, not to every Session event; it lets the client group each event without guessing from adjacency or scanning history. See the [Conversation subsystem](conversation.md).
 
 The hook bridges' `hook/invoked` / `hook/result` pairs (from `@cortex/hook-protocol`) correlate by `handlerId`. `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, and `Stop` fire inside the loop's open turn, so their `hook/*` records are turn-enclosed by construction. `SessionStart` gets no `hook/*` record because it runs before turn 1; its context remains pending in the inbox until a waking delivery opens a turn.
+
+### Plugin records
+
+Experimental packages declare plugin-owned state in `PluginRecordMap`: `appendPluginRecord()` uses each declaration to type its name and payload, and appends an event marked `ignorable: true` in the `plugin:` namespace. `pluginRecordOf()` reads stored records with unknown payloads regardless of current declarations. The [experimental persistence catalog](../experimental-persistence-catalog.md) lists current declarations. The [package README](../../packages/core/session/README.md#write-experimental-plugin-records) owns the caller restriction, retention, and read path.
+
+```ts type-equiv
+/**
+ * Event type of an experimental plugin record: `plugin:` followed by
+ * slash-separated segments of lowercase letters, digits, `.`, `_`, and `-`,
+ * each starting with a letter or digit. A record type is never a
+ * {@link SessionEventMap} member.
+ */
+type PluginRecordType = `plugin:${string}`
+```
+
+```ts type-equiv
+/**
+ * Payloads written by experimental packages, keyed by their `plugin:` record
+ * names. Packages augment this map to type writes and enter the current plugin
+ * record catalog; these declarations do not enter {@link SessionEventMap} or
+ * released persistence schemas. Stored records still require owner validation.
+ */
+interface PluginRecordMap {}
+```
+
+```ts type-equiv
+/**
+ * One committed experimental plugin record, read from the log by
+ * `pluginRecordOf`. The record's owner validates `data` before use, because a
+ * restored record carries whatever JSON an earlier build of its owner wrote.
+ */
+interface PluginRecord {
+  /** The record type, chosen by the owning plugin. */
+  readonly type: PluginRecordType
+  /** The record's position in the Session log. */
+  readonly seq: SessionSeq
+  /** Unix epoch milliseconds at append. */
+  readonly time: number
+  /** The JSON payload as committed. */
+  readonly data: unknown
+}
+```
 
 ## Durability contract
 

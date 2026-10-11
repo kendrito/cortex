@@ -59,7 +59,7 @@ const PEER_REQUIRED_HOST_EXPORTS = {
   '@cortex/client-connection': ['OperatorPeer'],
   '@cortex/subprocess': ['SubprocessExecutableNotFoundError', 'scrubbedParentEnv'],
   '@cortex/mcp-client': ['createMcpToolDefinition'],
-  '@cortex/llm': ['BlockAssembler', 'createMessage', 'createUserMessage', 'createAssistantMessage', 'ToolCallId'],
+  '@cortex/llm': ['APP_IDENTITY', 'BlockAssembler', 'createMessage', 'createUserMessage', 'createAssistantMessage', 'ReasoningEffortId', 'ToolCallId'],
   '@cortex/scope': ['carrierKeyOf', 'createScope', 'scopeOf', 'scopeTarget'],
   '@cortex/session': ['SESSION_FORMAT_VERSION', 'SessionId'],
   '@cortex/session-persistence': ['SessionPersistenceNotFoundError'],

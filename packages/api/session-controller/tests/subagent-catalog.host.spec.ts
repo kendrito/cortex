@@ -6,6 +6,7 @@ import type { SessionEvent, SessionHeader } from '@cortex/session'
 import { SessionQueryError } from '@cortex/session-query'
 import type { SessionObservation } from '@cortex/session-query'
 import SubagentRuntime from '@cortex/subagent'
+import { provideWorkingDirectoryFixture } from '@cortex/agent-loop-testkit'
 import { describe, expect, it, vi } from 'vitest'
 import {
   createSessionTestController,
@@ -51,6 +52,7 @@ async function bench() {
     ),
   }) as never)
   installSessionReadTestServices(ctx)
+  provideWorkingDirectoryFixture(ctx)
   await ctx.plugin(SubagentRuntime)
   const controller = createSessionTestController(ctx, defaults)
   return { ctx, controller }

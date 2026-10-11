@@ -41,7 +41,8 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/session-projection": "workspace:*",
-    "@cortex/tools": "workspace:*"
+    "@cortex/tools": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "devDependencies": {
     "@cortex/cordis": "workspace:~",
@@ -55,6 +56,7 @@
     "@cortex/agent-loop-testkit": "workspace:*",
     "@cortex/fs-local": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
-    "@cortex/scope": "workspace:*"
+    "@cortex/scope": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

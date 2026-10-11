@@ -54,7 +54,7 @@ const definition = {
 
 ### Register and read
 
-`register(definition)` installs the unit; registrants with the same key and `stateVersion` share its cells, while an incompatible version or invalid `stateVersion` throws. Registration is an effect on the calling fiber, so the last unload removes the key and its cached cells. Carriers read a consistent synchronous cut over every client-visible unit with `snapshot(session)` — `{ asOfSeq, values }`, where `asOfSeq` is the seq of the last event every value reflects — and subscribe to per-change notifications with `onChanged(listener)`. `stateOf(session, key)` reads one unit's live read-only host state without computing unrelated views.
+`register(definition)` installs the unit; registrants with the same key and `stateVersion` share its cells, while an incompatible version or invalid `stateVersion` throws. Registration is an effect on the calling fiber, so the last unload removes the key and its cached cells. The returned disposer can be yielded into a composite `ctx.effect()` on the same fiber to keep the unit available through dependent cleanup. Carriers read a consistent synchronous cut over every client-visible unit with `snapshot(session)` — `{ asOfSeq, values }`, where `asOfSeq` is the seq of the last event every value reflects — and subscribe to per-change notifications with `onChanged(listener)`. `stateOf(session, key)` reads one unit's live read-only host state without computing unrelated views.
 
 ```text
 const dispose = ctx.sessionProjections.register(definition)
@@ -87,13 +87,14 @@ The package is the Service Definition and drive role of a capability seam: the f
 |---|---|
 | [`src/index.ts`](src/index.ts) | Plugin entry: `SessionProjectionRegistry` service, `ProjectionDefinition`, snapshot and checkpoint machinery |
 | [`src/types.ts`](src/types.ts) | The merge-extensible `SessionProjectionMap` and `SessionProjectionStateMap` type tables |
-| — | No runtime invariant companion is published; the registry's own contracts (duplicate-key and stateVersion rejection, effect-tied removal, the `Object.is` change gate) are enforced synchronously inside the service and proven by its spec, the drive relation (every committed `session/event` passes every unit) would require re-running the drive to check — duplicating the implementation rather than detecting drift — and the served-value relation (every served key has a live registration) lives on each carrier's wire path, which emits no cordis event this companion could observe; carrier specs assert it. Synchronous-unit discipline is enforced as far as practical by the boundary `schema.parse` (a Promise-returning view fails loudly). |
 
 ### Drive and checkpoint flow
 
 One committed event drives every registered unit in registration order; a client-visible unit whose raw view changes by `Object.is` notifies the change feed with its schema-validated view and the causing seq. The live drive retains its previous and current raw views; snapshots and cold reads remain complete independent reads. `checkpoint(session)` returns one detached `(key → {ver, seq, val})` row per unit for the persisted cache; `restoreFloor` anchors a tail read one event below the lowest usable watermark so a shrunk log is detected, and `restore` refolds persisted rows over a stored suffix, discarding any row whose `ver` does not match or that claims events past the stored end.
 
 </details>
+
+**Runtime invariant:** No companion is published; the registry's own contracts (duplicate-key and stateVersion rejection, effect-tied removal, the `Object.is` change gate) are enforced synchronously inside the service and proven by its spec. The drive relation (every committed `session/event` passes every unit) would require re-running the drive to check, duplicating the implementation. The served-value relation (every served key has a live registration) lives on each carrier's wire path, which emits no Cordis event this companion could observe; carrier specs assert it. Synchronous-unit discipline is enforced as far as practical by the boundary `schema.parse` (a Promise-returning view fails loudly).
 
 -----
 

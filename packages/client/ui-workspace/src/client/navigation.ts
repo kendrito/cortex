@@ -27,7 +27,10 @@ interface MainSelection {
 
 /** Workspace archive and directory operations consumed by Client UI domains. */
 export interface UiWorkspace {
-  /** @returns the selected chat, including while a global panel is open. */
+  /**
+   * Return the selected chat while a global panel is open.
+   * @returns the selected chat, including while a global panel is open.
+   */
   currentSessionId(): SessionId | undefined
   /**
    * Select a Session and show its Conversation as one UI navigation action.

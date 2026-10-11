@@ -261,7 +261,6 @@ def write_advanced_profile_patch(root: Path, name: str, sessions: Path) -> Path:
             "config": {
                 "provider": "spawn",
                 "toolName": "subagent",
-                "backgroundMode": "one-shot",
             },
         },
         {"insert": [

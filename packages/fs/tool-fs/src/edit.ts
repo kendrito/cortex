@@ -96,7 +96,7 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
         type: 'object',
         additionalProperties: false,
         properties: {
-          path: { type: 'string', required: true },
+          path: { type: 'string', required: true, description: 'Canonical absolute path in the filesystem execution world.' },
           before: { type: 'string', required: true },
           after: { type: 'string', required: true },
         },
@@ -105,8 +105,9 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
         type: 'text',
         text: formatEditOutput(value.path, args.replace_all ?? false),
       }],
-      presentationMeta: (args, value) => ({
-        diffs: computeHunkDiffs(args.file_path, value.before, value.after)
+      presentationMeta: (_args, value) => ({
+        path: value.path,
+        diffs: computeHunkDiffs(value.path, value.before, value.after)
           .map(({ path, oldText, newText }) => ({ path, oldText, newText })),
       }),
     },
@@ -115,7 +116,7 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
       // Resolve the per-call sandbox policy (approved mode > session override
       // > backend default, plus the session cwd root) BEFORE anything executes.
       const sandboxPolicy = await sandbox.resolvePolicy('edit', args, exec)
-      const target = await ctx.fs.resolve(input.filePath, sessionResolveOptions(exec, sandboxPolicy?.workspaceRoot))
+      const target = await ctx.fs.resolve(input.filePath, await sessionResolveOptions(ctx, exec))
       // Single-slot decision: the policy plugin returns { version: vObserved } or
       // throws FS_NOT_OBSERVED; the bare default is undefined (unconditional edit).
       // No stat — the bare default never manufactures a version basis. The intent
@@ -140,7 +141,7 @@ export function applyEditTool(ctx: Context, sandbox: FsSandboxController): void 
       }
       ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
       return {
-        path: target.displayPath,
+        path: ctx.fs.processPath(target),
         before: outcome.before,
         after: outcome.after,
       }

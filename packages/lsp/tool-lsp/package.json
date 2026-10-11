@@ -32,7 +32,8 @@
     "@cortex/lsp": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/timeout": "workspace:*",
-    "@cortex/tools": "workspace:*"
+    "@cortex/tools": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/util-values": "workspace:*",
@@ -50,6 +51,8 @@
     "@cortex/system-prompt": "workspace:*",
     "@cortex/timeout": "workspace:*",
     "@cortex/tool-call-timeout-policy": "workspace:*",
-    "@cortex/tools": "workspace:*"
+    "@cortex/tools": "workspace:*",
+    "@cortex/working-directory": "workspace:*",
+    "@cortex/agent-loop-testkit": "workspace:*"
   }
 }

@@ -31,7 +31,8 @@
     "@cortex/llm": "workspace:*",
     "@cortex/skill": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/schemastery": "workspace:~"
@@ -45,6 +46,7 @@
     "@cortex/skill": "workspace:*",
     "@cortex/skill-filesystem": "workspace:*",
     "@cortex/tools": "workspace:*",
-    "@cortex/cordis": "workspace:~"
+    "@cortex/cordis": "workspace:~",
+    "@cortex/working-directory": "workspace:*"
   }
 }

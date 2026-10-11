@@ -1058,6 +1058,23 @@ it('offers the launcher\'s optional bundles switched off and never removable', a
   expect(await manager.removeBundle(offered)).toMatchObject({ changed: false, application: 'failed' })
 })
 
+it('removes a selected bundle no dependency holds by deselecting it without pnpm', async () => {
+  const { manager, dir } = await fixture()
+  const manifest = readProfileManifest('test', dir)
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({
+    ...manifest, cortex: { profile: { bundles: [...manifest.cortex?.profile?.bundles ?? [], 'retired'] } },
+  }))
+  expect((await manager.listBundles()).find(row => row.name === 'retired')).toMatchObject({
+    enabled: true, installed: false, optional: false, removable: true, error: { code: 'operation-error' },
+  })
+  const pnpm = vi.spyOn(operations, 'runProfilePnpm')
+  onTestFinished(() => { pnpm.mockRestore() })
+  expect(await manager.removeBundle('retired')).toMatchObject({ changed: true, application: 'applied' })
+  expect(pnpm).not.toHaveBeenCalled()
+  expect(readProfileManifest('test', dir).cortex?.profile?.bundles).not.toContain('retired')
+  expect((await manager.listBundles()).some(row => row.name === 'retired')).toBe(false)
+})
+
 it('omits installation-owned plain packages from the bundle inventory', async () => {
   const { manager, dir, profile, bundle } = await fixture()
   bundle('installation-plain', [])

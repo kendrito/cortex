@@ -36,7 +36,8 @@
     "@cortex/session": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "devDependencies": {
     "@cortex/agent": "workspace:*",
@@ -51,6 +52,7 @@
     "@cortex/session-persistence-jsonl": "workspace:*",
     "@cortex/tools": "workspace:*",
     "@cortex/cordis": "workspace:~",
-    "@cortex/session-projection": "workspace:*"
+    "@cortex/session-projection": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

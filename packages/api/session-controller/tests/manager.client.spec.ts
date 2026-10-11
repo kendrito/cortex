@@ -834,6 +834,19 @@ describe('subagent catalogs', () => {
     await manager.dispose()
   })
 
+  it('does not treat external execution records as browsable child sessions', ({ mock, remote }) => {
+    const manager = makeManager(mock, remote)
+    manager.handleControlFrame({
+      type: 'projection', sessionId: S1, key: 'subagentCatalog', seq: 4,
+      value: [{ id: S2, createdAt: 1, mode: 'external', label: 'external worker' }],
+    })
+    expect(manager.subagentAddress(S2)).toBeUndefined()
+    expect(manager.getListSnapshot().projectionsBySession[S1]?.values.subagentCatalog).toEqual([
+      { id: S2, createdAt: 1, mode: 'external', label: 'external worker' },
+    ])
+    expect(remote.session.projections.mock.calls).toEqual([])
+  })
+
   it('publishes pushed membership without a catalog request or an instantiated parent', ({ mock, remote }) => {
     const manager = makeManager(mock, remote)
     manager.handleSessionAdded(summary(S2, { origin: 'subagent', parentSessionId: S1, running: true }))

@@ -9,7 +9,7 @@
  * @module @cortex/sdk-client
  */
 
-export { CortexHarness, HarnessSession } from './api.ts'
+export { CortexHarness, HarnessSession, validatedSessionEvent } from './api.ts'
 export type { RunOptions } from './api.ts'
 export {
   HarnessClient,

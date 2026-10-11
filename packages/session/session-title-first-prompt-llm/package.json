@@ -40,6 +40,7 @@
     "@cortex/cordis-plugin-loader": "workspace:~",
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
+    "@cortex/session-format-catalog": "workspace:*",
     "@cortex/session-title": "workspace:*",
     "@cortex/session-title-llm": "workspace:*",
     "@cortex/cordis": "workspace:~",

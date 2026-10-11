@@ -53,6 +53,7 @@
     "node-pty": "1.2.0-beta.15"
   },
   "devDependencies": {
+    "@cortex/app-boot": "workspace:*",
     "@cortex/loader-smoke": "workspace:*",
     "@cortex/subprocess": "workspace:*",
     "@cortex/timeout": "workspace:*",

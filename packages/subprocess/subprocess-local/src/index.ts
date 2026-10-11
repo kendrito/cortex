@@ -15,7 +15,7 @@ import { delimiter, extname, isAbsolute, resolve } from 'node:path'
 import type { Duplex } from 'node:stream'
 import { Context } from '@cortex/cordis'
 import type * as NodePty from 'node-pty'
-import type { IPtyForkOptions } from 'node-pty'
+import type { IPtyForkOptions, IWindowsPtyForkOptions } from 'node-pty'
 import { createLazyRequire } from '@cortex/lazy-require'
 import { SubprocessRuntime, SubprocessExecutableNotFoundError } from '@cortex/subprocess'
 import type {
@@ -259,8 +259,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     return { platform, ...defaultShell === undefined ? {} : { defaultShell } }
   }
 
-  // Local PTY allocation is synchronous, but the provider contract permits remote asynchronous allocation.
-  // oxlint-disable-next-line typescript/require-await -- Preserve promise rejection semantics at the async provider contract.
+  // Windows PTY connection completes asynchronously before its process id is available.
   async spawnTerminal(spec: SubprocessTerminalSpawnSpec): Promise<SubprocessTerminalHandle> {
     const file = spec.argv[0]
     if (file === undefined || file.length === 0) {
@@ -270,14 +269,18 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
     const inspector = this.terminalInspector ?? createProcessInspector()
     const containmentMode = this.selectContainmentMode('terminal')
     const env = targetEnvironment(spec)
-    const activity = prepareShellActivity(spec, env, this.internals.platform ?? process.platform)
+    const platform = this.internals.platform ?? process.platform
+    const activity = prepareShellActivity(spec, env, platform)
     const launch = activity === undefined ? spec : { ...spec, argv: activity.argv, env: activity.env }
-    const options: IPtyForkOptions = {
+    const options: IPtyForkOptions | IWindowsPtyForkOptions = {
       name: spec.terminalType,
       rows: spec.rows,
       cols: spec.cols,
       cwd: spec.cwd,
       env: { ...activity?.env ?? env, TERM: spec.terminalType },
+      // Bundled OpenConsole preserves the persistent-pwsh prompt tail after
+      // scrolling; older operating-system console hosts can repaint it as cursor movement.
+      ...(platform === 'win32' ? { useConptyDll: true } : {}),
     }
     let scope: ReturnType<typeof prepareLinuxTerminalScope> | undefined
     let terminal: NodePty.IPty
@@ -309,7 +312,7 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
       terminal,
       inspector,
       spec.graceMs,
-      this.internals.platform ?? process.platform,
+      platform,
       owner,
       scope?.resolveOutcome,
       activity,
@@ -325,6 +328,12 @@ export class LocalSubprocessRuntime extends SubprocessRuntime {
       this.terminals.delete(handle)
     }
     void handle.done.then(release, release).catch(() => {})
+    try {
+      await handle.ready()
+    } catch (error) {
+      await handle.terminate()
+      throw error
+    }
     return handle
   }
 }

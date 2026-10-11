@@ -10,7 +10,7 @@ import { defineTool } from '@cortex/tools'
 import type { DiffCallView, DiffResultView, ToolResult } from '@cortex/tools'
 import type { FsWriteOutcome } from '@cortex/fs'
 import type {} from '@cortex/fs'
-import { computeHunkDiffs, diffsFromMeta } from './diff.ts'
+import { computeHunkDiffs, diffsFromMeta, pathFromMeta } from './diff.ts'
 import { remediateFsError } from './error.ts'
 import { sessionResolveOptions } from './session-cwd.ts'
 import type { FsSandboxController } from './sandbox.ts'
@@ -82,7 +82,7 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
         type: 'object',
         additionalProperties: false,
         properties: {
-          path: { type: 'string', required: true },
+          path: { type: 'string', required: true, description: 'Canonical absolute path in the filesystem execution world.' },
           operation: { type: 'string', required: true, enum: ['create', 'update'] },
           before: {
             required: true,
@@ -95,11 +95,12 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
         },
       },
       render: (_args, value) => [{ type: 'text', text: formatWriteOutput(value.path, value) }],
-      presentationMeta: (args, value) => ({
+      presentationMeta: (_args, value) => ({
         operation: value.operation,
+        path: value.path,
         diffs: value.before === null
           ? []
-          : computeHunkDiffs(args.file_path, value.before, value.after)
+          : computeHunkDiffs(value.path, value.before, value.after)
             .map(({ path, oldText, newText }) => ({ path, oldText, newText })),
       }),
     },
@@ -109,7 +110,7 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
       // > backend default, plus the session cwd root) BEFORE anything executes;
       // an escalating call throws its distinct text on any non-grant.
       const sandboxPolicy = await sandbox.resolvePolicy('write', args, exec)
-      const target = await ctx.fs.resolve(input.filePath, sessionResolveOptions(exec, sandboxPolicy?.workspaceRoot))
+      const target = await ctx.fs.resolve(input.filePath, await sessionResolveOptions(ctx, exec))
       // Single-slot decision: the policy plugin produces createIfAbsent/
       // replaceIfVersion; the bare default is undefined (unconditional). No stat.
       const intent = await ctx.waterfall('fs/write-intent', target, exec, () => undefined)
@@ -124,7 +125,7 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
       }
       ctx.emit('fs/observed', target, { kind: 'present', version: outcome.version }, exec)
       return {
-        path: target.displayPath,
+        path: ctx.fs.processPath(target),
         operation: outcome.operation,
         before: outcome.before,
         after: outcome.after,
@@ -146,7 +147,7 @@ export function applyWriteTool(ctx: Context, sandbox: FsSandboxController): void
     presentResult(args, result: ToolResult): DiffResultView | undefined {
       if (result.isError) return undefined
       const diffs = diffsFromMeta(result.meta)
-        ?? [{ path: args.file_path, oldText: null, newText: args.content }]
+        ?? [{ path: pathFromMeta(result.meta) ?? args.file_path, oldText: null, newText: args.content }]
       return { card: 'diff', title: `Write ${args.file_path}`, diffs }
     },
   }))

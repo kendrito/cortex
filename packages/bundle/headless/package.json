@@ -54,7 +54,8 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/session-query": "workspace:*",
-    "@cortex/fs": "workspace:*"
+    "@cortex/fs": "workspace:*",
+    "@cortex/subagent": "workspace:*"
   },
   "devDependencies": {
     "@cortex/cordis": "workspace:~",
@@ -66,6 +67,7 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/session-query": "workspace:*",
-    "@cortex/fs": "workspace:*"
+    "@cortex/fs": "workspace:*",
+    "@cortex/subagent": "workspace:*"
   }
 }

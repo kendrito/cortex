@@ -57,7 +57,7 @@ function signalName(number: number | undefined): NodeJS.Signals | null {
  * the tracking a remote provider needs.
  */
 export class LocalTerminalHandle implements SubprocessTerminalHandle {
-  readonly pid: number
+  get pid(): number { return this.terminal.pid }
   readonly output = new PassThrough()
   readonly done: Promise<SubprocessOutcome>
 
@@ -74,7 +74,7 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
   private quiescent = false
   private managedRangeEmpty = false
   /** The spawned shell's start identity; scans stop adopting members once the root pid no longer carries it. */
-  private readonly rootIdentity: ProcessIdentity | undefined
+  private rootIdentity: ProcessIdentity | undefined
 
   /**
    * @param terminal - allocated node-pty process.
@@ -93,8 +93,7 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
     private readonly onQuiescence?: () => void,
     private readonly observeShellExit = false,
   ) {
-    this.pid = terminal.pid
-    try { this.rootIdentity = inspector.snapshot().tree(this.pid).find(member => member.pid === this.pid) }
+    try { this.rootIdentity = this.pid > 0 ? inspector.snapshot().tree(this.pid).find(member => member.pid === this.pid) : undefined }
     catch (_rootIdentityUnavailable) { this.rootIdentity = undefined }
     this.done = this.outcome.promise
     const resume = (): void => {
@@ -134,6 +133,23 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
   /** Whether node-pty has not yet published the top-level exit event. */
   get running(): boolean {
     return !this.exited
+  }
+
+  /**
+   * Wait for node-pty's asynchronous Windows connection before publishing the
+   * process id and its fenced start identity. Output remains subscribed while
+   * connection completes; node-pty owns the connection timeout and exit signal.
+   * @returns after the process id is available.
+   * @throws when the PTY exits or is disposed before connection completes.
+   */
+  async ready(): Promise<void> {
+    while (this.pid <= 0 && !this.exited && !this.quiescent) {
+      await new Promise<void>(resolve => setImmediate(resolve))
+    }
+    if (this.pid <= 0) throw new Error('terminal process exited before its process id became available')
+    if (this.rootIdentity !== undefined) return
+    try { this.rootIdentity = this.inspector.snapshot().tree(this.pid).find(member => member.pid === this.pid) }
+    catch (_rootIdentityUnavailable) { this.rootIdentity = undefined }
   }
 
   // node-pty writes synchronously; the seam returns a promise for remote transports.
@@ -205,8 +221,8 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
     if (this.platform === 'win32') {
       if (signal === 'SIGINT') {
         // Windows has no process-group signalling: a `\x03` input write is the
-        // Ctrl-C delivery path conhost turns into a console-wide CTRL_C event
-        // for attached processes. node-pty's signal kills throw on Windows, so
+        // Ctrl-C delivery path the console host turns into a console-wide
+        // CTRL_C event for attached processes. node-pty's signal kills throw on Windows, so
         // no signal ever reaches the inspector.
         this.terminal.write('\x03')
         return foreground.processGroupId
@@ -366,13 +382,14 @@ export class LocalTerminalHandle implements SubprocessTerminalHandle {
 
   private async stopShellWindows(): Promise<void> {
     // node-pty's Windows kill(signal) throws ("Signals not supported on
-    // windows"), and its bare kill() delegates to a console-list agent that
-    // fails when the parent has no console. taskkill tree escalation is the
-    // teardown path, fenced on the shell's start identity like every
-    // descendant; a root identity miss falls back to the bare kill. taskkill
-    // termination also does not reliably fire node-pty's exit notification
-    // (the same console-list agent), so the tiers verify the shell's absence
-    // through the inspector instead of waiting on `done` alone.
+    // windows"), and its bare kill() reaches the console host by a per-host
+    // path: Windows' own host goes through a console-list agent that fails when
+    // the parent has no console, while the bundled OpenConsole runs a native
+    // kill plus conout teardown. taskkill tree escalation is the teardown path,
+    // fenced on the shell's start identity like every descendant; a root
+    // identity miss falls back to the bare kill. taskkill termination also does
+    // not reliably fire node-pty's exit notification, so the tiers verify the
+    // shell's absence through the inspector instead of waiting on `done` alone.
     const shellGone = (): boolean =>
       this.exited || (this.rootIdentity !== undefined && !this.inspector.isAlive(this.rootIdentity))
     if (!shellGone() && this.rootIdentity !== undefined) {

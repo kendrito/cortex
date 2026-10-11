@@ -105,7 +105,8 @@
     "@cortex/util-time": "workspace:*",
     "@cortex/util-values": "workspace:*",
     "@cortex/util-workspace-path": "workspace:*",
-    "@cortex/workspace": "workspace:*"
+    "@cortex/workspace": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "peerDependenciesMeta": {
     "@cortex/session-persistence": {
@@ -160,6 +161,7 @@
     "@cortex/util-values": "workspace:*",
     "@cortex/util-workspace-path": "workspace:*",
     "@cortex/workspace": "workspace:*",
-    "@types/mime-types": "^3.0.1"
+    "@types/mime-types": "^3.0.1",
+    "@cortex/working-directory": "workspace:*"
   }
 }

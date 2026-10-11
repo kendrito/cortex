@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { provideWorkingDirectoryFixture, unsupportedInbox } from '@cortex/agent-loop-testkit'
 import { Context } from '@cortex/cordis'
 import { ToolCallId } from '@cortex/llm'
 import { Session, SessionId } from '@cortex/session'
@@ -13,7 +14,6 @@ import LocalJobRegistry from '@cortex/jobs-local'
 import * as ToolJobs from '@cortex/tool-jobs'
 import * as ToolPty from '@cortex/tool-terminal'
 import { sendSource } from '../src/background.ts'
-import { unsupportedInbox } from '@cortex/agent-loop-testkit'
 
 async function fakeAgent(ctx: Context, rawId: string): Promise<Agent> {
   const scope = ctx.plugin(() => {})
@@ -111,6 +111,7 @@ async function setup(jobs: boolean, config: ToolPty.Config = {}) {
 
 async function setupBase(jobs: boolean) {
   const ctx = new Context()
+  provideWorkingDirectoryFixture(ctx)
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(AgentRegistry)
@@ -509,6 +510,6 @@ describe('tool-terminal plugin shape', () => {
   it('is a named function plugin with no default export', () => {
     expect('default' in ToolPty).toBe(false)
     expect(ToolPty.name).toBe('tool-terminal')
-    expect(ToolPty.inject).toEqual(['terminals', 'tools', 'systemPrompt'])
+    expect(ToolPty.inject).toEqual(['terminals', 'tools', 'systemPrompt', 'workingDirectory'])
   })
 })

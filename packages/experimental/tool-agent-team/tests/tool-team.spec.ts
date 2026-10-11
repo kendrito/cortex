@@ -19,6 +19,7 @@ import * as ToolSubagentControl from '@cortex/tool-subagent-control'
 import { defineContentToolFixture } from '@cortex/tools'
 import type { GenerateOptions } from '@cortex/llm'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { mountWorkingDirectoryFixture } from '../../../subagent/subagent/tests/working-directory-fixture.ts'
 import TeamService from '../../agent-team/src/index.ts'
 import * as toolTeam from '../src/index.ts'
 
@@ -65,6 +66,7 @@ async function setup(script: ConstructorParameters<typeof MockAdapter>[0], legac
   const ctx = new Context()
   contexts.add(ctx)
   await mountAgentLoopTestDependencies(ctx)
+  await mountWorkingDirectoryFixture(ctx)
   const storageRoot = mkdtempSync(join(tmpdir(), 'cortex-tool-team-'))
   roots.push(storageRoot)
   await ctx.plugin(JsonlSessionPersistence, { root: storageRoot })
@@ -198,6 +200,7 @@ describe('cortex-tool-team', () => {
     expect(JSON.parse(text(tasks))).toMatchObject({ tasks: [{ id: task.id, ownerName: member.target }] })
     const sent = await execute(ctx, lead, 'send_message', { target: member.target, message: 'review the diff' })
     expect(sent.isError).toBe(false)
+    expect(JSON.parse(text(sent))).toEqual({ sent: true })
     const interrupted = await execute(ctx, lead, 'interrupt_agent', { target: listed[1]!.target })
     expect(interrupted.isError).toBe(false)
     await child.whenIdle()
@@ -479,10 +482,10 @@ describe('cortex-tool-team', () => {
     expect(text(roster)).toBe(JSON.stringify(JSON.parse(text(roster))))
     const peer = await execute(ctx, child, 'send_message', { target: 'lead', message: 'progress report' })
     expect(peer.isError).toBe(false)
-    expect(JSON.parse(text(peer))).toMatchObject({ status: 'accepted' })
+    expect(JSON.parse(text(peer))).toEqual({ sent: true })
     const followup = await execute(ctx, child, 'send_message', { target: 'lead', message: 'review the report' })
     expect(followup.isError).toBe(false)
-    expect(JSON.parse(text(followup))).toMatchObject({ status: 'accepted' })
+    expect(JSON.parse(text(followup))).toEqual({ sent: true })
     await lead.whenIdle()
 
     const created = await execute(ctx, lead, 'team_task_create', {
@@ -661,7 +664,8 @@ describe('cortex-tool-team', () => {
     toolTeam.apply(ctx, {})
     expect((await assembly(ctx, lead)).tools.map(schema => schema.name).filter(name => TOOL_NAMES.includes(name)).sort())
       .toEqual(TOOL_NAMES)
-    const ordinary = await ctx.subagents.startContinuable({
+    const ordinary = await ctx.subagents.startActivation({
+      delivery: 'parent',
       provider: 'spawn',
       label: 'ordinary child',
       request: { prompt: [{ type: 'text', text: 'finish' }], parent: lead },
@@ -691,7 +695,7 @@ describe('cortex-tool-team', () => {
       content: [{ type: 'text', text: 'resume with Team scope' }],
       signal: SIGNAL,
     })
-    expect(receipt.status).toBe('accepted')
+    expect(receipt.messageId).toEqual(expect.any(String))
     const resumed = await waitRunning(ctx, childId)
     expect((await assembly(ctx, resumed)).tools.map(schema => schema.name)
       .filter(name => TOOL_NAMES.includes(name)).sort()).toEqual(TOOL_NAMES)

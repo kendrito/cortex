@@ -165,6 +165,7 @@
     "verify-doc-graphs": "tsx scripts/gen-doc-graphs.ts --check",
     "gen-persistence-catalog": "tsx scripts/gen-persistence-catalog.ts",
     "verify-persistence-catalog": "tsx scripts/gen-persistence-catalog.ts --check",
+    "verify-plugin-record-callers": "tsx scripts/verify-plugin-record-callers.ts",
     "persistence-changes": "tsx scripts/persistence-changes.ts",
     "persistence-review": "tsx scripts/persistence-review.ts",
     "verify-persistence-changes": "tsx scripts/persistence-changes.ts --check",

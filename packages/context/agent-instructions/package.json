@@ -34,7 +34,8 @@
     "@cortex/llm": "workspace:*",
     "@cortex/session": "workspace:*",
     "@cortex/session-projection": "workspace:*",
-    "@cortex/tools": "workspace:*"
+    "@cortex/tools": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "dependencies": {
     "@cortex/util-values": "workspace:*",
@@ -54,6 +55,7 @@
     "@cortex/session-projection": "workspace:*",
     "@cortex/system-prompt": "workspace:*",
     "@cortex/tool-fs": "workspace:*",
-    "@cortex/tools": "workspace:*"
+    "@cortex/tools": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

@@ -1,0 +1,28 @@
+# Bilingual-pair consistency record for 2026-10-10-cortex-local-capabilities.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/2026-10-10-cortex-local-capabilities.md
+/:
+  en: 3d5a424ae7d7e46b
+  zh: c22a8e4a62d8cc1a
+/2026-10-10-cortex-local-capabilities:
+  en: 65bf4fc22dd23c12
+  zh: ee39a6dc3953925d
+/2026-10-10-cortex-local-capabilities/summary:
+  en: 0d640bc7eebce203
+  zh: 081024bc373593bc
+/2026-10-10-cortex-local-capabilities/table-of-contents:
+  en: 6cf314a069ceb451
+  zh: 9adff678e9ecab3b
+/2026-10-10-cortex-local-capabilities/declaration:
+  en: 6907136f28e48c90
+  zh: 02f8298485f3d8e7
+/2026-10-10-cortex-local-capabilities/compatibility:
+  en: cb0c280f0280827c
+  zh: 87cb83aae7ca57a2
+/2026-10-10-cortex-local-capabilities/verification:
+  en: a53cc07e5af7c015
+  zh: 5ab9cd87ea51d0f2
+/2026-10-10-cortex-local-capabilities/dev-note:
+  en: b75c8458928b72b9
+  zh: 003ba4e17b4b5269

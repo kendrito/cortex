@@ -210,7 +210,7 @@ function CatalogRows({
     return () => { clearInterval(timer) }
   }, [running])
   const emptyLoading = catalog.state === 'loading' && catalog.entries.length === 0
-  const reserveDisclosure = catalog.entries.some(entry => !isKnownLeaf(catalogs[entry.id]))
+  const reserveDisclosure = catalog.entries.some(entry => entry.mode !== 'external' && !isKnownLeaf(catalogs[entry.id]))
   return (
     <>
       {emptyLoading && (
@@ -231,15 +231,17 @@ function CatalogRows({
       )}
       {catalog.entries.map((entry) => {
         const childCatalog = catalogs[entry.id]
+        const external = entry.mode === 'external'
         const isCurrent = entry.id === currentSessionId
         const isExpanded = expanded.has(entry.id)
-        const knownLeaf = isKnownLeaf(childCatalog)
+        const knownLeaf = external || isKnownLeaf(childCatalog)
         const childLoading = childCatalog === undefined
           || (childCatalog.state === 'loading' && childCatalog.entries.length === 0)
         const summary = summaries[entry.id]
         const label = entry.label ?? entry.id
         const mode = entry.mode === 'unknown' ? t('mode.unknown')
-          : entry.mode === 'one-shot' ? t('mode.oneShot') : t('mode.continuable')
+          : entry.mode === 'one-shot' ? t('mode.oneShot')
+            : external ? t('mode.external') : t('mode.continuable')
         const completed = entry.activity === 'inactive'
           && summary?.projectionValues?.subagentTiming?.lastTurnCompleted === true
         const activity = entry.activity === 'running'
@@ -247,7 +249,7 @@ function CatalogRows({
           : completed
             ? t('activity.completed')
             : t('activity.inactive')
-        const secondary = [summary?.title, mode, activity]
+        const secondary = [summary?.title, mode, external ? undefined : activity]
           .filter(value => value !== undefined)
           .join(' · ')
         const totalTokens = tokenTotal(summary?.projectionValues?.tokenUsage)
@@ -270,6 +272,7 @@ function CatalogRows({
           .join(' · ')
 
         const open = (): void => {
+          if (entry.mode === 'external') return
           openChild({
             parentSessionId,
             childSessionId: entry.id,
@@ -277,13 +280,14 @@ function CatalogRows({
           })
           closeCatalog()
         }
-        const openAside = (event: MouseEvent<HTMLButtonElement>): void => {
+        const openAside = entry.mode === 'external' ? undefined : (event: MouseEvent<HTMLButtonElement>): void => {
           event.preventDefault()
           event.stopPropagation()
           openChildAside({ parentSessionId, childSessionId: entry.id, mode: entry.mode })
           closeCatalog()
         }
         const handleKey = (event: KeyboardEvent<HTMLDivElement>): void => {
+          if (external) return
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
             event.stopPropagation()
@@ -307,8 +311,9 @@ function CatalogRows({
           <div key={entry.id} className={css.node}>
             <div
               role="treeitem"
-              tabIndex={0}
+              tabIndex={external ? -1 : 0}
               aria-level={level}
+              aria-disabled={external || undefined}
               aria-current={isCurrent || undefined}
               aria-label={[label, secondary, metrics].filter(value => value !== '').join(' ')}
               {...knownLeaf ? {} : { 'aria-expanded': isExpanded }}
@@ -331,7 +336,7 @@ function CatalogRows({
                 )}
               <div className={css.clickarea}>
                 <span className={css.rowActivitySlot}>
-                  <StateDot state={entry.activity === 'running' ? 'ongoing' : completed ? 'done' : 'idle'} />
+                  {!external && <StateDot state={entry.activity === 'running' ? 'ongoing' : completed ? 'done' : 'idle'} />}
                 </span>
                 <span className={css.content}>
                   <span className={`${css.label} ${isCurrent ? css.currentLabel : ''}`}>{label}</span>
@@ -350,7 +355,7 @@ function CatalogRows({
                     )}
                   </span>
                 )}
-                {!isCurrent && (
+                {!isCurrent && !external && (
                   <Tooltip label={t('open.sidebar')} side="bottom" align="end">
                     <button
                       type="button"

@@ -1,3 +1,5 @@
+import { mountWorkingDirectoryFixture } from '../../subagent/tests/working-directory-fixture.ts'
+import { startExternalActivation } from '../../subagent/tests/external-activation-helpers.ts'
 import { execFile } from 'node:child_process'
 import {
   cpSync,
@@ -8,6 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { createRequire } from 'node:module'
+import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { delimiter, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -121,6 +124,7 @@ async function realRuntime(): Promise<RealRuntime> {
   const ctx = new Context()
   contexts.push(ctx)
   await ctx.plugin(SessionProjectionRegistry)
+  await mountWorkingDirectoryFixture(ctx)
   await ctx.plugin(SubagentRuntime)
   await ctx.plugin(LocalSubprocessRuntime)
   const handles: SubprocessHandle[] = []
@@ -210,6 +214,70 @@ function responseInputTexts(body: Record<string, unknown>): string[] {
 }
 
 describe('real @openai/codex 0.153.4 product', () => {
+  it('suppresses native plugin startup network while the configured local model is active', async () => {
+    const requests: string[] = []
+    const proxy = createServer((request, response) => {
+      requests.push(`${request.method} ${request.url}`)
+      response.writeHead(502).end()
+    })
+    proxy.on('connect', (request, socket) => {
+      requests.push(`CONNECT ${request.url}`)
+      socket.end('HTTP/1.1 502 Bad Gateway\r\n\r\n')
+    })
+    await new Promise<void>((resolve, reject) => {
+      proxy.once('error', reject)
+      proxy.listen(0, '127.0.0.1', resolve)
+    })
+    try {
+      const address = proxy.address()
+      if (address === null || typeof address === 'string') throw new Error('missing proxy address')
+      const proxyUrl = `http://127.0.0.1:${address.port}`
+      const instance = await realInstanceFixture([{ kind: 'hold' }])
+      const configPath = join(instance.env.CODEX_HOME!, 'config.toml')
+      writeFileSync(configPath, `${readFileSync(configPath, 'utf8')}\n[features]\nplugins = true\nremote_plugin = true\nrecommended_plugins = true\n`)
+      Object.assign(instance.env, {
+        HTTP_PROXY: proxyUrl,
+        HTTPS_PROXY: proxyUrl,
+        ALL_PROXY: proxyUrl,
+        http_proxy: proxyUrl,
+        https_proxy: proxyUrl,
+        all_proxy: proxyUrl,
+        NO_PROXY: '127.0.0.1,localhost',
+        no_proxy: '127.0.0.1,localhost',
+      })
+      const { ctx, handles, spawnSpecs } = await realRuntime()
+      await ctx.plugin(codex, { env: instance.env, disposeGraceMs: 2_000 })
+      const abort = new AbortController()
+      const run = await startExternalActivation(ctx, 'codex', {
+        prompt: [{ type: 'text', text: 'Use the configured local fixture model.' }],
+        parent: {
+          id: 'privacy-parent',
+          session: { header: { cwd: instance.workspace } },
+        } as unknown as Agent,
+        signal: abort.signal,
+      })
+      try {
+        await instance.fixture.requestStarted
+        // Keep startup tasks alive long enough to expose the former cache fetches.
+        await new Promise(resolve => setTimeout(resolve, 1_000))
+        expect(instance.fixture.requests).toHaveLength(1)
+        expect(instance.fixture.requests[0]?.body.model).toBe('fixture-model')
+        expect(spawnSpecs[0]?.argv).toContain('features.plugins=false')
+        expect(requests).toEqual([])
+      } finally {
+        abort.abort()
+        await run.dispose()
+      }
+      await expectQuiescent(handles)
+      expect(requests).toEqual([])
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        proxy.close(error => error === undefined ? resolve() : reject(error))
+        proxy.closeAllConnections()
+      })
+    }
+  }, 30_000)
+
   it('starts approve-for-me through the real app-server and returns exact text', async () => {
     const sentinel = 'REAL_CODEX_SENTINEL_0_149_1'
     const task = 'Return the fixture sentinel exactly.'
@@ -243,7 +311,7 @@ describe('real @openai/codex 0.153.4 product', () => {
     })
     expect(schema.definitions.ThreadStartParams.required).toBeUndefined()
 
-    const run = await harness.ctx.subagents.start('codex', {
+    const run = await startExternalActivation(harness.ctx, 'codex', {
       prompt: [{ type: 'text', text: task }],
       parent: harness.parent,
       signal: new AbortController().signal,
@@ -320,12 +388,12 @@ describe('real @openai/codex 0.153.4 product', () => {
     const safeController = new AbortController()
 
     const [safeRun, bypassRun] = await Promise.all([
-      ctx.subagents.start('codex-safe', {
+      startExternalActivation(ctx, 'codex-safe', {
         prompt: [{ type: 'text', text: 'Hold the safe instance.' }],
         parent: safeParent,
         signal: safeController.signal,
       }),
-      ctx.subagents.start('codex-bypass', {
+      startExternalActivation(ctx, 'codex-bypass', {
         prompt: [{ type: 'text', text: 'Complete the bypass instance.' }],
         parent: bypassParent,
         signal: new AbortController().signal,
@@ -334,7 +402,7 @@ describe('real @openai/codex 0.153.4 product', () => {
     await safeInstance.fixture.requestStarted
     await safeFiber.dispose()
     expect(ctx.subagents.list()).toEqual(['codex-bypass'])
-    await expect(ctx.subagents.start('codex-safe', {
+    await expect(startExternalActivation(ctx, 'codex-safe', {
       prompt: [{ type: 'text', text: 'This start must fail.' }],
       parent: safeParent,
       signal: new AbortController().signal,
@@ -344,7 +412,7 @@ describe('real @openai/codex 0.153.4 product', () => {
       output: [{ type: 'text', text: 'NAMED_CODEX_BYPASS_RESULT' }],
       stopReason: 'completed',
     })
-    safeController.abort(new Error('cancel only the published safe run'))
+    void safeRun.dispose()
     await expect(safeRun.result).resolves.toEqual({
       output: [],
       stopReason: 'aborted',
@@ -399,7 +467,7 @@ describe('real @openai/codex 0.153.4 product', () => {
       },
     ])
     const sideEffect = join(harness.workspace, 'approval-side-effect')
-    const run = await harness.ctx.subagents.start('codex', {
+    const run = await startExternalActivation(harness.ctx, 'codex', {
       prompt: [{ type: 'text', text: 'Attempt the fixture command.' }],
       parent: harness.parent,
       signal: new AbortController().signal,
@@ -435,7 +503,7 @@ describe('real @openai/codex 0.153.4 product', () => {
         status: 503,
         message: 'SECRET_TOKEN in /private/secret.txt',
       }])
-      const run = await harness.ctx.subagents.start('codex', {
+      const run = await startExternalActivation(harness.ctx, 'codex', {
         prompt: [{ type: 'text', text: 'Exercise the service failure path.' }],
         parent: harness.parent,
         signal: new AbortController().signal,
@@ -452,7 +520,7 @@ describe('real @openai/codex 0.153.4 product', () => {
     }
     {
       const { harness, fixture } = await realHarness([{ kind: 'hold' }])
-      const run = await harness.ctx.subagents.start('codex', {
+      const run = await startExternalActivation(harness.ctx, 'codex', {
         prompt: [{ type: 'text', text: 'Exercise the process failure path.' }],
         parent: harness.parent,
         signal: new AbortController().signal,
@@ -498,7 +566,7 @@ describe('real @openai/codex 0.153.4 product', () => {
       ]
     }, 'dangerously-bypass-approvals-and-sandbox')
     const target = join(harness.workspace, sideEffect)
-    const run = await harness.ctx.subagents.start('codex', {
+    const run = await startExternalActivation(harness.ctx, 'codex', {
       prompt: [{ type: 'text', text: 'Create the fixture side effect.' }],
       parent: harness.parent,
       signal: new AbortController().signal,
@@ -516,13 +584,13 @@ describe('real @openai/codex 0.153.4 product', () => {
   it('settles cancellation locally and leaves the real app-server tree quiescent', async () => {
     const { harness, fixture } = await realHarness([{ kind: 'hold' }])
     const controller = new AbortController()
-    const run = await harness.ctx.subagents.start('codex', {
+    const run = await startExternalActivation(harness.ctx, 'codex', {
       prompt: [{ type: 'text', text: 'Wait for cancellation.' }],
       parent: harness.parent,
       signal: controller.signal,
     })
     await fixture.requestStarted
-    controller.abort(new Error('real product cancellation'))
+    void run.dispose()
     await expect(run.result).resolves.toMatchObject({ stopReason: 'aborted' })
     await run.dispose()
     await expectQuiescent(harness.handles)

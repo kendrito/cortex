@@ -38,7 +38,8 @@
     "@cortex/scope": "workspace:*",
     "@cortex/sdk-protocol": "workspace:*",
     "@cortex/session": "workspace:*",
-    "@cortex/subagent": "workspace:*"
+    "@cortex/subagent": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   },
   "devDependencies": {
     "@cortex/cordis": "workspace:~",
@@ -54,6 +55,7 @@
     "@cortex/session-persistence-jsonl": "workspace:*",
     "@cortex/session-projection": "workspace:*",
     "@cortex/subagent": "workspace:*",
-    "@cortex/llm-pi-ai": "workspace:*"
+    "@cortex/llm-pi-ai": "workspace:*",
+    "@cortex/working-directory": "workspace:*"
   }
 }

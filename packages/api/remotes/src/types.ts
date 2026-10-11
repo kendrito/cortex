@@ -17,3 +17,6 @@ export type ApiRemoteForwardedEvent = typeof API_REMOTE_FORWARDED_EVENTS[number]
 declare module '@cortex/typert-protocol' {
   interface TypertRemoteEventSelection extends Record<ApiRemoteForwardedEvent, true> {}
 }
+
+// Retain the owner event declaration for generated client consumers.
+export type {} from '@cortex/skill'

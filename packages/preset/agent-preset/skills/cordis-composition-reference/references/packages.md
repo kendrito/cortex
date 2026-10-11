@@ -187,6 +187,8 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@cortex/experimental-speech-to-text` | yes | Experimental speech recognition with independently selectable providers |
 | `@cortex/experimental-speech-to-text-sensevoice` | yes | Local SenseVoice ONNX transcription with a managed sherpa-onnx process |
 | `@cortex/experimental-tool-agent-team` | yes | Scoped model-facing Agent Teams tools over ctx.agentTeams |
+| `@cortex/experimental-tool-worktree` | no | Model tool that creates and enters a new Git worktree |
+| `@cortex/experimental-worktree` | yes | Creates a named Git worktree and changes the calling Session working directory |
 
 ## extensions
 
@@ -350,6 +352,8 @@ Every package below exports a Cordis plugin that a bundle patch can name in a Lo
 | `@cortex/session-title-all-prompts-llm` | yes | All-user-messages LLM provider plugin for Cortex session titles |
 | `@cortex/session-title-first-prompt-llm` | yes | First-message LLM provider plugin for Cortex session titles |
 | `@cortex/session-turn-outline` | no | Whole-log turn outline projection (turnOutline) for the Cortex |
+| `@cortex/tool-working-directory` | no | Read and change the active Session working directory |
+| `@cortex/working-directory` | yes | Session working directories with durable changes and model context |
 
 ## session-query
 

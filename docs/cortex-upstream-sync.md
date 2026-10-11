@@ -6,6 +6,12 @@ The exact DeepSeek Harness baseline is pinned in [upstream.json](../upstream.jso
 
 The embedded editor, its Code tab, pinned pane, sidecar launcher, and theme synchronization are removed. Conversation and trajectory views remain available. Cortex no longer starts or configures VS Code or code-server.
 
+### Selective backports
+
+Cortex `0.2.0-rc.2.cortex.2` selects local capability and reliability changes from `dsh-v0.2.1-alpha.2` (`d743267388641bc76f17c45ce8b4c231aed1d32c`). It includes plugin uninstall and style lifecycle repairs, Windows shell and terminal reliability, font controls, Session plugin records, working-directory switching, opt-in local Git worktrees, dynamic model context/tool support, and managed agent/team lifecycles. The [migration guide](upgrade-guide/v0.2.0-rc.2/cortex-local-improvements/guide.md) describes changed plugin APIs. This is a partial backport, so `upstream.json` retains the fully imported `0.2.0-rc.2` baseline and the release advances only the Cortex counter.
+
+Worktrees never fetch refs or missing objects, run checkout hooks or configured filters, or install a different Git binary. The local Git executable must support `--no-lazy-fetch` (Git 2.45 or newer). Font families use local/system fonts. Reasoning translation services, cloud accounts, background update/download checks, telemetry exporters, the embedded editor, and web grounding remain excluded. Existing administrator-configured model routes are preserved.
+
 ## Excluded services
 
 The import omits the web grounding package family, DeepSeek-native model adapters and account provider defaults, session upload service, OpenTelemetry exporters, product analytics runtime, account settings UI, and web-search UI. Product analytics event declarations remain as types for upstream component compatibility; there is no corresponding runtime service, RPC endpoint, or exporter. The generic pi-ai adapter starts with an empty provider map. The Models UI admits only loopback OpenAI-compatible routes and rejects external probes before making a request. Administrator-authored backend configuration retains the earlier fork's generic provider capability.

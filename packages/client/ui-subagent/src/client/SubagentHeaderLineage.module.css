@@ -161,6 +161,14 @@
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
+.row[aria-disabled="true"] {
+  cursor: default;
+}
+
+.row[aria-disabled="true"]:hover > .clickarea {
+  background: transparent;
+}
+
 .clickarea {
   box-sizing: border-box;
   display: flex;

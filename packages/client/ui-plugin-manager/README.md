@@ -86,7 +86,7 @@ A row's page exists only while a `plugins.row.config` entry names the row, so a 
 <a id="understand-the-implementation"></a>
 ## Understand the implementation
 
-Package management uses the profile's dependency records: installed bundles can be toggled and removed; installation-owned bundles remain locked. This distinction does not select startup failure policy.
+Package management uses the profile's dependency records: installed bundles can be toggled and removed; installation-owned bundles remain locked. A selected bundle that neither the profile nor the installation holds also offers uninstall, which only removes it from the profile's bundle list. This distinction does not select startup failure policy.
 
 <details>
 <summary>Implementation internals — click to expand</summary>

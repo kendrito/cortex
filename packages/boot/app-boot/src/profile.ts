@@ -211,6 +211,7 @@ export const DEFAULT_PROFILE_BUNDLES: readonly string[] = ['@cortex/base']
  * [admission](../../../../.agents/notes/implemented/architecture/2026-09-21-experimental-capabilities-as-optional-bundles.md)).
  */
 export const OPTIONAL_BUNDLES: readonly string[] = [
+  '@cortex/experimental-tool-worktree',
   '@cortex/experimental-agent-team-profile',
   '@cortex/experimental-voice-input-bundle',
   '@cortex/experimental-auto-review',
@@ -430,7 +431,7 @@ export interface RuntimeResolutionOptions {
  */
 export async function createRuntimeResolution(
   options: RuntimeResolutionOptions,
-): Promise<RuntimeResolution> {
+): Promise<ProfileRuntimeResolution> {
   const { installAnchor, profile, home = resolveCortexHome() } = options
   const profilesDir = join(home, PROFILES_DIR)
   const manifest = readOptionalProfileManifest(profile)
@@ -445,7 +446,7 @@ export async function createRuntimeResolution(
     : collectProfileScopePackages(profile, packageNames, profileDeclarers, profileVersions)
   const linkedRoots = profile === undefined ? [] : linkedProfileRoots(profile, profilesDir)
   // The Promise return type is the pre-stable API; construction has no asynchronous step.
-  return await Promise.resolve(Object.freeze({
+  return await Promise.resolve(new ProfileRuntimeResolution({ installAnchor, profileDir: profile?.dir, home }, {
     profilesDir,
     profileDir: profile?.dir,
     localPackageNames: Object.freeze(localPackageNames),
@@ -461,6 +462,54 @@ export async function createRuntimeResolution(
       })),
     ]),
   }))
+}
+
+/** Inputs a {@link ProfileRuntimeResolution} reuses to compute its successor. */
+interface ResolutionSource {
+  installAnchor: string
+  home: string
+  profileDir: string | undefined
+}
+
+/**
+ * A runtime resolution that remembers the inputs it was computed from. Worker environment data carries only its
+ * fields; the inputs stay private to the thread that computed it.
+ */
+export class ProfileRuntimeResolution implements RuntimeResolution {
+  readonly profilesDir: string
+  readonly profileDir: string | undefined
+  readonly localPackageNames: readonly string[]
+  readonly entries: readonly RuntimeResolutionEntry[]
+  readonly linkedRoots: readonly LinkedRoot[]
+  readonly #source: ResolutionSource
+
+  /**
+   * @param source - inputs of {@link createRuntimeResolution}, reused by {@link computeLatestResolution}.
+   * @param table - the computed package table.
+   */
+  constructor(source: ResolutionSource, table: RuntimeResolution) {
+    this.#source = source
+    this.profilesDir = table.profilesDir
+    this.profileDir = table.profileDir
+    this.localPackageNames = table.localPackageNames
+    this.entries = table.entries
+    this.linkedRoots = table.linkedRoots
+    Object.freeze(this)
+  }
+
+  /**
+   * Compute the latest generation from the same installation, profile directory, and Harness home, rereading the
+   * profile's manifest, bundle selection, and installed packages from disk, without retaining synthetic layers.
+   * With no profile directory, only installation packages are recomputed. This instance is unchanged.
+   * @returns a new resolution for the latest generation.
+   */
+  computeLatestResolution(): Promise<ProfileRuntimeResolution> {
+    const { installAnchor, home, profileDir } = this.#source
+    return createRuntimeResolution({
+      installAnchor, home,
+      ...profileDir === undefined ? {} : { profile: loadProfileDirectory('cortex', profileDir, installAnchor) },
+    })
+  }
 }
 
 /** Synthetic profiles used by direct callers may have no on-disk manifest. */

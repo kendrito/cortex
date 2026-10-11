@@ -10,6 +10,7 @@
  * Real-`rg` behavior is pinned separately in integration.spec.ts.
  */
 
+import { provideWorkingDirectoryFixture } from '@cortex/agent-loop-testkit'
 import { describe, expect, it } from 'vitest'
 import { Context } from '@cortex/cordis'
 import { createScope, type Scope } from '@cortex/scope'
@@ -198,6 +199,7 @@ const DEFAULT_CONFIG = { sampleOverCapGlobResults: true } satisfies ToolFsSearch
 
 async function setup(options: SetupOptions = {}) {
   const ctx = new Context()
+  provideWorkingDirectoryFixture(ctx)
   const warnings: string[] = []
   ctx.logger.warn = ((message: unknown) => { warnings.push(String(message)) }) as typeof ctx.logger.warn
   await ctx.plugin(SystemPrompt)
@@ -256,6 +258,7 @@ describe('registration', () => {
 
   it('stays pending until ctx.subprocess exists (inject)', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(ToolFsSearch, DEFAULT_CONFIG) // no subprocess service
@@ -311,6 +314,7 @@ describe('config validation', () => {
     ['timeoutMs', { timeoutMs: -100 }],
   ] as const)('rejects a non-positive or fractional %s at load', async (name, config) => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(FakeSubprocess)
@@ -319,6 +323,7 @@ describe('config validation', () => {
 
   it('rejects a grace beyond the Node timer range at load', async () => {
     const ctx = new Context()
+    provideWorkingDirectoryFixture(ctx)
     await ctx.plugin(SystemPrompt)
     await ctx.plugin(ToolRuntime)
     await ctx.plugin(FakeSubprocess)

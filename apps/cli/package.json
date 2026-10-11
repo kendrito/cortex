@@ -100,7 +100,8 @@
     "@cortex/atomic-write": "workspace:*",
     "@cortex/agent-preset": "workspace:*",
     "@cortex/experimental-voice-input-bundle": "workspace:*",
-    "@cortex/experimental-auto-review": "workspace:*"
+    "@cortex/experimental-auto-review": "workspace:*",
+    "@cortex/experimental-tool-worktree": "workspace:*"
   },
   "devDependencies": {
     "@agentclientprotocol/sdk": "1.4.0",
