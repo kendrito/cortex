@@ -1,7 +1,7 @@
 {
   "name": "@cortex/working-directory",
   "description": "Session working directories with durable changes and model context",
-  "version": "0.2.0-rc.2.cortex.1",
+  "version": "0.2.0-rc.2.cortex.2",
   "publishConfig": {
     "access": "public"
   },

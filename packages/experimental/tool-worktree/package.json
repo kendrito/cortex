@@ -1,7 +1,7 @@
 {
   "name": "@cortex/experimental-tool-worktree",
   "description": "Model tool that creates and enters a new Git worktree",
-  "version": "0.2.0-rc.2.cortex.1",
+  "version": "0.2.0-rc.2.cortex.2",
   "publishConfig": {
     "access": "public"
   },
