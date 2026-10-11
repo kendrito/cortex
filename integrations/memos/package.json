@@ -1,0 +1,95 @@
+{
+  "name": "@cortex/memos-local-memory",
+  "version": "2.0.16-cortex.1",
+  "private": true,
+  "description": "Local MemOS memory for Cortex, with all LLM work routed through the owning Cortex model.",
+  "type": "module",
+  "main": "dist/adapters/deepseek-harness/index.js",
+  "types": "dist/adapters/deepseek-harness/index.d.ts",
+  "cortex": {
+    "bundle": {
+      "patch": "./adapters/deepseek-harness/cordis.patch.yml"
+    }
+  },
+  "files": [
+    "dist",
+    "viewer/dist",
+    "adapters/deepseek-harness/cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "UPSTREAM.json"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-runtime-assets.cjs",
+    "build:viewer": "vite build --config vite.config.ts",
+    "build:package": "npm run build && npm run build:viewer",
+    "prepack": "npm run build:package",
+    "test": "vitest run",
+    "test:cortex": "vitest run",
+    "lint": "tsc -p tsconfig.build.json --noEmit"
+  },
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "4.2.0",
+    "@preact/signals": "2.9.0",
+    "@sinclair/typebox": "0.34.48",
+    "better-sqlite3": "12.10.0",
+    "preact": "10.29.1",
+    "uuid": "10.0.0",
+    "yaml": "2.6.1",
+    "three": "0.180.0"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "*",
+    "@cortex/agent": "*",
+    "@cortex/llm": "*",
+    "@cortex/session": "*",
+    "@cortex/system-prompt": "*",
+    "@cortex/timeout": "*",
+    "@cortex/tools": "*",
+    "@cortex/schemastery": "*",
+    "@cortex/util-values": "*"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/cordis": {
+      "optional": true
+    },
+    "@cortex/agent": {
+      "optional": true
+    },
+    "@cortex/llm": {
+      "optional": true
+    },
+    "@cortex/session": {
+      "optional": true
+    },
+    "@cortex/system-prompt": {
+      "optional": true
+    },
+    "@cortex/timeout": {
+      "optional": true
+    },
+    "@cortex/tools": {
+      "optional": true
+    },
+    "@cortex/schemastery": {
+      "optional": true
+    },
+    "@cortex/util-values": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "2.10.5",
+    "@types/better-sqlite3": "7.6.12",
+    "@types/node": "22.10.0",
+    "@types/uuid": "10.0.0",
+    "typescript": "5.7.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9",
+    "@types/three": "0.180.0"
+  }
+}

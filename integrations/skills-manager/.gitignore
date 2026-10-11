@@ -1,0 +1,10 @@
+node_modules/
+*.log
+*.tgz
+.DS_Store
+
+.codegraph/
+.compat-results/
+
+# 项目文档仅保留本机，不纳入 Git。
+/docs/

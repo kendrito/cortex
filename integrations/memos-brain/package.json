@@ -1,0 +1,44 @@
+{
+  "name": "@cortex/memos-brain",
+  "version": "1.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Explore local MemOS learning in a 3D Cortex Brain panel.",
+  "engines": { "node": "^22.19.0 || >=24.0.0" },
+  "main": "lib/host.js",
+  "exports": { ".": "./lib/host.js", "./client": "./lib/client.js", "./package.json": "./package.json" },
+  "files": ["lib", "cordis.patch.yml", "README.md", "LICENSE"],
+  "scripts": {
+    "setup:cortex": "node scripts/cortex-setup.mjs",
+    "build": "node scripts/build.mjs",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@cortex/memos-local-memory": "file:../memos"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "*", "@cortex/client-connection": "*", "@cortex/home-paths": "*", "@cortex/schemastery": "*",
+    "@cortex/client-ui-layout": "*", "@cortex/client-ui-sidebar": "*", "@cortex/client-ui-slots": "*", "@cortex/client-ui-renderer": "*",
+    "react": "^18.3.1"
+  },
+  "peerDependenciesMeta": {
+    "@cortex/cordis": { "optional": true },
+    "@cortex/client-connection": { "optional": true },
+    "@cortex/home-paths": { "optional": true },
+    "@cortex/schemastery": { "optional": true },
+    "@cortex/client-ui-layout": { "optional": true },
+    "@cortex/client-ui-sidebar": { "optional": true },
+    "@cortex/client-ui-slots": { "optional": true },
+    "@cortex/client-ui-renderer": { "optional": true }
+  },
+  "devDependencies": { "esbuild": "0.25.0", "typescript": "5.9.3", "@types/node": "22.20.4", "@types/react": "18.3.31" },
+  "cortex": {
+    "bundle": { "patch": "./cordis.patch.yml" },
+    "client": {
+      "platform": "web",
+      "inject": ["@cortex/client-ui-slots", "@cortex/client-ui-layout", "@cortex/client-ui-sidebar", "@cortex/client-ui-renderer"]
+    }
+  }
+}

@@ -16,6 +16,7 @@
     "website/.generated/**",
     "vendor/**",
     "native/**",
+    "integrations/**",
     "**/*.js",
     "**/*.mjs",
     "**/*.config.ts",

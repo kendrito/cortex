@@ -1,0 +1,3 @@
+- insert:
+    - id: memos-brain
+      name: '@cortex/memos-brain'

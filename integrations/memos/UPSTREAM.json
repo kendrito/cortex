@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "package": "@cortex/memos-local-memory",
+  "version": "2.0.16-cortex.1",
+  "upstream": {
+    "repository": "https://github.com/MemTensor/MemOS",
+    "commit": "a7367d07e55db61099f7b4e2c1108bc5831a24f3",
+    "path": "apps/memos-local-plugin",
+    "package": "@memtensor/memos-local-plugin",
+    "version": "2.0.16-beta.1",
+    "license": "Apache-2.0"
+  },
+  "localChanges": [
+    "Native Cortex adapter and profile bundle with owning-session model routing",
+    "Local embedding assets required; runtime model downloads disabled",
+    "Private runtime with telemetry, remote sharing, update checks, and separate providers disabled",
+    "Loopback viewer with local assets and Cortex-managed model settings",
+    "Reproducible local development setup and private package metadata"
+  ]
+}

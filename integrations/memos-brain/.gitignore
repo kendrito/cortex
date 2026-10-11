@@ -1,0 +1,26 @@
+node_modules/
+lib/
+*.tsbuildinfo
+*.log
+*.tgz
+
+# Local configuration, credentials, memory stores, and model assets.
+.env*
+.credentials.*
+config.yaml
+data/
+logs/
+skills/
+models/
+.preview-test-auth/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.sqlite-shm
+*.sqlite-wal
+*.onnx
+*.jsonl
+__pycache__/
+*.pyc

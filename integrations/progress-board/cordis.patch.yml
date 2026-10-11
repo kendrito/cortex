@@ -1,0 +1,3 @@
+- insert:
+    - id: progress-board
+      name: '@cortex/progress-board'

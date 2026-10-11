@@ -2564,6 +2564,12 @@ importers:
       '@cortex/launch-environment':
         specifier: workspace:*
         version: link:../../util/launch-environment
+      '@cortex/memos-brain':
+        specifier: link:../../../integrations/memos-brain
+        version: link:../../../integrations/memos-brain
+      '@cortex/memos-local-memory':
+        specifier: link:../../../integrations/memos
+        version: link:../../../integrations/memos
       '@cortex/message-feedback':
         specifier: workspace:*
         version: link:../../feedback/message-feedback
@@ -2579,6 +2585,9 @@ importers:
       '@cortex/plugin-manager':
         specifier: workspace:*
         version: link:../../boot/plugin-manager
+      '@cortex/progress-board':
+        specifier: link:../../../integrations/progress-board
+        version: link:../../../integrations/progress-board
       '@cortex/schemastery':
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
@@ -2672,6 +2681,9 @@ importers:
       '@cortex/workspace-changes':
         specifier: workspace:*
         version: link:../../deliverables/workspace-changes
+      '@michengai/dsh-skills-manager':
+        specifier: link:../../../integrations/skills-manager
+        version: link:../../../integrations/skills-manager
       commander:
         specifier: ^15.0.0
         version: 15.0.0

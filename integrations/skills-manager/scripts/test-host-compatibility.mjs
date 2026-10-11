@@ -1,0 +1,585 @@
+// 隔离安装指定版本的真实 DSH Web，验证发布包、Agent 作用域和技能策略。
+// --serve 在检查后保留宿主供浏览器验收；Ctrl+C 关闭宿主。失败或 --keep 保留临时目录；结果另存 .compat-results。
+import { spawn } from "node:child_process";
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  writeFile,
+  cp,
+  realpath,
+  access,
+  rm,
+  readdir,
+} from "node:fs/promises";
+import { tmpdir } from "node:os";
+import {
+  dirname,
+  join,
+  resolve,
+  delimiter,
+  relative,
+  isAbsolute,
+} from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { createHash } from "node:crypto";
+import { zipSync } from "fflate";
+import assert from "node:assert/strict";
+
+import { supportedHosts as supported } from "./hosts.mjs";
+import { parseOptions, usage } from "./compatibility-options.mjs";
+import { resolveTempRoot, sameExistingPath } from "./compat-paths.mjs";
+import { hostCordisOverrides, pinHostDependencies } from "./compat-dependencies.mjs";
+let options;
+try {
+  options = parseOptions(process.argv.slice(2));
+} catch (error) {
+  console.error(`${error.message}\n${usage}`);
+  process.exit(1);
+}
+if (options.help) {
+  console.log(usage);
+  process.exit(0);
+}
+if (options.list) {
+  console.log(JSON.stringify(supported));
+  process.exit(0);
+}
+if (options.versions.length > 1) {
+  for (const version of options.versions) {
+    const code = await new Promise((done, reject) => {
+      const child = spawn(
+        process.execPath,
+        [
+          fileURLToPath(import.meta.url),
+          version,
+          ...(options.keep ? ["--keep"] : []),
+          ...(options.serve ? ["--serve"] : []),
+        ],
+        { stdio: "inherit", windowsHide: true },
+      );
+      child.once("error", reject);
+      child.once("exit", done);
+    });
+    if (code !== 0) process.exit(1);
+  }
+  process.exit(0);
+}
+const [version] = options.versions;
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const manifest = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
+
+async function seedRepositoryInstall(home) {
+  const source = { owner: "example", name: "skills", ref: "main", subdirectory: "skills" };
+  const id = createHash("sha256").update(JSON.stringify(source)).digest("hex").slice(0, 24);
+  const document = "---\nname: repo-slash\ndescription: Use when: the slash menu must list a repository install\n---\nREPO_SLASH_BODY\n";
+  const documentBytes = Buffer.from(document);
+  const documentHash = createHash("sha256").update(documentBytes).digest("hex");
+  const zip = Buffer.from(zipSync({ "repo-main/skills/repo-slash/SKILL.md": documentBytes }));
+  const commit = createHash("sha256").update(zip).digest("hex");
+  const cache = join(home, "skills-manager", "repository-cache");
+  await mkdir(cache, { recursive: true });
+  await writeFile(join(cache, `${id}-${commit}.zip`), zip);
+  await writeFile(join(home, "skills-manager", "repositories.json"), JSON.stringify({
+    version: 1,
+    repositories: [{
+      ...source,
+      id,
+      skills: [{
+        path: "skills/repo-slash",
+        files: [{ path: "SKILL.md", hash: documentHash }],
+        name: "repo-slash",
+        description: "Use when: the slash menu must list a repository install",
+        body: "REPO_SLASH_BODY",
+        documentHash,
+        valid: true,
+      }],
+      commit,
+      refreshedAt: "2026-09-30T00:00:00.000Z",
+      error: null,
+    }],
+    installs: [],
+  }));
+  return { id, path: "skills/repo-slash" };
+}
+// 从 PATH 的实际 shim 或符号链接定位入口，不依赖 Node 安装位置。
+async function findTool(name) {
+  for (const directory of (process.env.PATH || "").split(delimiter)) {
+    const shim = join(
+      directory,
+      name + (process.platform === "win32" ? ".cmd" : ""),
+    );
+    try {
+      const target = await realpath(shim);
+      if (process.platform !== "win32") return target;
+      const candidates =
+        name === "npm"
+          ? ["node_modules/npm/bin/npm-cli.js"]
+          : [
+              "node_modules/pnpm/bin/pnpm.cjs",
+              "node_modules/corepack/dist/pnpm.js",
+            ];
+      for (const candidate of candidates) {
+        const entry = resolve(dirname(target), candidate);
+        try {
+          await access(entry);
+          return entry;
+        } catch {}
+      }
+    } catch {}
+  }
+  throw new Error(
+    `PATH 中找不到可运行的 ${name} 入口；请安装项目指定的 pnpm 和 npm 后重试。`,
+  );
+}
+const npm = await findTool("npm");
+const pnpm = await findTool("pnpm");
+const tempRoot = await resolveTempRoot(tmpdir());
+const sandbox = await resolveTempRoot(await mkdtemp(join(tempRoot, `dsh-skills-compat-${version}-`)));
+const env = {
+  ...process.env,
+  CORTEX_HOME: join(sandbox, "home"),
+  USERPROFILE: join(sandbox, "user"),
+};
+for (const key of [
+  "AGENTS",
+  "CODEX",
+  "CLAUDE",
+  "GEMINI",
+  "OPENCODE",
+  "CURSOR",
+]) {
+  env[`DSH_${key}_HOME`] = join(env.USERPROFILE, key.toLowerCase());
+}
+await mkdir(join(sandbox, "workspace"), { recursive: true });
+const workspace = await resolveTempRoot(join(sandbox, "workspace"));
+// 先验证普通工作区，随后补 Git 标记验证两种根目录规则一致。
+await mkdir(env.USERPROFILE, { recursive: true });
+
+async function run(args, cwd = sandbox, taskEnv = process.env) {
+  return new Promise((resolveRun, reject) => {
+    const directTool =
+      process.platform !== "win32" && [npm, pnpm].includes(args[0]);
+    const child = spawn(
+      directTool ? args[0] : process.execPath,
+      directTool ? args.slice(1) : args,
+      {
+        cwd,
+        env: taskEnv,
+        windowsHide: true,
+        detached: process.platform !== "win32",
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    let output = "";
+    const timeout = setTimeout(() => {
+      void stopProcess(child).catch((error) => console.error(error));
+      reject(new Error(`命令超过 180 秒：${args.join(" ")}\n${output}`));
+    }, 180000);
+    child.stdout.on("data", (data) => {
+      output += data;
+    });
+    child.stderr.on("data", (data) => {
+      output += data;
+    });
+    child.on("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    child.on("exit", (code) => {
+      clearTimeout(timeout);
+      code === 0
+        ? resolveRun(output)
+        : reject(new Error(`${args.join(" ")} (${code})\n${output}`));
+    });
+  });
+}
+
+// 仅终止本脚本启动的进程树；退出有界，避免失败后无限等待。
+async function stopProcess(child) {
+  if (!child || child.exitCode !== null || child.signalCode !== null) return;
+  if (process.platform === "win32") {
+    await new Promise((done, reject) => {
+      const killer = spawn(
+        "taskkill",
+        ["/PID", String(child.pid), "/T", "/F"],
+        { windowsHide: true, stdio: "ignore" },
+      );
+      const timer = setTimeout(() => {
+        killer.kill();
+        reject(new Error("终止进程树超时"));
+      }, 10000);
+      killer.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      killer.once("exit", () => {
+        clearTimeout(timer);
+        done();
+      });
+    });
+  } else {
+    try {
+      process.kill(-child.pid, "SIGKILL");
+    } catch (error) {
+      if (error.code !== "ESRCH") throw error;
+    }
+  }
+  if (child.exitCode === null && child.signalCode === null) {
+    await new Promise((done, reject) => {
+      const timer = setTimeout(() => reject(new Error("宿主退出超时")), 10000);
+      child.once("exit", () => {
+        clearTimeout(timer);
+        done();
+      });
+    });
+  }
+}
+
+const report = { version, plugin: manifest.version, sandbox, checks: [] };
+let host;
+let hostLog = "";
+try {
+  console.log(`${version}: 隔离安装 ${sandbox}`);
+  const dependencies = { "@deepseek-ai/dsh": version };
+  for (const name of Object.keys(manifest.peerDependencies)) {
+    if (name.startsWith("@cortex/")) dependencies[name] = version;
+  }
+  await writeFile(
+    join(sandbox, "package.json"),
+    JSON.stringify({
+      private: true,
+      type: "module",
+      packageManager: manifest.packageManager,
+      dependencies,
+    }),
+  );
+  // 旧版宿主的 peer 图会使 npm 11 长时间解析；使用项目规定的 pnpm，并统一官方版本。
+  await writeFile(
+    join(sandbox, "pnpm-workspace.yaml"),
+    `autoInstallPeers: true\nstrictPeerDependencies: false\noverrides:\n${Object.entries(hostCordisOverrides(version)).map(([name, pinned]) => `  '${name}': '${pinned}'`).join("\n")}\n`,
+  );
+  await writeFile(join(sandbox, ".pnpmfile.cjs"),
+    `const pinHostDependencies = ${pinHostDependencies.toString()};\nmodule.exports = { hooks: { readPackage: pkg => pinHostDependencies(pkg, ${JSON.stringify(version)}) } };\n`, "utf8");
+  const installLog = await run([
+    pnpm,
+    "install",
+    "--ignore-scripts",
+    "--registry=https://registry.npmjs.org/",
+  ]);
+  await writeFile(join(sandbox, "install.log"), installLog);
+  for (const [name, expected] of Object.entries(dependencies)) {
+    const installed = JSON.parse(
+      await readFile(
+        join(sandbox, "node_modules", name, "package.json"),
+        "utf8",
+      ),
+    );
+    assert.equal(installed.version, expected, `${name} 不能由其他版本掩盖`);
+  }
+  for (const entry of await readdir(join(sandbox, "node_modules", ".pnpm"))) {
+    if (!entry.startsWith("@deepseek-ai+dsh")) continue;
+    const scope = join(sandbox, "node_modules", ".pnpm", entry, "node_modules", "@deepseek-ai");
+    // Windows 下虚拟存储目录会被截断并加哈希，不能从目录名反推包名。
+    for (const item of await readdir(scope, { withFileTypes: true })) {
+      if (!item.isDirectory() || !(item.name === "dsh" || item.name.startsWith("dsh-"))) continue;
+      const installed = JSON.parse(await readFile(join(scope, item.name, "package.json"), "utf8"));
+      assert.equal(installed.version, version, `${installed.name} 传递依赖不能混装其他宿主版本`);
+    }
+  }
+  report.checks.push("精确版本的宿主、全部官方 peer 与传递依赖已安装");
+  const pack = JSON.parse(
+    await run(
+      [
+        npm,
+        "pack",
+        "--ignore-scripts",
+        "--json",
+        "--pack-destination",
+        sandbox,
+      ],
+      root,
+    ),
+  );
+  const cli = join(
+    sandbox,
+    "node_modules",
+    "@deepseek-ai",
+    "dsh",
+    "lib",
+    "bin.js",
+  );
+  await writeFile(
+    join(sandbox, "plugin-install.log"),
+    await run(
+      [
+        cli,
+        "plugin",
+        "--profile",
+        "web",
+        "add",
+        join(sandbox, pack[0].filename),
+        "--registry=https://registry.npmjs.org/",
+      ],
+      sandbox,
+      env,
+    ),
+  );
+  await cp(
+    join(root, "test", "fixtures", "compatibility-probe.mjs"),
+    join(sandbox, "probe.mjs"),
+  );
+  await writeFile(
+    join(sandbox, "probe.yml"),
+    `- insert:\n    - id: skills-compat-probe\n      name: ${JSON.stringify(pathToFileURL(join(sandbox, "probe.mjs")).href)}\n`,
+  );
+  const external = join(env.DSH_AGENTS_HOME, "skills", "compat-external");
+  await mkdir(external, { recursive: true });
+  const original =
+    "---\nname: compat-external\ndescription: 隔离兼容测试\n---\nCOMPAT_EXTERNAL_BODY\n";
+  await writeFile(join(external, "SKILL.md"), original);
+  const local = join(env.CORTEX_HOME, "skills", "compat-local");
+  await mkdir(local, { recursive: true });
+  await writeFile(
+    join(local, "SKILL.md"),
+    original.replaceAll("compat-external", "compat-local"),
+  );
+  // 同名项目与全局正文分开，验证停用一个副本不会停用其他来源。
+  const projectScoped = join(workspace, ".dsh", "skills", "compat-scoped");
+  const globalScoped = join(env.CORTEX_HOME, "skills", "compat-scoped");
+  for (const [path, body] of [[projectScoped, "PROJECT_BODY"], [globalScoped, "GLOBAL_BODY"]]) {
+    await mkdir(path, { recursive: true });
+    await writeFile(join(path, "SKILL.md"), `---\nname: compat-scoped\ndescription: 作用域回退测试\n---\n${body}\n`);
+  }
+  const repositoryInstall = await seedRepositoryInstall(env.CORTEX_HOME);
+  host = spawn(
+    process.execPath,
+    [
+      cli,
+      "--profile",
+      "web",
+      "--patch",
+      join(sandbox, "probe.yml"),
+      "--port",
+      "0",
+      "--no-open",
+    ],
+    {
+      cwd: workspace,
+      env,
+      windowsHide: true,
+      detached: process.platform !== "win32",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  const url = await new Promise((resolveUrl, reject) => {
+    const timeout = setTimeout(
+      () => reject(new Error(`宿主启动超时\n${hostLog}`)),
+      45000,
+    );
+    const observe = (data) => {
+      hostLog += data;
+      const match = hostLog.match(/http:\/\/127\.0\.0\.1:\d+(?:\/[^\s]*)?/);
+      if (match) {
+        clearTimeout(timeout);
+        resolveUrl(match[0]);
+      }
+    };
+    host.stdout.on("data", observe);
+    host.stderr.on("data", observe);
+    host.once("error", (error) => {
+      clearTimeout(timeout);
+      reject(error);
+    });
+    host.once("exit", (code) => {
+      clearTimeout(timeout);
+      reject(new Error(`宿主提前退出 ${code}\n${hostLog}`));
+    });
+  });
+  const base = new URL(url).origin;
+  // 首次访问换取宿主 Cookie；不在证据中保存临时访问 token。
+  const landing = await fetch(url, { redirect: "manual" });
+  const cookie = landing.headers
+    .getSetCookie()
+    .map((value) => value.split(";")[0])
+    .join("; ");
+  async function request(path, body) {
+    const response = await fetch(base + path, {
+      method: body ? "POST" : "GET",
+      headers: {
+        cookie,
+        "x-dsh-skills-session": "skills-manager-compat-agent",
+        origin: base,
+        "content-type": "application/json",
+        "x-dsh-skills-manager": "1",
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+      signal: AbortSignal.timeout(20000),
+    });
+    const text = await response.text();
+    assert.equal(response.status, 200, text);
+    return JSON.parse(text);
+  }
+  const state = await request("/api/dsh-skills-manager/state");
+  assert(state.ok);
+  for (const name of ["compat-external", "compat-local"]) {
+    assert(
+      state.data.roots.some((item) =>
+        item.skills.some((skill) => skill.name === name),
+      ),
+      `状态缺少 ${name}`,
+    );
+  }
+  const probe = () => request("/__skills-manager-compat");
+  let snapshot = await probe();
+  assert(snapshot.list.some((skill) => skill.name === "compat-external"));
+  assert(snapshot.list.some((skill) => skill.name === "compat-local"));
+  assert(snapshot.local.content.includes("COMPAT_EXTERNAL_BODY"));
+  assert(snapshot.skill.content.includes("COMPAT_EXTERNAL_BODY"));
+  assert(snapshot.skill.invocation.modelInvocable);
+  report.checks.push("发布包加载、状态接口、真实 Agent 作用域列表与正文读取");
+  await request("/api/dsh-skills-manager/disable", {
+    root: "agents",
+    name: "compat-external",
+  });
+  snapshot = await probe();
+  assert(
+    snapshot.list.some((skill) => skill.name === "compat-external"),
+    "停用后仍可发现技能",
+  );
+  assert.equal(snapshot.skill.invocation.modelInvocable, false);
+  assert.equal(snapshot.skill.invocation.userInvocable, false);
+  await request("/api/dsh-skills-manager/enable", {
+    root: "agents",
+    name: "compat-external",
+  });
+  snapshot = await probe();
+  assert.equal(snapshot.skill.invocation.modelInvocable, true);
+  assert.equal(snapshot.skill.invocation.userInvocable, true);
+  assert.equal(await readFile(join(external, "SKILL.md"), "utf8"), original);
+  report.checks.push(
+    "活动 Agent 停用后模型与用户调用策略刷新、恢复启用、源文件不变",
+  );
+  const scopedState = await request("/api/dsh-skills-manager/state");
+  const expectedProjectPath = join(workspace, ".dsh", "skills");
+  const projectRoots = scopedState.data.roots.filter((item) => item.kind === "project-dsh");
+  let projectRoot;
+  for (const item of projectRoots) {
+    if (await sameExistingPath(item.path, expectedProjectPath)) {
+      projectRoot = item;
+      break;
+    }
+  }
+  assert(projectRoot, "真实 Agent 的项目来源可管理");
+  assert.equal(snapshot.scoped.content, "PROJECT_BODY");
+  async function toggleScoped(root, enabled) {
+    await request(`/api/dsh-skills-manager/${enabled ? "enable" : "disable"}`, { root, name: "compat-scoped" });
+    return probe();
+  }
+  snapshot = await toggleScoped(projectRoot.key, false);
+  assert.equal(snapshot.scoped.content, "GLOBAL_BODY", "项目停用后宿主采用全局正文");
+  assert.equal(snapshot.scoped.invocation.modelInvocable, true);
+  const fallbackState = await request("/api/dsh-skills-manager/state");
+  const disabledProject = fallbackState.data.roots.find((r) => r.key === projectRoot.key).skills.find((s) => s.name === "compat-scoped");
+  assert.equal(disabledProject.enabled, false);
+  assert.equal(disabledProject.shadowedBy, undefined);
+  assert.deepEqual(disabledProject.fallbackTo, { root: "dsh", name: "compat-scoped", scope: "user" }, "接管提示与宿主实际全局赢家一致");
+  snapshot = await toggleScoped("dsh", false);
+  assert.equal(snapshot.scoped.invocation.modelInvocable, false, "全部停用才阻断调用");
+  assert.equal(snapshot.scoped.invocation.userInvocable, false);
+  snapshot = await toggleScoped(projectRoot.key, true);
+  assert.equal(snapshot.scoped.content, "PROJECT_BODY");
+  assert.equal(snapshot.scoped.invocation.modelInvocable, true, "全局停用不影响项目恢复");
+  snapshot = await toggleScoped("dsh", true);
+  assert.equal(snapshot.scoped.content, "PROJECT_BODY");
+  report.checks.push("项目优先、项目停用后全局回退、全部停用阻断、分别恢复及 UI 状态一致");
+  report.checks.push("非 Git 工作区的真实宿主发现、读取、启停及全局回退");
+  await mkdir(join(workspace, ".git"));
+  const gitState = await request("/api/dsh-skills-manager/state");
+  assert.equal(gitState.data.roots.find((r) => r.kind === "project-dsh").key, projectRoot.key);
+  assert.equal((await probe()).scoped.content, "PROJECT_BODY");
+  await rm(join(workspace, ".git"), { recursive: true });
+  report.checks.push("添加 Git 标记后项目身份和正文保持一致，移除后恢复非 Git 验收环境");
+  await request("/api/dsh-skills-manager/repositories/install", repositoryInstall);
+  snapshot = await probe();
+  const installedSkill = snapshot.list.find((skill) => skill.name === "repo-slash");
+  assert(installedSkill, "仓库安装后无需手动开关即可进入斜杠目录");
+  assert.equal(installedSkill.invocation.userInvocable, true);
+  assert.equal(installedSkill.invocation.modelInvocable, true);
+  assert(snapshot.installed?.content?.includes("REPO_SLASH_BODY"), "斜杠目录可以读取仓库安装正文");
+  const managerState = JSON.parse(await readFile(join(env.CORTEX_HOME, "skills-manager", "state.json"), "utf8"));
+  assert(managerState.enabledSkills.dsh.includes("repo-slash"), "仓库安装写入 enabledSkills");
+  report.checks.push("仓库安装写入启用策略，真实 Agent 斜杠目录可发现并读取");
+  report.passed = true;
+  await writeFile(
+    join(sandbox, "result.json"),
+    JSON.stringify(report, null, 2),
+  );
+  console.log(JSON.stringify(report));
+  if (options.serve) {
+    console.log(`浏览器验收：${url}`);
+    await new Promise((resolveStop) => {
+      process.once("SIGINT", resolveStop);
+      process.once("SIGTERM", resolveStop);
+    });
+  }
+} catch (error) {
+  report.passed = false;
+  report.error = String(error.stack || error);
+  await writeFile(
+    join(sandbox, "result.json"),
+    JSON.stringify(report, null, 2),
+  );
+  console.error(JSON.stringify(report));
+  process.exitCode = 1;
+} finally {
+  try {
+    await stopProcess(host);
+  } catch (error) {
+    report.passed = false;
+    report.error = String(error);
+    process.exitCode = 1;
+  }
+  const evidence = join(root, ".compat-results", version);
+  await mkdir(evidence, { recursive: true });
+  await writeFile(
+    join(evidence, "result.json"),
+    JSON.stringify(report, null, 2),
+  );
+  await writeFile(
+    join(evidence, "host.log"),
+    hostLog.replace(/\?token=[^\s]+/g, "?token=[redacted]"),
+  );
+  for (const name of ["install.log", "plugin-install.log"]) {
+    try {
+      await cp(join(sandbox, name), join(evidence, name));
+    } catch (error) {
+      if (error.code !== "ENOENT") throw error;
+    }
+  }
+  await writeFile(
+    join(sandbox, "result.json"),
+    JSON.stringify(report, null, 2),
+  );
+  if (
+    report.passed &&
+    !options.keep &&
+    !options.serve
+  ) {
+    const rel = relative(tempRoot, sandbox);
+    assert(
+      rel && !rel.startsWith("..") && !isAbsolute(rel),
+      "清理路径必须位于临时目录内",
+    );
+    try {
+      await rm(sandbox, {
+        recursive: true,
+        force: true,
+        maxRetries: 3,
+        retryDelay: 500,
+      });
+    } catch (error) {
+      console.warn(`临时目录清理失败，保留 ${sandbox}: ${error.message}`);
+    }
+  }
+}

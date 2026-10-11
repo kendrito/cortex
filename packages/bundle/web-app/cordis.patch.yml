@@ -39,6 +39,38 @@
 # window.__CORTEX_BOOT__; the modules row is simultaneously a host row.
 - insert:
 
+    # Built into Cortex: these always load, never appear on the Plugins page, and
+    # the plugin manager refuses to switch them off (its protectedModules list).
+    # Memory's own on/off switch and reset live in the Brain tab instead.
+    # Local memory (MemOS): recall, capture and the memos_* tools. The standalone
+    # viewer stays off because the Brain tab replaces it, and a failed start (for
+    # example a fresh install with no embedding model yet) never stops Cortex.
+    - id: memos-local-memory
+      name: '@cortex/memos-local-memory/dist/adapters/deepseek-harness/index.js'
+      config:
+        enabled: true
+        profileId: default
+        home: ''
+        recallEnabled: true
+        captureEnabled: true
+        toolsEnabled: true
+        hostLlmEnabled: true
+        viewerEnabled: false
+        viewerPort: 18801
+        recallTimeoutMs: 3000
+        contextMaxChars: 6000
+        toolResultMaxChars: 1200
+        failOnStartupError: false
+    # The Brain tab: the 3D memory explorer plus the memory switch and reset.
+    - id: memos-brain
+      name: '@cortex/memos-brain'
+    # The progress board pinned above the composer.
+    - id: progress-board
+      name: '@cortex/progress-board'
+    # Skills Manager in Settings: local skills, repositories, backups and Trash.
+    - id: skills-manager
+      name: '@michengai/dsh-skills-manager'
+
     # One switch owns the testing pane, MCP tools, child engine, and model bridge.
     - id: testy
       name: '@cortex/testy'

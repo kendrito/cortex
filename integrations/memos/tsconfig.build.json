@@ -1,0 +1,1 @@
+{"extends":"./tsconfig.json","include":["core/**/*.ts","agent-contract/**/*.ts","server/**/*.ts","adapters/deepseek-harness/**/*.ts"],"exclude":["node_modules","dist","viewer","adapters/openclaw","adapters/hermes","tests","bridge"]}

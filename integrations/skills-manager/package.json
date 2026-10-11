@@ -1,0 +1,113 @@
+{
+  "name": "@michengai/dsh-skills-manager",
+  "version": "1.1.13",
+  "description": "Local Skills Manager for Cortex: global and project skills, explicit repository imports, backups, rollback and Trash.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MichengAI/dsh-skills-manager.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MichengAI/dsh-skills-manager/issues"
+  },
+  "homepage": "https://github.com/MichengAI/dsh-skills-manager#readme",
+  "type": "module",
+  "packageManager": "pnpm@11.22.0",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "locale",
+    "lib",
+    "assets",
+    "cordis.patch.yml",
+    "CHANGELOG.md",
+    "CHANGELOG.zh-CN.md"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "npm run typecheck && npm run build && npm run test:cortex && npm run test:client",
+    "test:cortex": "node --test test/cortex-core-safety.test.mjs test/cortex-host-runtime.test.mjs test/cortex-client-runtime.test.mjs",
+    "test:client": "node test/locale-test.mjs && node test/client-scope.test.mjs && node test/repository-ui.test.mjs && node test/theme-select.test.mjs",
+    "verify": "npm test && npm run pack:check",
+    "pack:check": "npm pack --dry-run --json",
+    "prepack": "npm run typecheck && npm run build",
+    "typecheck": "node node_modules/typescript/bin/tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@cortex/cordis": "*",
+    "@cortex/client-locale": "*",
+    "@cortex/client-ui-slots": "*",
+    "@cortex/host-webserver": "*",
+    "@cortex/session": "*",
+    "@cortex/skill": "*",
+    "@cortex/tools": "*",
+    "@cortex/web-app": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.4",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "antd": "6.6.5",
+    "esbuild": "0.25.0",
+    "react": "^18.3.1",
+    "react-dom": "18.3.1",
+    "typescript": "5.9.3",
+    "@cortex/cordis": "*",
+    "@cortex/client-ui-slots": "*",
+    "@cortex/host-webserver": "*",
+    "@cortex/session": "*",
+    "@cortex/web-app": "*",
+    "@cortex/home-paths": "*",
+    "@cortex/client-connection": "*",
+    "@cortex/agent": "*",
+    "@cortex/agent-preset-registry": "*",
+    "@cortex/session-query": "*",
+    "@cortex/skill": "*",
+    "@cortex/tools": "*",
+    "@cortex/schemastery": "*",
+    "@cortex/client-ui-primitives": "*",
+    "@cortex/api-remotes": "*",
+    "@cortex/fs": "*",
+    "@cortex/fs-sandbox": "*",
+    "@cortex/api-session-controller": "*",
+    "@cortex/client-locale": "*",
+    "@cortex/client-ui-session": "*",
+    "@cortex/client-ui-settings": "*",
+    "@cortex/client-ui-renderer": "*",
+    "@cortex/scope": "*"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh",
+    "dsh-plugin",
+    "skill",
+    "skills",
+    "cordis"
+  ],
+  "dependencies": {
+    "fflate": "0.8.3"
+  },
+  "cortex": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@cortex/client-ui-slots",
+        "@cortex/client-locale"
+      ],
+      "platform": "web"
+    }
+  },
+  "private": true
+}

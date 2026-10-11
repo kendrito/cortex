@@ -72,6 +72,24 @@ describe('tierExternalDeps', () => {
     expect(isPermissive('MPL-2.0')).toBe(false)
   })
 
+  it('treats links into the repository as first-party and keeps links leaving it external', () => {
+    const { manifests, names } = workspace({
+      'packages/bundle/app/package.json': {
+        dependencies: {
+          '@cortex/built-in': 'link:../../../integrations/built-in',
+          'outside-link': 'link:../../../../elsewhere/outside-link',
+          'installed-link': 'link:../../../node_modules/installed-link',
+          'registry-lib': '^1',
+        },
+      },
+    })
+    const tiers = tierExternalDeps(manifests, names)
+    expect(tiers.has('@cortex/built-in')).toBe(false)
+    expect(tiers.get('outside-link')).toBe(true)
+    expect(tiers.get('installed-link')).toBe(true)
+    expect(tiers.get('registry-lib')).toBe(true)
+  })
+
   it('keeps license rejection active when a browser library is declared for development', () => {
     const { manifests, names } = workspace({
       'packages/client/ui/package.json': { devDependencies: { 'browser-lib': '^1', 'test-tool': '^1' } },

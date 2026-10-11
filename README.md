@@ -17,14 +17,24 @@ Use Node.js within the supported engine range and the package manager version de
 ```sh
 pnpm install
 pnpm run build
+pnpm run build:integrations
 pnpm cortex web
 ```
+
+`build:integrations` installs and builds the built-in integrations under `integrations/` (local memory, Brain, the progress board and Skills Manager). Each is a standalone npm project, so the workspace build does not reach it; the step reaches the npm registry the first time.
 
 The Web UI listens on `http://127.0.0.1:3080` by default. Configure a local model gateway before starting a model turn. Other entry points include `pnpm cortex --profile headless "run the tests"`, `pnpm cortex --profile tui`, and `pnpm cortex --dump-config`.
 
 Windows web and desktop profiles enable the experimental native Computer Use driver by default. It can observe and interact with the desktop through session tools; screenshots used by an image-capable model are sent to your configured model provider. See [Computer Use](docs/subsystems/computer-use.md) for permissions and disabling or switching providers. Headless and SDK profiles do not enable it automatically.
 
 Web and desktop profiles also enable Playwright browser automation and local full-text conversation search. Browser automation does not add web grounding tools. The embedded code editor is removed; Cortex does not launch a VS Code or code-server sidecar.
+
+Four features ship built in and are not listed on the Plugins page, so they cannot be switched off or uninstalled there:
+
+- **Local memory** ([MemOS](integrations/memos/README.md)) recalls and learns from conversations on this machine.
+- **Brain** ([memos-brain](integrations/memos-brain/README.md)) explores what memory has learned. Its tab is also where memory is paused, or reset to forget everything learned.
+- **Progress board** ([progress-board](integrations/progress-board/README.md)) sits above the composer with an estimated bar, the agent's task list and a live row per subagent.
+- **Skills Manager** ([skills-manager](integrations/skills-manager/CORTEX-PORT.md)) manages local skills in Settings → Skills. It is a port of an Apache-2.0 project and keeps that license.
 
 On Windows x64, [Testy](packages/extensions/testy/README.md) is included as an optional built-in plugin. Describe a workflow to discover the application, create and run an AI test, and review screenshots and assertions inside Cortex. Testy uses the selected Cortex model and is also available as MCP tools in chats.
 

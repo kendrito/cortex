@@ -174,7 +174,11 @@
     "@cortex/experimental-computer-use-cua-driver-native": "workspace:*",
     "@cortex/browser-use": "workspace:*",
     "@cortex/experimental-browser-use-playwright-mcp": "workspace:*",
-    "@cortex/testy": "workspace:*"
+    "@cortex/testy": "workspace:*",
+    "@cortex/memos-local-memory": "link:../../../integrations/memos",
+    "@cortex/memos-brain": "link:../../../integrations/memos-brain",
+    "@cortex/progress-board": "link:../../../integrations/progress-board",
+    "@michengai/dsh-skills-manager": "link:../../../integrations/skills-manager"
   },
   "peerDependencies": {
     "@cortex/cordis": "workspace:~",

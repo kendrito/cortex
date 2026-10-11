@@ -1,0 +1,3071 @@
+import type { SkillRoot, RepositoryDestination, RootInput, Diagnostic, OperationError, CodedError, Log, DiscoveredEntry, SkillEntry, ParsedSkill, Scan, ManagerState, PolicyResult, Policy, SkillItem, ViewItem, RootView, SkillView, ScopeOptions, MutationOptions, RenameOptions, UploadInput, CreateInput, ImportCandidate, ImportPending, ImportConflict, ImportFailure, ImportResult } from "./types.js";
+// dsh-skills-manager core —— 纯 Node 技能文件管理核心（仅 ZIP 解压使用 fflate，可独立单测）
+//
+// 覆盖 DSH 用户级与活动 Session 项目级技能根：
+//   - 用户根目录：~/.cortex/skills 与常见 Agent 用户目录
+//   - 项目根目录：DSH 可创建、回收；公共 Agent 与各应用目录支持本地策略启停，源文件只读
+//   - 条目形态：<root>/<name>/SKILL.md（bundle）或 <root>/<name>.md（flat），只读来源递归发现，可写来源只扫一层
+//   - 前端展示 name、description 与启停状态，不做格式检查或自动修复
+//
+// 所有函数返回普通结果对象，业务校验失败返回 { ok: false, error, code?, params? }；
+// error 保持中文原文（兼容性红线），code 为点分小写业务错误码，params 供前端词典占位符替换；
+// 系统异常（fs ENOENT 等）透传 String(e.message)，不加 code。
+// 文件写入错误由路由返回给调用方。
+
+import { homedir } from "node:os";
+import { resolveCortexHome } from "@cortex/home-paths";
+import {
+  join,
+  basename,
+  dirname,
+  resolve,
+  relative,
+  isAbsolute,
+  sep,
+} from "node:path";
+import { promises as fs } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { unzipSync } from "fflate";
+import {
+  discoverReadonlyEntries,
+  validDiscoveryName,
+} from "./readonly-discovery.js";
+
+const KEBAB_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// 项目来源集中定义，路径校验、策略身份和展示共用，避免新增目录只可见却不可加载。
+// 两种作用域共用 Agent 顺序；兼容目录紧跟主目录，通用项目目录最后补充。
+const EXTERNAL_SOURCE_ORDER = [
+  "ccswitch", "codex", "claude", "gemini", "opencode", "cursor", "copilot",
+  "windsurf", "windsurf-user", "trae", "trae-cn", "openclaw", "clawdbot",
+  "roo", "codebuddy", "workbuddy", "qoder", "qoder-cn", "lingma", "projectSkills",
+];
+function rankSources<T extends {key: string; native?: boolean; rank?: number; localeKey?: string}>(sources: T[], startRank: number) {
+  const order = (root: T) => EXTERNAL_SOURCE_ORDER.indexOf(root.localeKey === "projectSkills" ? "projectSkills" : root.key);
+  const external = sources.filter((root) => !root.native);
+  // 先逐项校验；单元素数组不会调用 sort 比较器，也不能漏过未登记来源。
+  for (const root of external) {
+    if (order(root) < 0) throw new Error(`技能来源未登记到 EXTERNAL_SOURCE_ORDER: ${root.key}`);
+  }
+  external.sort((a, b) => order(a) - order(b));
+  const ranks = new Map(external.map((root, index) => [root.key, startRank + index * 10]));
+  return sources.map((root) => ({ ...root, rank: root.native ? root.rank! : ranks.get(root.key)! }))
+    .sort((a, b) => a.rank - b.rank);
+}
+const PROJECT_SOURCES = rankSources([
+  { key: "dsh", directory: ".cortex", localeKey: "projectDsh", label: "Project Cortex", rank: 100, mutable: true, native: true },
+  { key: "agents", directory: ".agents", localeKey: "projectAgents", label: "Project Agent", rank: 200, native: true },
+  // 保留原生项目 100/200；其余项目来源按统一 Agent 顺序生成 210–320。
+  { key: "copilot", directory: ".github", localeKey: "copilot", label: "Copilot" },
+  { key: "codex", directory: ".codex", localeKey: "codex", label: "Codex" },
+  { key: "claude", directory: ".claude", localeKey: "claude", label: "Claude" },
+  { key: "gemini", directory: ".gemini", localeKey: "gemini", label: "Gemini" },
+  { key: "opencode", directory: ".opencode", localeKey: "opencode", label: "OpenCode" },
+  { key: "cursor", directory: ".cursor", localeKey: "cursor", label: "Cursor" },
+  { key: "windsurf", directory: ".windsurf", localeKey: "windsurf", label: "Windsurf" },
+  { key: "trae", directory: ".trae", localeKey: "trae", label: "Trae" },
+  { key: "trae-cn", directory: ".trae-cn", localeKey: "traeCn", label: "Trae CN" },
+  // 保留 project-openclaw:<hash> 策略键兼容已有设置；此项扫描通用 <project>/skills，并非 OpenClaw 专属目录。
+  { key: "openclaw", directory: "", localeKey: "projectSkills", label: "Project Skills" },
+  { key: "roo", directory: ".roo", localeKey: "roo", label: "Roo" },
+  { key: "codebuddy", directory: ".codebuddy", localeKey: "codebuddy", label: "CodeBuddy" },
+  { key: "workbuddy", directory: ".workbuddy", localeKey: "workbuddy", label: "WorkBuddy" },
+  // Qoder CN CLI 的项目技能也写在 .qoder/skills，与国际版 Qoder 共用。
+  { key: "qoder", directory: ".qoder", localeKey: "qoder", label: "Qoder" },
+  { key: "lingma", directory: ".lingma", localeKey: "lingma", label: "Qoder CN" },
+], 210);
+const PROJECT_ROOT_KEY_RE = new RegExp(
+  `^project-(?:${[...PROJECT_SOURCES]
+    .map((source) => source.key)
+    .sort((left, right) => right.length - left.length)
+    .join("|")}):[a-f0-9]{16}$`,
+);
+function projectSourceDefinition(kind?: string) {
+  return PROJECT_SOURCES.find((source) => `project-${source.key}` === kind);
+}
+const USER_DSH_POLICY_RANK = 399;
+const WINDOWS_DEVICE_NAME_RE =
+  /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
+const MAX_SOURCE_DEPTH = 64;
+const MAX_ENTRY_NAME_LENGTH = 128;
+const MAX_BROWSE_ENTRIES = 500;
+const MAX_UPLOAD_ARCHIVE_BYTES = 32 << 20;
+const MAX_UPLOAD_ENTRY_BYTES = 32 << 20;
+const MAX_UPLOAD_TOTAL_BYTES = 64 << 20;
+const MAX_UPLOAD_ENTRIES = 1000;
+const MAX_UPLOAD_PATH_LENGTH = 512;
+const TRANSIENT_RENAME_CODES = new Set(["EACCES", "EBUSY", "EPERM"]);
+
+// ── 业务错误码 ────────────────────────────────────────────────────────────────
+
+/** 构造带 code/params 的业务 Error，供导入链路 throw 后透传到失败明细。 */
+function codedError(message: string, code: string, params?: Record<string, unknown>): CodedError {
+  const error: CodedError = new Error(message);
+  error.code = code;
+  error.params = params;
+  return error;
+}
+
+/** 把业务 Error 的 code/params 附加到失败明细；系统异常（ENOENT 等，非 error.* 前缀）保持原文。 */
+function attachCode<T extends Diagnostic>(item: T, error: CodedError | null | undefined): T {
+  if (error && typeof error.code === "string" && /^error\./.test(error.code))
+    item.code = error.code;
+  if (error && error.params) item.params = error.params;
+  return item;
+}
+
+// ── 路径解析 ────────────────────────────────────────────────────────────────
+
+export function resolveDshHome() {
+  return resolveCortexHome();
+}
+
+export function resolveAgentsHome() {
+  return process.env.CORTEX_AGENTS_HOME || join(homedir(), ".agents");
+}
+
+/**
+ * DSH 及常见 Agent 的用户级技能目录。
+ *
+ * rank 与官方 filesystem provider 的用户级优先级衔接：DSH=400、Agents=500。
+ * manager provider 以 450 接管公共 Agents（仍低于 DSH），其余来源依次排在其后。
+ */
+export function userRoots(): SkillRoot[] {
+  return rankSources([
+    {
+      key: "dsh",
+      path: join(resolveDshHome(), "skills"),
+      label: "Cortex skills",
+      mutable: true,
+      toggleable: true,
+      native: true,
+      rank: 400,
+    },
+    {
+      key: "agents",
+      path: join(resolveAgentsHome(), "skills"),
+      label: "公共 Agent",
+      mutable: false,
+      toggleable: true,
+      native: true,
+      rank: 450,
+    },
+    {
+      key: "ccswitch",
+      path: join(homedir(), ".cc-switch", "skills"),
+      label: "CC Switch",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "codex",
+      path: join(
+        process.env.DSH_CODEX_HOME || join(homedir(), ".codex"),
+        "skills",
+      ),
+      label: "Codex",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "claude",
+      path: join(
+        process.env.DSH_CLAUDE_HOME || join(homedir(), ".claude"),
+        "skills",
+      ),
+      label: "Claude",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "gemini",
+      path: join(
+        process.env.DSH_GEMINI_HOME || join(homedir(), ".gemini"),
+        "skills",
+      ),
+      label: "Gemini",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "opencode",
+      path: join(
+        process.env.DSH_OPENCODE_HOME || join(homedir(), ".config", "opencode"),
+        "skills",
+      ),
+      label: "OpenCode",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "cursor",
+      path: join(
+        process.env.DSH_CURSOR_HOME || join(homedir(), ".cursor"),
+        "skills",
+      ),
+      label: "Cursor",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "copilot",
+      path: join(process.env.DSH_COPILOT_HOME || join(homedir(), ".copilot"), "skills"),
+      label: "Copilot",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "windsurf",
+      path: join(
+        process.env.DSH_WINDSURF_HOME || join(homedir(), ".codeium", "windsurf"),
+        "skills",
+      ),
+      label: "Windsurf",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "windsurf-user",
+      localeKey: "windsurfUser",
+      path: join(
+        process.env.DSH_WINDSURF_USER_HOME || join(homedir(), ".windsurf"),
+        "skills",
+      ),
+      label: "Windsurf 主目录",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "trae",
+      path: join(process.env.DSH_TRAE_HOME || join(homedir(), ".trae"), "skills"),
+      label: "Trae",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "trae-cn",
+      localeKey: "traeCn",
+      path: join(
+        process.env.DSH_TRAE_CN_HOME || join(homedir(), ".trae-cn"),
+        "skills",
+      ),
+      label: "Trae 国内版",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "openclaw",
+      path: join(
+        process.env.DSH_OPENCLAW_HOME || join(homedir(), ".openclaw"),
+        "skills",
+      ),
+      label: "OpenClaw",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "clawdbot",
+      path: join(
+        process.env.DSH_CLAWDBOT_HOME || join(homedir(), ".clawdbot"),
+        "skills",
+      ),
+      label: "OpenClaw 旧目录",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "roo",
+      path: join(process.env.DSH_ROO_HOME || join(homedir(), ".roo"), "skills"),
+      label: "Roo",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "codebuddy",
+      path: join(
+        process.env.DSH_CODEBUDDY_HOME || join(homedir(), ".codebuddy"),
+        "skills",
+      ),
+      label: "CodeBuddy",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "workbuddy",
+      localeKey: "workbuddy",
+      path: join(
+        process.env.DSH_WORKBUDDY_HOME || join(homedir(), ".workbuddy"),
+        "skills",
+      ),
+      label: "WorkBuddy",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "qoder",
+      localeKey: "qoder",
+      path: join(process.env.DSH_QODER_HOME || join(homedir(), ".qoder"), "skills"),
+      label: "Qoder",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "qoder-cn",
+      localeKey: "qoderCn",
+      path: join(
+        process.env.DSH_QODER_CN_HOME || join(homedir(), ".qoder-cn"),
+        "skills",
+      ),
+      label: "Qoder CN CLI",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+    {
+      key: "lingma",
+      localeKey: "lingma",
+      path: join(process.env.DSH_LINGMA_HOME || join(homedir(), ".lingma"), "skills"),
+      label: "Qoder CN",
+      mutable: false,
+      toggleable: true,
+      native: false,
+    },
+  ], 500);
+}
+
+function projectIdentity(path: string) {
+  const canonical = pathIdentity(path);
+  return createHash("sha256").update(canonical).digest("hex").slice(0, 16);
+}
+
+async function nearestProjectRoot(cwd: string) {
+  if (typeof cwd !== "string" || !isAbsolute(cwd)) return null;
+  let start;
+  try {
+    start = await fs.realpath(resolve(cwd));
+    if (!(await fs.stat(start)).isDirectory()) return null;
+  } catch {
+    return { unavailable: true, cwd };
+  }
+  let current = start;
+  for (;;) {
+    try {
+      await fs.lstat(join(current, ".git"));
+      return { root: current, cwd: start };
+    } catch {
+      /* 继续向上查找最近的项目根 */
+    }
+    const parent = dirname(current);
+    // 与宿主一致：无 Git 标记时使用已校验的会话 cwd。
+    if (parent === current) return { root: start, cwd: start };
+    current = parent;
+  }
+}
+
+async function projectSourceSafe(definition: SkillRoot) {
+  // 只读来源允许目录链接，但重叠来源会绕过用户根的停用策略。
+  const source = projectSourceDefinition(definition.kind);
+  if (!source) return false;
+  if (!source.mutable)
+    return !(await overlapsUserSkillRoot(definition.path));
+  const container = join(
+    definition.projectRoot!,
+    source.directory,
+  );
+  for (const path of [container, definition.path]) {
+    const st = await lstatOrNull(path);
+    if (st && (!st.isDirectory() || st.isSymbolicLink())) return false;
+  }
+  return !(await overlapsUserSkillRoot(definition.path));
+}
+
+/**
+ * 从活动 Session cwd 推导项目技能根。只接受宿主上可解析的绝对目录，
+ * 同一项目的多个 Session 会折叠到同一组稳定 key，避免跨 workspace 合并同名技能。
+ */
+export async function projectRoots(projectCwds: string[] = [], diagnostics?: Diagnostic[]): Promise<SkillRoot[]> {
+  const projects = new Map<string, {root: string; cwds: Set<string>}>();
+  for (const cwd of Array.isArray(projectCwds) ? projectCwds : []) {
+    const found = await nearestProjectRoot(cwd);
+    if (!found || !found.root) {
+      if (
+        found &&
+        found.unavailable &&
+        Array.isArray(diagnostics) &&
+        typeof cwd === "string" &&
+        isAbsolute(cwd)
+      ) {
+        diagnostics.push({
+          code: "warning.project.unavailable",
+          params: { path: cwd },
+          error: `无法从宿主读取活动工作区，项目技能未显示: ${cwd}`,
+        });
+      }
+      continue;
+    }
+    const identity = pathIdentity(found.root);
+    const existing = projects.get(identity) || {
+      root: found.root,
+      cwds: new Set<string>(),
+    };
+    existing.cwds.add(found.cwd);
+    projects.set(identity, existing);
+  }
+  const roots = [];
+  for (const project of [...projects.values()].sort((a, b) =>
+    a.root.localeCompare(b.root),
+  )) {
+    const id = projectIdentity(project.root);
+    const common = {
+      mutable: false,
+      toggleable: false,
+      native: true,
+      scope: "project",
+      projectRoot: project.root,
+      projectName: basename(project.root) || project.root,
+      workspaceCwds: [...project.cwds].sort(),
+    };
+    const candidates = PROJECT_SOURCES.map((source) => ({
+      ...common,
+      key: `project-${source.key}:${id}`,
+      kind: `project-${source.key}`,
+      localeKey: source.localeKey,
+      path: join(project.root, source.directory, "skills"),
+      label: source.label,
+      rank: source.rank,
+      mutable: source.mutable === true,
+      native: source.native === true,
+      toggleable: true,
+    }));
+    for (const candidate of candidates) {
+      if (candidate.kind !== "project-dsh" && !(await lstatOrNull(candidate.path)))
+        continue;
+      if (await projectSourceSafe(candidate)) roots.push(candidate);
+    }
+  }
+  return roots;
+}
+
+export function managerHomePath() {
+  return join(resolveDshHome(), "skills-manager");
+}
+
+export function managerStatePath() {
+  return join(managerHomePath(), "state.json");
+}
+
+export function trashRootPath() {
+  return join(managerHomePath(), "trash");
+}
+
+export function logPath() {
+  return join(resolveDshHome(), "dsh-skills-manager.log");
+}
+
+/**
+ * 为前端内嵌目录选择器列出一个本机目录层级。
+ * 不跟随目录符号链接；选择后的导入仍由 importSkill 做完整安全校验。
+ */
+export async function browseDirectories(inputPath: string) {
+  const requested = String(inputPath == null ? "" : inputPath).trim();
+  const target = requested === "" ? homedir() : requested;
+  if (!isAbsolute(target)) {
+    return {
+      ok: false,
+      error: `目录路径必须是绝对路径: ${target}`,
+      code: "error.browse.absolute",
+      params: { path: target },
+    };
+  }
+
+  let canonical;
+  let directory;
+  try {
+    canonical = await fs.realpath(target);
+    directory = await fs.stat(canonical);
+  } catch (caught) { const error = caught as CodedError;
+    return {
+      ok: false,
+      error: `无法读取目录: ${target}`,
+      code: "error.browse.unreadable",
+      params: {
+        path: target,
+        error: String(error && error.message ? error.message : error),
+      },
+    };
+  }
+  if (!directory.isDirectory()) {
+    return {
+      ok: false,
+      error: `不是目录: ${target}`,
+      code: "error.browse.notDirectory",
+      params: { path: target },
+    };
+  }
+
+  const entries = [];
+  let truncated = false;
+  try {
+    const items = await fs.readdir(canonical, { withFileTypes: true });
+    for (const item of items) {
+      // 目录链接不在浏览器中展开，避免选择器在不知情时跨越到另一棵目录树。
+      if (!item.isDirectory() || item.isSymbolicLink()) continue;
+      // Dirent 来自一次目录快照；再用 lstat 校验当前条目，既收紧 TOCTOU 窗口，
+      // 也明确排除 Windows junction 等重解析目录。
+      const childPath = join(canonical, item.name);
+      const childStat = await lstatOrNull(childPath);
+      if (!childStat || !childStat.isDirectory() || childStat.isSymbolicLink())
+        continue;
+      if (entries.length >= MAX_BROWSE_ENTRIES) {
+        truncated = true;
+        break;
+      }
+      entries.push({
+        name: item.name,
+        path: childPath,
+        hidden: item.name.startsWith("."),
+      });
+    }
+  } catch (caught) { const error = caught as CodedError;
+    return {
+      ok: false,
+      error: `无法读取目录: ${canonical}`,
+      code: "error.browse.unreadable",
+      params: {
+        path: canonical,
+        error: String(error && error.message ? error.message : error),
+      },
+    };
+  }
+  entries.sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, {
+      sensitivity: "base",
+      numeric: true,
+    }),
+  );
+
+  const crumbs = [];
+  let cursor = canonical;
+  for (;;) {
+    const parent = dirname(cursor);
+    crumbs.unshift({
+      name: parent === cursor ? cursor : basename(cursor),
+      path: cursor,
+      hidden: false,
+    });
+    if (parent === cursor) break;
+    cursor = parent;
+  }
+  return { path: canonical, home: homedir(), crumbs, entries, truncated };
+}
+
+function dshRootPath() {
+  return userRoots().find((root) => root.key === "dsh")!.path;
+}
+
+/** 只读来源的拒绝结果；action 为可翻译语义值（toggle/delete）。 */
+function readonlyError(action: string): OperationError {
+  return {
+    ok: false,
+    code: "error.root.readonly",
+    params: { action },
+    error:
+      action === "delete"
+        ? "该技能来源不允许删除"
+        : "该技能来源不允许启用或停用",
+  };
+}
+
+function rootDefinition(root: RootInput): SkillRoot | null {
+  if (root && typeof root === "object" && typeof root.key === "string")
+    return root;
+  if (typeof root !== "string") return null;
+  const resolved = resolve(root);
+  return userRoots().find((item) => resolve(item.path) === resolved) || null;
+}
+
+function rootByKey(key: string): SkillRoot | null | undefined {
+  return userRoots().find((item) => item.key === key) || null;
+}
+
+/** 只允许用户 DSH 根，或由活动 Session 推导出的项目 DSH 根参与文件写入。 */
+function writableRootDefinition(root: RootInput, allowRepositoryRoot = false) {
+  const definition = rootDefinition(root);
+  // 普通管理页仍只写 DSH。仓库安装只能额外写入已核对的公共 Agent 目录。
+  if (allowRepositoryRoot && definition?.key === "agents") {
+    const canonical = rootByKey("agents");
+    return canonical && resolve(definition.path) === resolve(canonical.path)
+      ? { ...canonical, mutable: true }
+      : null;
+  }
+  if (!definition || definition.mutable !== true) return null;
+  if (definition.key === "dsh")
+    return resolve(definition.path) === resolve(dshRootPath())
+      ? rootByKey("dsh")
+      : null;
+  if (
+    definition.scope !== "project" ||
+    definition.kind !== "project-dsh" ||
+    typeof definition.projectRoot !== "string" ||
+    !isAbsolute(definition.projectRoot!) ||
+    definition.key !==
+      `project-dsh:${projectIdentity(definition.projectRoot!)}` ||
+    resolve(definition.path) !==
+      resolve(join(definition.projectRoot!, ".cortex", "skills"))
+  )
+    return null;
+  return definition;
+}
+
+async function checkedWritableRootDefinition(root: RootInput, allowRepositoryRoot = false): Promise<SkillRoot | OperationError | null | undefined> {
+  const definition = writableRootDefinition(root, allowRepositoryRoot);
+  if (definition && definition.scope !== "project" && allowRepositoryRoot) {
+    // 公共 Agent 的祖先目录也不能是链接，避免确认安装后写到配置路径之外。
+    for (let path = resolve(definition.path); ; path = dirname(path)) {
+      const st = await lstatOrNull(path);
+      if (st && (!st.isDirectory() || st.isSymbolicLink()))
+        return { ok: false, error: `技能目录不安全，拒绝写入: ${path}`, code: "error.root.unsafe", params: { path } };
+      if (dirname(path) === path) break;
+    }
+  }
+  if (!definition || definition.scope !== "project") return definition;
+  if (await overlapsUserSkillRoot(definition.path)) {
+    return {
+      ok: false,
+      error: `项目技能目录与用户技能目录重叠，拒绝写入: ${definition.path}`,
+      code: "error.root.unsafe",
+      params: { path: definition.path },
+    };
+  }
+  // 项目仓库内容不可信；拒绝通过 .cortex 或 skills 链接把写入重定向到项目之外。
+  for (const path of [join(definition.projectRoot!, ".cortex"), definition.path]) {
+    const st = await lstatOrNull(path);
+    if (st && (!st.isDirectory() || st.isSymbolicLink())) {
+      return {
+        ok: false,
+        error: `项目技能目录不安全，拒绝写入: ${path}`,
+        code: "error.root.unsafe",
+        params: { path },
+      };
+    }
+  }
+  return definition;
+}
+
+/** 仓库可选的安装位置：全局 DSH，以及已配置的公共 Agent 目录。 */
+export async function repositoryDestinations(): Promise<RepositoryDestination[]> {
+  const result: RepositoryDestination[] = [];
+  for (const root of userRoots().filter(item => item.key === "dsh" || item.key === "agents")) {
+    let error: Diagnostic | undefined;
+    try {
+      const checked = await checkedWritableRootDefinition(root, true);
+      if (!checked || checked.ok === false) error = checked || { code: "error.root.unsafe", error: "技能安装位置不可用" };
+    } catch (caught) { const exception = caught as CodedError; error = { code: "error.root.unsafe", error: exception.message, params: { path: root.path } }; }
+    result.push({ key: root.key as RepositoryDestination['key'], path: resolve(root.path), label: root.label, localeKey: root.localeKey, available: !error, ...(error ? { error } : {}) });
+  }
+  return result;
+}
+
+/** 判断 child 是否与 parent 相同或位于其内部。跨盘符时 relative 会返回绝对路径。 */
+function isSameOrDescendant(parent: string, child: string) {
+  const rel = relative(resolve(parent), resolve(child));
+  return (
+    rel === "" ||
+    (!isAbsolute(rel) && rel !== ".." && !rel.startsWith(`..${sep}`))
+  );
+}
+
+/** 解析真实路径；中间若有目录链接，按落地目录比较重叠。 */
+async function resolvedPath(path: string) {
+  try {
+    return await fs.realpath(path);
+  } catch {
+    return resolve(path);
+  }
+}
+
+/** 即使末级路径尚不存在，也解析最近既存祖先中的链接，供权限域重叠判断。 */
+async function comparisonPath(path: string) {
+  let current = resolve(path);
+  const missing = [];
+  for (;;) {
+    try {
+      return resolve(await fs.realpath(current), ...missing);
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) return resolve(path);
+      missing.unshift(basename(current));
+      current = parent;
+    }
+  }
+}
+
+async function overlapsUserSkillRoot(path: string) {
+  const candidate = await comparisonPath(path);
+  for (const root of userRoots()) {
+    const userPath = await comparisonPath(root.path);
+    if (
+      isSameOrDescendant(candidate, userPath) ||
+      isSameOrDescendant(userPath, candidate)
+    )
+      return true;
+  }
+  return false;
+}
+
+/** 两个路径重叠时，覆盖导入可能删除自身来源，必须拒绝。 */
+async function pathsOverlap(a: string, b: string) {
+  const left = await resolvedPath(a);
+  const right = await resolvedPath(b);
+  return isSameOrDescendant(left, right) || isSameOrDescendant(right, left);
+}
+
+/** 预解析技能根后的根内校验，供逐条目扫描复用同一次 realpath，减少重复 IO。 */
+async function isInsideResolvedRoot(rootReal: string, path: string) {
+  return isSameOrDescendant(rootReal, await resolvedPath(path));
+}
+
+function pathIdentity(path: string) {
+  const canonical = resolve(path);
+  return process.platform === "win32" ? canonical.toLowerCase() : canonical;
+}
+
+async function lstatOrNull(path: string) {
+  try {
+    return await fs.lstat(path);
+  } catch {
+    return null;
+  }
+}
+
+/** 名称只允许一个普通路径段；不把既有技能名称限制为 kebab-case。 */
+export function entryPath(root: string, name: string) {
+  if (
+    typeof name !== "string" ||
+    name === "" ||
+    name === "." ||
+    name === ".." ||
+    name.startsWith(".") ||
+    name.length > MAX_ENTRY_NAME_LENGTH ||
+    /[\\/:*?"<>|\0]/.test(name) ||
+    /[. ]$/.test(name) ||
+    WINDOWS_DEVICE_NAME_RE.test(name) ||
+    basename(name) !== name
+  )
+    return null;
+  const rootPath = resolve(root);
+  const path = resolve(rootPath, name);
+  return isSameOrDescendant(rootPath, path) && rootPath !== path ? path : null;
+}
+
+function isDshRoot(root: RootInput) {
+  return typeof root === "string" && resolve(root) === resolve(dshRootPath());
+}
+
+// ── 命名规整 ────────────────────────────────────────────────────────────────
+
+/** 尽量把任意名称规整为 kebab-case；无法生成合法名称时返回空串。 */
+export function toKebab(s: string) {
+  let t = String(s).trim();
+  if (t === "") return "";
+  t = t.replace(/([a-z0-9])([A-Z])/g, "$1-$2"); // camelCase 边界
+  t = t.toLowerCase();
+  t = t.replace(/[\s_.]+/g, "-");
+  t = t.replace(/[^a-z0-9-]/g, "-");
+  t = t.replace(/-+/g, "-").replace(/^-+|-+$/g, "");
+  return t;
+}
+
+// ── frontmatter 解析 / 序列化（宽松 YAML 对象，保留键序）────────────────────
+
+/** 剥离 UTF-8 BOM（Windows 工具常写入，不剥离会导致开头 --- 失配）。 */
+function stripBom(text: string) {
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+}
+
+/** 解析 SKILL.md 的 frontmatter。返回 { fields, map, body }，map 保留键序。
+ *  只识别顶层 key: value；缩进嵌套字段（如 metadata.source）不进入 map。 */
+export function parseSkillDoc(text: string): ParsedSkill {
+  const src = stripBom(String(text));
+  const lines = src.split(/\r?\n/);
+  const map: Record<string, string> = Object.create(null);
+  const fields = [];
+  let body = src;
+  let hasFrontmatter = false;
+  if (lines.length > 0 && lines[0].trim() === "---") {
+    let end = -1;
+    for (let i = 1; i < lines.length; i++) {
+      if (lines[i].trim() === "---") {
+        end = i;
+        break;
+      }
+    }
+    if (end >= 0) {
+      hasFrontmatter = true;
+      for (let i = 1; i < end; i++) {
+        const m = /^([A-Za-z0-9_-]+)\s*:\s*(.*)$/.exec(lines[i]);
+        if (m) {
+          fields.push({ key: m[1], raw: m[2] });
+          const block = /^([>|])[-+]?\s*$/.exec(m[2]);
+          if (block) {
+            const content = [];
+            while (
+              i + 1 < end &&
+              (/^\s/.test(lines[i + 1]) || lines[i + 1] === "")
+            ) {
+              i++;
+              content.push(lines[i]);
+            }
+            const indentation = content
+              .filter((line) => line.trim() !== "")
+              .reduce(
+                (min, line) =>
+                  Math.min(min, (/^\s*/.exec(line) || [""])[0].length),
+                Infinity,
+              );
+            const normalized = content.map((line) =>
+              Number.isFinite(indentation)
+                ? line.slice(Math.min(indentation, line.length))
+                : line,
+            );
+            map[m[1]] =
+              block[1] === ">"
+                ? normalized.join(" ").replace(/\s+/g, " ").trim()
+                : normalized.join("\n").trim();
+          } else {
+            map[m[1]] = decodeYamlScalar(m[2]);
+          }
+        }
+      }
+      body = lines.slice(end + 1).join("\n");
+    }
+  }
+  return { fields, map, body, hasFrontmatter };
+}
+
+/** 读取 YAML 标量的显示值；不依赖第三方 YAML 解析器。 */
+function decodeYamlScalar(v: string) {
+  const s = String(v == null ? "" : v).trim();
+  if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {
+    try {
+      const value: unknown = JSON.parse(s);
+      if (typeof value === "string") return value;
+    } catch {
+      /* 保留无法解析的原始内容 */
+    }
+  }
+  if (s.length >= 2 && s[0] === "'" && s[s.length - 1] === "'")
+    return s.slice(1, -1).replace(/''/g, "'");
+  return s;
+}
+
+export function unquote(v: unknown) {
+  const s = String(v == null ? "" : v).trim();
+  if (
+    s.length >= 2 &&
+    ((s[0] === '"' && s[s.length - 1] === '"') ||
+      (s[0] === "'" && s[s.length - 1] === "'"))
+  ) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
+
+/** 同目录临时文件加 rename，避免写入中断时截断原 SKILL.md。 */
+/** Windows 上杀毒软件或索引器可能短暂占用目录；只重试明确可恢复的 rename 错误。 */
+export async function renameWithRetry(source: string, destination: string, options: RenameOptions = {}) {
+  const rename =
+    typeof options.rename === "function" ? options.rename : fs.rename;
+  const maxAttempts =
+    Number.isInteger(options.maxAttempts) && options.maxAttempts! > 0
+      ? options.maxAttempts!
+      : 6;
+  const delayMs =
+    Number.isFinite(options.delayMs) && options.delayMs! >= 0
+      ? options.delayMs!
+      : 40;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await rename(source, destination);
+    } catch (caught) { const error = caught as CodedError;
+      if (
+        !TRANSIENT_RENAME_CODES.has(error && error.code || "") ||
+        attempt >= maxAttempts
+      )
+        throw error;
+      await new Promise((resolvePromise) =>
+        setTimeout(resolvePromise, delayMs * attempt),
+      );
+    }
+  }
+}
+
+async function removeMovedPath(path: string) {
+  const st = await lstatOrNull(path);
+  if (!st) return;
+  if (st.isDirectory() && !st.isSymbolicLink())
+    await fs.rm(path, { recursive: true, force: false });
+  else await fs.unlink(path);
+}
+
+/** rename 跨盘返回 EXDEV 时：先完整复制，再在源盘原子隐藏源条目，最后清理隐藏副本。 */
+async function movePathWithFallback(source: string, destination: string, options: RenameOptions = {}) {
+  try {
+    await renameWithRetry(source, destination, options);
+    return { copied: false, cleanupError: null };
+  } catch (caught) { const error = caught as CodedError;
+    if (!error || error.code !== "EXDEV") throw error;
+  }
+
+  const quarantine = join(
+    dirname(source),
+    `.${basename(source)}.dssm-move-${randomUUID()}`,
+  );
+  try {
+    await fs.cp(source, destination, {
+      recursive: true,
+      dereference: false,
+      errorOnExist: true,
+      force: false,
+      verbatimSymlinks: true,
+    });
+    // 源与 quarantine 位于同一目录；成功后原技能名立即消失，避免递归删除留下半份可见条目。
+    await renameWithRetry(source, quarantine, options);
+  } catch (caught) { const error = caught as CodedError;
+    await removeMovedPath(destination).catch(() => undefined);
+    throw error;
+  }
+
+  let cleanupError = null;
+  try {
+    await removeMovedPath(quarantine);
+  } catch (caught) { const error = caught as CodedError;
+    cleanupError = error;
+  }
+  return { copied: true, cleanupError, quarantine };
+}
+
+async function writeFileAtomically(path: string, content: string) {
+  const temp = join(
+    dirname(path),
+    `.${basename(path)}.dssm-${randomUUID()}.tmp`,
+  );
+  try {
+    await fs.writeFile(temp, content, "utf8");
+    await fs.rename(temp, path);
+  } catch (caught) { const error = caught as CodedError;
+    await fs.rm(temp, { force: true }).catch(() => undefined);
+    throw error;
+  }
+}
+
+/** 解析布尔字段值；合法布尔返回 true/false，非法返回 undefined。 */
+export function parseBoolValue(raw: unknown) {
+  const v = unquote(raw).trim().toLowerCase();
+  if (v === "true" || v === "yes" || v === "on" || v === "1") return true;
+  if (v === "false" || v === "no" || v === "off" || v === "0") return false;
+  return undefined;
+}
+
+// ── 条目定位 / 扫描 ─────────────────────────────────────────────────────────
+
+/** 按名称解析条目（bundle 优先，其次 flat）。找不到返回 null。 */
+export async function resolveEntry(root: RootInput, name: string): Promise<DiscoveredEntry | null> {
+  const definition = rootDefinition(root);
+  if (definition && !definition.mutable) {
+    if (!validDiscoveryName(name)) return null;
+    return (
+      (await discoverReadonlyEntries(definition.path)).entries.find(
+        (entry) => entry.name === name,
+      ) || null
+    );
+  }
+  const directory = definition ? definition.path : root as string;
+  try {
+    const bundlePath = entryPath(directory, name);
+    if (bundlePath === null) return null;
+    const rootPath = resolve(directory);
+    const rootStat = await lstatOrNull(rootPath);
+    if (!rootStat || !rootStat.isDirectory() || rootStat.isSymbolicLink())
+      return null;
+    const rootReal = await resolvedPath(rootPath);
+    const bundleStat = await lstatOrNull(bundlePath);
+    if (
+      bundleStat &&
+      bundleStat.isDirectory() &&
+      !bundleStat.isSymbolicLink()
+    ) {
+      const bundleDoc = join(bundlePath, "SKILL.md");
+      const docStat = await lstatOrNull(bundleDoc);
+      if (
+        docStat &&
+        docStat.isFile() &&
+        !docStat.isSymbolicLink() &&
+        (await isInsideResolvedRoot(rootReal, bundleDoc))
+      ) {
+        return {
+          kind: "bundle",
+          docPath: bundleDoc,
+          entryPath: bundlePath,
+          realDocPath: await fs.realpath(bundleDoc),
+          realEntryPath: await fs.realpath(bundlePath),
+          linked: false,
+        };
+      }
+    }
+    const flatDoc = resolve(rootPath, `${name}.md`);
+    if (!isSameOrDescendant(rootPath, flatDoc) || rootPath === flatDoc)
+      return null;
+    const flatStat = await lstatOrNull(flatDoc);
+    if (
+      flatStat &&
+      flatStat.isFile() &&
+      !flatStat.isSymbolicLink() &&
+      (await isInsideResolvedRoot(rootReal, flatDoc))
+    ) {
+      const realDocPath = await fs.realpath(flatDoc);
+      return {
+        kind: "flat",
+        docPath: flatDoc,
+        entryPath: flatDoc,
+        realDocPath,
+        realEntryPath: realDocPath,
+        linked: false,
+      };
+    }
+    return null;
+  } catch {
+    // lstat 与 realpath/readFile 之间允许来源变化，调用方统一按不存在处理。
+    return null;
+  }
+}
+
+function entryOf(name: string, kind: string, docPath: string, doc: Pick<ParsedSkill, "map" | "hasFrontmatter">) {
+  const declaredName = doc.map.name !== undefined ? unquote(doc.map.name) : "";
+  const description =
+    doc.map.description !== undefined ? unquote(doc.map.description) : "";
+  const modelValue = parseBoolValue(doc.map["disable-model-invocation"]);
+  const userValue = parseBoolValue(doc.map["user-invocable"]);
+  const modelDisabled = modelValue === true;
+  const userDisabled = userValue === false;
+  const invocationPolicyValid =
+    (doc.map["disable-model-invocation"] === undefined ||
+      modelValue !== undefined) &&
+    (doc.map["user-invocable"] === undefined || userValue !== undefined);
+  const diagnostics = [];
+  if (!doc.hasFrontmatter)
+    diagnostics.push({
+      level: "error",
+      code: "diagnostic.frontmatter.missing",
+    });
+  if (doc.hasFrontmatter && !declaredName)
+    diagnostics.push({ level: "error", code: "diagnostic.name.missing" });
+  else if (declaredName && !KEBAB_RE.test(declaredName))
+    diagnostics.push({
+      level: "error",
+      code: "diagnostic.name.invalid",
+      params: { name: declaredName },
+    });
+  if (doc.hasFrontmatter && !description)
+    diagnostics.push({
+      level: "error",
+      code: "diagnostic.description.missing",
+    });
+  if (!invocationPolicyValid)
+    diagnostics.push({ level: "error", code: "diagnostic.invocation.invalid" });
+  return {
+    name,
+    declaredName,
+    kind,
+    docPath,
+    description,
+    modelInvocable: !modelDisabled,
+    userInvocable: !userDisabled,
+    invocationPolicyValid,
+    hasFrontmatter: doc.hasFrontmatter,
+    // 调用策略值异常可以由 manager 本地策略覆盖；结构本身合法即可加载。
+    loadable:
+      doc.hasFrontmatter && KEBAB_RE.test(declaredName) && description !== "",
+    diagnostics,
+  };
+}
+
+/** 只读来源递归发现；可写 DSH 根维持顶层扫描及链接写边界。 */
+export function scanEntries(root: RootInput, options: {metadataOnly: true}): Promise<MetadataScan>;
+export function scanEntries(root: RootInput, options?: {metadataOnly?: false}): Promise<Scan>;
+export async function scanEntries(root: RootInput, options: {metadataOnly?: boolean} = {}): Promise<Scan | MetadataScan> {
+  const definition = rootDefinition(root);
+  if (definition && !definition.mutable) {
+    const discovered = await discoverReadonlyEntries(definition.path);
+    if (options.metadataOnly) return discovered;
+    const entries = [];
+    for (const entry of discovered.entries) {
+      try {
+        entries.push({
+          ...entryOf(
+            entry.name,
+            entry.kind,
+            entry.docPath,
+            parseSkillDoc(await fs.readFile(entry.realDocPath, "utf8")),
+          ),
+          ...entry,
+        });
+      } catch {
+        /* 忽略已失效或不可读技能。 */
+      }
+    }
+    return { ...discovered, entries };
+  }
+  const directory = definition ? definition.path : root as string;
+  const rootStat = await lstatOrNull(resolve(directory));
+  if (!rootStat || !rootStat.isDirectory() || rootStat.isSymbolicLink())
+    return { exists: false, entries: [] };
+  let items;
+  try {
+    items = await fs.readdir(directory, { withFileTypes: true });
+  } catch {
+    return { exists: false, entries: [] };
+  }
+  const byName = new Map<string, SkillEntry>();
+  const rootReal = await resolvedPath(directory);
+  for (const it of items) {
+    try {
+      if (it.isSymbolicLink()) continue;
+      if (it.isDirectory() && entryPath(directory, it.name) !== null) {
+        const docPath = join(directory, it.name, "SKILL.md");
+        const st = await lstatOrNull(docPath);
+        if (
+          !st ||
+          !st.isFile() ||
+          st.isSymbolicLink() ||
+          !(await isInsideResolvedRoot(rootReal, docPath))
+        )
+          continue;
+        const doc = options.metadataOnly
+          ? { map: {}, hasFrontmatter: false }
+          : parseSkillDoc(await fs.readFile(docPath, "utf8"));
+        byName.set(it.name, {
+          ...entryOf(it.name, "bundle", docPath, doc),
+          entryPath: join(directory, it.name),
+          realDocPath: await fs.realpath(docPath),
+          realEntryPath: await fs.realpath(join(directory, it.name)),
+          linked: false,
+        });
+      } else if (
+        it.isFile() &&
+        it.name.toLowerCase().endsWith(".md") &&
+        it.name.toLowerCase() !== "skill.md" &&
+        entryPath(directory, it.name.slice(0, -3)) !== null
+      ) {
+        const skillName = it.name.slice(0, -3);
+        if (byName.has(skillName)) continue;
+        const docPath = join(directory, it.name);
+        if (!(await isInsideResolvedRoot(rootReal, docPath))) continue;
+        const doc = options.metadataOnly
+          ? { map: {}, hasFrontmatter: false }
+          : parseSkillDoc(await fs.readFile(docPath, "utf8"));
+        const realDocPath = await fs.realpath(docPath);
+        byName.set(skillName, {
+          ...entryOf(skillName, "flat", docPath, doc),
+          entryPath: docPath,
+          realDocPath,
+          realEntryPath: realDocPath,
+          linked: false,
+        });
+      }
+    } catch {
+      /* 跳过不可读条目 */
+    }
+  }
+  const entries = [...byName.values()].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  return { exists: true, entries };
+}
+
+/** 同一真实技能优先归属直接 SSOT；同类条目再按来源 rank 决胜。 */
+function scanDeduplicatedRoots(roots: SkillRoot[], options: {metadataOnly: true}): Promise<Map<string, MetadataScan>>;
+function scanDeduplicatedRoots(roots?: SkillRoot[], options?: {metadataOnly?: false}): Promise<Map<string, Scan>>;
+async function scanDeduplicatedRoots(roots: SkillRoot[] = userRoots(), options: {metadataOnly?: boolean} = {}) {
+  const results = await Promise.all(
+    roots.map(async (root) => [root, options.metadataOnly ? await scanEntries(root, {metadataOnly: true}) : await scanEntries(root)] as const),
+  );
+  const scans = new Map<string, MetadataScan>();
+  const groups = new Map<string, {root: SkillRoot; entry: MetadataEntry}[]>();
+  for (const [root, scan] of results) {
+    scans.set(root.key, scan);
+    for (const entry of scan.entries) {
+      const identity = pathIdentity(
+        entry.realEntryPath || entry.entryPath || entry.docPath,
+      );
+      const group = groups.get(identity) || [];
+      group.push({ root, entry });
+      groups.set(identity, group);
+    }
+  }
+  const winners = new Set();
+  for (const group of groups.values()) {
+    group.sort(
+      (left, right) =>
+        Number(left.entry.linked) - Number(right.entry.linked) ||
+        left.root.rank - right.root.rank,
+    );
+    const winner = group[0];
+    winner.entry.providerRank = Math.min(
+      ...group.map((item) => item.root.rank),
+    );
+    winner.entry.policyAliases = group.map((item) => ({
+      rootKey: item.root.key,
+      name: item.entry.name,
+    }));
+    winners.add(winner.entry);
+  }
+  for (const scan of scans.values()) {
+    scan.entries = scan.entries.filter((entry) => winners.has(entry));
+  }
+  return scans;
+}
+
+/** 详情与列表共享路径去重，扫描定位信息时不读取无关技能正文。 */
+async function visibleEntryForRoot(root: SkillRoot, name: string) {
+  if (!validDiscoveryName(name)) return null;
+  const roots = root.scope === "project" ? [root] : userRoots();
+  const scans = await scanDeduplicatedRoots(roots, { metadataOnly: true });
+  return (
+    scans.get(root.key)?.entries.find((entry) => entry.name === name) || null
+  );
+}
+
+// ── Manager 本地策略（外部源只读，启停状态写入 CORTEX_HOME）────────────────────
+
+function defaultManagerState(): ManagerState {
+  const sources: ManagerState["sources"] = Object.create(null);
+  const disabledSkills: ManagerState["disabledSkills"] = Object.create(null);
+  const enabledSkills: ManagerState["enabledSkills"] = Object.create(null);
+  for (const root of userRoots()) {
+    if (root.key !== "dsh") sources[root.key] = root.native;
+    disabledSkills[root.key] = [];
+    enabledSkills[root.key] = [];
+  }
+  return { version: 1, sources, disabledSkills, enabledSkills };
+}
+
+function validStateSkillName(name: unknown): name is string {
+  return validDiscoveryName(name);
+}
+
+/** 状态文件已存在但不可用时一律关闭外部来源，避免损坏配置重新暴露技能。 */
+function failClosedManagerState() {
+  const state = defaultManagerState();
+  for (const key of Object.keys(state.sources)) state.sources[key] = false;
+  return state;
+}
+
+function validPolicyLists(value: unknown, allowMissing = false) {
+  if (value === undefined && allowMissing) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  for (const [key, list] of Object.entries(value)) {
+    if (
+      !userRoots().some((root) => root.key === key) &&
+      !PROJECT_ROOT_KEY_RE.test(key)
+    )
+      continue;
+    if (!Array.isArray(list) || list.some((name) => !validStateSkillName(name)))
+      return false;
+  }
+  return true;
+}
+
+function validManagerStateDocument(value: ManagerState) {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    value.version !== 1
+  )
+    return false;
+  if (
+    !value.sources ||
+    typeof value.sources !== "object" ||
+    Array.isArray(value.sources)
+  )
+    return false;
+  if (
+    !validPolicyLists(value.disabledSkills) ||
+    !validPolicyLists(value.enabledSkills, true)
+  )
+    return false;
+  for (const root of userRoots()) {
+    if (root.key === "dsh") continue;
+    if (typeof value.sources[root.key] !== "boolean") return false;
+    const list = value.disabledSkills[root.key];
+    if (!Array.isArray(list) || list.some((name) => !validStateSkillName(name)))
+      return false;
+  }
+  // 项目来源键允许缺省（默认开启），但显式值必须与全局来源一样严格校验。
+  for (const [key, flag] of Object.entries(value.sources)) {
+    if (PROJECT_ROOT_KEY_RE.test(key) && typeof flag !== "boolean") return false;
+  }
+  const enabledSkills = value.enabledSkills || {};
+  for (const key of new Set([
+    ...Object.keys(value.disabledSkills),
+    ...Object.keys(enabledSkills),
+  ])) {
+    const disabled = new Set(value.disabledSkills[key] || []);
+    if ((enabledSkills[key] || []).some((name) => disabled.has(name)))
+      return false;
+  }
+  return true;
+}
+
+/** 仅对可识别的 version 1 状态补齐新增只读来源键，其余结构仍交由严格校验失败关闭。 */
+function migrateManagerStateDocument(value: ManagerState) {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    value.version !== 1
+  )
+    return value;
+  // version 1 没有记录引入来源的版本，只有确曾新增的来源允许补缺。
+  // 原有 agents/codex/claude/gemini/opencode 字段缺失仍表示损坏配置。
+  const addedSources = ["ccswitch", "cursor", "copilot", "windsurf", "windsurf-user", "trae", "trae-cn", "openclaw", "clawdbot", "roo", "codebuddy", "workbuddy", "qoder", "qoder-cn", "lingma"];
+  for (const key of addedSources) {
+    for (const field of ["sources", "disabledSkills", "enabledSkills"] as const) {
+      if (
+        value[field] &&
+        typeof value[field] === "object" &&
+        !Array.isArray(value[field]) &&
+        value[field][key] === undefined
+      )
+        value[field][key] = field === "sources" ? true : [];
+    }
+  }
+  return value;
+}
+
+function normalizeManagerState(value: ManagerState) {
+  const normalized = defaultManagerState();
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return normalized;
+  for (const root of userRoots()) {
+    if (
+      root.key !== "dsh" &&
+      value.sources &&
+      typeof value.sources[root.key] === "boolean"
+    )
+      normalized.sources[root.key] = value.sources[root.key];
+    const list = value.disabledSkills && value.disabledSkills[root.key];
+    if (Array.isArray(list))
+      normalized.disabledSkills[root.key] = [
+        ...new Set(list.filter((name) => validStateSkillName(name))),
+      ].sort();
+    const enabled = value.enabledSkills && value.enabledSkills[root.key];
+    if (Array.isArray(enabled))
+      normalized.enabledSkills[root.key] = [
+        ...new Set(enabled.filter((name) => validStateSkillName(name))),
+      ].sort();
+  }
+  if (value.sources && typeof value.sources === "object" && !Array.isArray(value.sources)) {
+    for (const [key, flag] of Object.entries(value.sources)) {
+      if (PROJECT_ROOT_KEY_RE.test(key) && !key.startsWith("project-dsh:") && typeof flag === "boolean")
+        normalized.sources[key] = flag;
+    }
+  }
+  for (const field of ["disabledSkills", "enabledSkills"] as const) {
+    const source = value[field];
+    if (source && typeof source === "object" && !Array.isArray(source)) {
+      for (const [key, list] of Object.entries(source)) {
+        if (!PROJECT_ROOT_KEY_RE.test(key) || !Array.isArray(list)) continue;
+        normalized[field][key] = [
+          ...new Set(list.filter(validStateSkillName)),
+        ].sort();
+      }
+    }
+  }
+  return normalized;
+}
+
+export async function readManagerState(): Promise<PolicyResult> {
+  try {
+    const raw = await fs.readFile(managerStatePath(), "utf8");
+    // 旧版状态迁移与下方 schema 校验仍是磁盘数据的信任边界。
+    const parsed = migrateManagerStateDocument(JSON.parse(raw) as ManagerState);
+    if (!validManagerStateDocument(parsed))
+      throw codedError("invalid manager state schema", "error.state.invalid");
+    return {
+      state: normalizeManagerState(parsed),
+      warning: null,
+      writable: true,
+    };
+  } catch (caught) { const error = caught as CodedError;
+    if (error && error.code === "ENOENT")
+      return { state: defaultManagerState(), warning: null, writable: true };
+    return {
+      state: failClosedManagerState(),
+      writable: false,
+      warning: {
+        code: "warning.state.invalid",
+        params: { path: managerStatePath() },
+        error: `技能管理器状态文件不可读，所有技能已安全停用且状态写入已锁定: ${managerStatePath()}`,
+      },
+    };
+  }
+}
+
+async function writeManagerState(value: ManagerState) {
+  await fs.mkdir(managerHomePath(), { recursive: true });
+  await writeFileAtomically(
+    managerStatePath(),
+    `${JSON.stringify(normalizeManagerState(value), null, 2)}\n`,
+  );
+}
+
+function managerSkillOverride(policy: ManagerState, rootKey: string, name: string, policyAliases: {rootKey: string; name: string}[] = []) {
+  if ((policy.enabledSkills[rootKey] || []).includes(name)) return true;
+  if ((policy.disabledSkills[rootKey] || []).includes(name)) return false;
+  let inheritedEnable = false;
+  for (const alias of policyAliases) {
+    if (alias.rootKey === rootKey && alias.name === name) continue;
+    if ((policy.disabledSkills[alias.rootKey] || []).includes(alias.name))
+      return false;
+    if ((policy.enabledSkills[alias.rootKey] || []).includes(alias.name))
+      inheritedEnable = true;
+  }
+  if (inheritedEnable) return true;
+  return undefined;
+}
+
+function effectiveSkillPolicy(policyResult: PolicyResult, root: SkillRoot, entry: SkillEntry): Policy {
+  const override = managerSkillOverride(
+    policyResult.state,
+    root.key,
+    entry.name,
+    entry.policyAliases,
+  );
+  const sourceEnabled =
+    root.key === "dsh" ||
+    root.kind === "project-dsh" ||
+    (root.native ? policyResult.state.sources[root.key] !== false : policyResult.state.sources[root.key] === true);
+  if (policyResult.writable === false || !sourceEnabled || override === false) {
+    return {
+      override,
+      sourceEnabled,
+      modelInvocable: false,
+      userInvocable: false,
+      enabled: false,
+    };
+  }
+  const modelInvocable = entry.invocationPolicyValid && entry.modelInvocable;
+  const userInvocable = entry.invocationPolicyValid && entry.userInvocable;
+  return {
+    override,
+    sourceEnabled,
+    modelInvocable,
+    userInvocable,
+    enabled: modelInvocable && userInvocable,
+  };
+}
+
+function invalidManagerStateWrite() {
+  return {
+    ok: false,
+    code: "error.state.invalid",
+    params: { path: managerStatePath() },
+    error: `技能管理器状态文件不可读，已拒绝覆盖: ${managerStatePath()}`,
+  };
+}
+
+export async function setSourceEnabled(key: string, enabled: boolean, log?: Log, options: ScopeOptions = {}) {
+  let root = rootByKey(key);
+  if (!root && PROJECT_ROOT_KEY_RE.test(key) && !key.startsWith("project-dsh:"))
+    root = (await projectRoots(options.projectCwds)).find((item) => item.key === key);
+  if (!root || root.key === "dsh" || root.kind === "project-dsh" || !root.toggleable)
+    return readonlyError("toggle");
+  const current = await readManagerState();
+  if (current.writable === false) return invalidManagerStateWrite();
+  current.state.sources[root.key] = enabled === true;
+  await writeManagerState(current.state);
+  if (log)
+    log(
+      enabled ? "source-enable" : "source-disable",
+      `${enabled ? "启用" : "停用"}来源 ${root.key}: ${root.path}`,
+    );
+  return { root: root.key, enabled: enabled === true };
+}
+
+async function checkedPolicyRootDefinition(root: RootInput): Promise<SkillRoot | OperationError | null> {
+  const definition = rootDefinition(root);
+  if (!definition || !definition.toggleable) return null;
+  if (definition.scope !== "project") {
+    const canonical = rootByKey(definition.key);
+    return canonical && resolve(canonical.path) === resolve(definition.path)
+      ? canonical
+      : null;
+  }
+  const source = projectSourceDefinition(definition.kind);
+  const validProjectRoot =
+    source &&
+    PROJECT_ROOT_KEY_RE.test(definition.key) &&
+    typeof definition.projectRoot === "string" &&
+    isAbsolute(definition.projectRoot!) &&
+    definition.key ===
+      `${definition.kind}:${projectIdentity(definition.projectRoot!)}` &&
+    resolve(definition.path) ===
+      resolve(
+        join(
+          definition.projectRoot!,
+          source.directory,
+          "skills",
+        ),
+      );
+  if (!validProjectRoot) return null;
+  if (!(await projectSourceSafe(definition))) {
+    return {
+      ok: false,
+      error: `项目技能目录不安全，拒绝写入状态: ${definition.path}`,
+      code: "error.root.unsafe",
+      params: { path: definition.path },
+    };
+  }
+  return definition;
+}
+
+async function setPolicySkillEnabled(root: RootInput, name: string, enabled: boolean, log?: Log) {
+  const definition = await checkedPolicyRootDefinition(root);
+  if (definition && definition.ok === false) return definition;
+  if (!definition) return readonlyError("toggle");
+  const resolved = await resolveEntry(definition, name);
+  if (resolved === null)
+    return {
+      ok: false,
+      error: `技能不存在: ${name}`,
+      code: "error.skill.notFound",
+      params: { name },
+    };
+  let summary;
+  try {
+    summary = entryOf(
+      name,
+      resolved.kind,
+      resolved.docPath,
+      parseSkillDoc(
+        await fs.readFile(resolved.realDocPath || resolved.docPath, "utf8"),
+      ),
+    );
+  } catch {
+    return {
+      ok: false,
+      error: `技能不存在: ${name}`,
+      code: "error.skill.notFound",
+      params: { name },
+    };
+  }
+  if (!summary.hasFrontmatter) {
+    return {
+      ok: false,
+      error: `技能缺少完整 frontmatter，无法${enabled ? "启用" : "停用"}: ${name}`,
+      code: "error.skill.noFrontmatter",
+      params: { name, action: enabled ? "enable" : "disable" },
+    };
+  }
+  if (!summary.loadable) {
+    return {
+      ok: false,
+      error: `技能结构不完整，无法${enabled ? "启用" : "停用"}: ${name}`,
+      code: "error.skill.notLoadable",
+      params: { name, action: enabled ? "enable" : "disable" },
+    };
+  }
+  const current = await readManagerState();
+  if (current.writable === false) return invalidManagerStateWrite();
+  const disabled = new Set(current.state.disabledSkills[definition.key] || []);
+  const explicitlyEnabled = new Set(
+    current.state.enabledSkills[definition.key] || [],
+  );
+  if (enabled) {
+    disabled.delete(name);
+    explicitlyEnabled.add(name);
+  } else {
+    explicitlyEnabled.delete(name);
+    disabled.add(name);
+  }
+  current.state.disabledSkills[definition.key] = [...disabled].sort();
+  current.state.enabledSkills[definition.key] = [...explicitlyEnabled].sort();
+  await writeManagerState(current.state);
+  if (log)
+    log(
+      enabled ? "policy-enable" : "policy-disable",
+      `${enabled ? "启用" : "停用"} ${definition.key}/${name}（本地策略，源文件不变）`,
+    );
+  return { root: definition.key, name, enabled: enabled === true };
+}
+
+// ── 启用 / 停用（同时控制模型与 / 手动调用，非破坏）──────────────────────────
+
+/** Enabling restores frontmatter invocation limits; disabling blocks both invocation channels. */
+export async function setSkillEnabled(root: RootInput, name: string, enabled: boolean, log?: Log) {
+  return setPolicySkillEnabled(root, name, enabled, log);
+}
+
+async function safeExistingEntryPaths(root: string, name: string) {
+  const paths: {path: string; fileName: string; recursive: boolean}[] = [];
+  const bundle = entryPath(root, name);
+  if (bundle === null) return paths;
+  const flat = resolve(root, `${name}.md`);
+  const bundleStat = await lstatOrNull(bundle);
+  if (bundleStat && (bundleStat.isDirectory() || bundleStat.isSymbolicLink()))
+    paths.push({ path: bundle, fileName: name, recursive: true });
+  const flatStat = await lstatOrNull(flat);
+  if (flatStat && (flatStat.isFile() || flatStat.isSymbolicLink()))
+    paths.push({ path: flat, fileName: `${name}.md`, recursive: false });
+  return paths;
+}
+
+async function readTrashMetadata(id: string): Promise<TrashMetadata | null> {
+  if (entryPath(trashRootPath(), id) === null) return null;
+  try {
+    const value: TrashMetadata = JSON.parse(
+      await fs.readFile(join(trashRootPath(), id, "metadata.json"), "utf8"),
+    );
+    if (
+      !value ||
+      value.id !== id ||
+      typeof value.name !== "string" ||
+      !Array.isArray(value.entries)
+    )
+      return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Windows Defender / 索引器可能持续占用刚写入的 stage 目录，导致容器目录 rename
+ * 在短重试窗口后仍返回 EPERM。此时保留 stage 作为唯一可回滚副本，逐项复制到最终目录，
+ * 并最后写 metadata：listTrash() 在复制完整前不会暴露半成品。
+ */
+async function publishTrashStage(stage: string, finalPath: string, metadata: TrashMetadata, renameOptions?: RenameOptions) {
+  try {
+    await renameWithRetry(stage, finalPath, renameOptions);
+    return { fallback: false, cleanupError: null };
+  } catch (caught) { const error = caught as CodedError;
+    if (!TRANSIENT_RENAME_CODES.has(error && error.code || "")) throw error;
+  }
+
+  await fs.mkdir(finalPath);
+  try {
+    for (const fileName of metadata.entries) {
+      await fs.cp(join(stage, fileName), join(finalPath, fileName), {
+        recursive: true,
+        dereference: false,
+        errorOnExist: true,
+        force: false,
+      });
+    }
+    await fs.writeFile(
+      join(finalPath, "metadata.json"),
+      `${JSON.stringify(metadata, null, 2)}\n`,
+      "utf8",
+    );
+  } catch (caught) { const error = caught as CodedError;
+    await fs
+      .rm(finalPath, { recursive: true, force: true })
+      .catch(() => undefined);
+    throw error;
+  }
+
+  let cleanupError = null;
+  try {
+    await fs.rm(stage, { recursive: true, force: true });
+  } catch (caught) { const error = caught as CodedError;
+    cleanupError = error;
+  }
+  return { fallback: true, cleanupError };
+}
+
+function trashRootMetadata(definition: SkillRoot) {
+  if (definition.scope !== "project" && rootByKey(definition.key))
+    return { key: definition.key, scope: "user", label: definition.label, ...(definition.localeKey ? { localeKey: definition.localeKey } : {}) };
+  return {
+    key: definition.key,
+    scope: "project",
+    kind: "project-dsh",
+    projectRoot: definition.projectRoot!,
+    projectName: definition.projectName,
+    label: definition.label,
+  };
+}
+
+async function restoreRootDefinition(metadata: TrashMetadata, options: ScopeOptions = {}): Promise<SkillRoot | OperationError | null | undefined> {
+  // version 1 entries predate scoped Trash and always belong to $CORTEX_HOME/skills.
+  if (!metadata.root) return rootByKey("dsh");
+  if (metadata.root.scope === "user" && rootByKey(metadata.root.key))
+    return checkedWritableRootDefinition(rootByKey(metadata.root.key), metadata.root.key !== "dsh");
+  if (
+    metadata.root.scope !== "project" ||
+    metadata.root.kind !== "project-dsh" ||
+    typeof metadata.root.key !== "string" ||
+    typeof metadata.root.projectRoot !== "string" ||
+    !isAbsolute(metadata.root.projectRoot)
+  )
+    return {
+      ok: false,
+      error: `回收站条目来源非法: ${metadata.id}`,
+      code: "error.trash.invalid",
+      params: { id: metadata.id },
+    };
+  const roots = await projectRoots(options.projectCwds);
+  const normalizedProjectRoot = pathIdentity(metadata.root.projectRoot);
+  const root = roots.find(
+    (item) =>
+      item.key === metadata.root!.key &&
+      item.kind === "project-dsh" &&
+      pathIdentity(item.projectRoot!) === normalizedProjectRoot,
+  );
+  if (!root) {
+    return {
+      ok: false,
+      error: `原项目当前不在活动工作区中，无法恢复: ${metadata.root.projectRoot}`,
+      code: "error.trash.projectUnavailable",
+      params: { path: metadata.root.projectRoot },
+    };
+  }
+  return checkedWritableRootDefinition(root);
+}
+
+/** 把用户或活动项目的 DSH 根中的单个技能移入 manager-owned 回收站。 */
+export async function deleteSkill(root: RootInput, name: string, log?: Log, options: MutationOptions = {}) {
+  const definition = await checkedWritableRootDefinition(root, options.allowRepositoryRoot === true);
+  if (definition && definition.ok === false) return definition;
+  if (!definition) return readonlyError("delete");
+  const resolved = await resolveEntry(definition, name);
+  if (resolved === null && !options.repositoryEntryOnly)
+    return {
+      ok: false,
+      error: `技能不存在: ${name}`,
+      code: "error.skill.notFound",
+      params: { name },
+    };
+  const targets = (await safeExistingEntryPaths(definition.path, name))
+    .filter(target => !options.repositoryEntryOnly || target.fileName === name);
+  if (!targets.length) return { ok: false, error: `技能不存在: ${name}`, code: "error.skill.notFound", params: { name } };
+  const id = options.repositoryTrash?.id || `${Date.now()}-${randomUUID()}`;
+  if (!/^\d+-[a-f0-9-]{36}$/.test(id)) throw codedError("回收站条目编号非法", "error.trash.invalid", { id });
+  const trashRoot = trashRootPath();
+  const stage = join(trashRoot, `.stage-${randomUUID()}`);
+  const finalPath = join(trashRoot, id);
+  const moved = [];
+  await fs.mkdir(stage, { recursive: true });
+  try {
+    for (const target of targets) {
+      const destination = join(stage, target.fileName);
+      const transferred = await movePathWithFallback(
+        target.path,
+        destination,
+        options.renameOptions,
+      );
+      if (transferred.cleanupError && log)
+        log(
+          "trash-source-warning",
+          `技能已跨盘移入回收站，但源盘隐藏副本等待后续清理: ${transferred.quarantine}（${transferred.cleanupError.message || transferred.cleanupError}）`,
+        );
+      moved.push({ ...target, destination });
+    }
+    const metadata = {
+      version: 2,
+      id,
+      name,
+      deletedAt: new Date().toISOString(),
+      entries: moved.map((item) => item.fileName),
+      root: trashRootMetadata(definition),
+      ...(options.repositoryTrash ? { repository: options.repositoryTrash.repository } : {}),
+    };
+    await fs.writeFile(
+      join(stage, "metadata.json"),
+      `${JSON.stringify(metadata, null, 2)}\n`,
+      "utf8",
+    );
+    const published = await publishTrashStage(
+      stage,
+      finalPath,
+      metadata,
+      options.renameOptions,
+    );
+    if (published.cleanupError && log)
+      log(
+        "trash-stage-warning",
+        `回收站已发布，但临时目录等待后续清理: ${stage}（${published.cleanupError.message || published.cleanupError}）`,
+      );
+    if (log) log("trash", `移到回收站 ${name} -> ${finalPath}`);
+    return { id, name, deletedAt: metadata.deletedAt, root: metadata.root };
+  } catch (caught) { const error = caught as CodedError;
+    const rollbackFailures = [];
+    for (const item of moved.reverse()) {
+      try {
+        await movePathWithFallback(
+          item.destination,
+          item.path,
+          options.renameOptions,
+        );
+      } catch (caught) { const rollbackError = caught as CodedError;
+        rollbackFailures.push({
+          path: item.destination,
+          error: String(
+            rollbackError && rollbackError.message
+              ? rollbackError.message
+              : rollbackError,
+          ),
+        });
+      }
+    }
+    if (rollbackFailures.length) {
+      const causeText = String(error && error.message ? error.message : error);
+      throw codedError(
+        `${causeText}；移入回收站回滚失败，未恢复内容保留在: ${stage}`,
+        "error.trash.rollbackFailed",
+        { path: stage, error: causeText },
+      );
+    }
+    await fs.rm(stage, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function listTrash() {
+  let items;
+  try {
+    items = await fs.readdir(trashRootPath(), { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const result = [];
+  for (const item of items) {
+    if (!item.isDirectory() || item.name.startsWith(".")) continue;
+    const metadata = await readTrashMetadata(item.name);
+    if (metadata) result.push(metadata);
+  }
+  return result.sort((a, b) =>
+    String(b.deletedAt).localeCompare(String(a.deletedAt)),
+  );
+}
+
+export async function restoreTrash(id: string, log?: Log, options: MutationOptions = {}) {
+  const metadata = await readTrashMetadata(id);
+  if (!metadata)
+    return {
+      ok: false,
+      error: `回收站条目不存在: ${id}`,
+      code: "error.trash.notFound",
+      params: { id },
+    };
+  const definition = await restoreRootDefinition(metadata, options);
+  if (!definition || definition.ok === false)
+    return definition || readonlyError("restore");
+  const root = definition.path;
+  const conflicts = await safeExistingEntryPaths(root, metadata.name);
+  if (conflicts.length)
+    return {
+      ok: false,
+      error: `无法恢复，同名技能已存在: ${metadata.name}`,
+      code: "error.trash.conflict",
+      params: { name: metadata.name },
+    };
+  await fs.mkdir(root, { recursive: true });
+  const itemRoot = join(trashRootPath(), id);
+  const moved = [];
+  let committed = false;
+  try {
+    for (const fileName of metadata.entries) {
+      const source = join(itemRoot, fileName);
+      const destination = join(root, fileName);
+      if (
+        !isSameOrDescendant(itemRoot, source) ||
+        !isSameOrDescendant(root, destination)
+      )
+        throw codedError("回收站条目路径非法", "error.trash.invalid", { id });
+      await movePathWithFallback(source, destination, options.renameOptions);
+      moved.push({ source, destination });
+    }
+    if (options.repositoryRestore) {
+      // Atomic success receipt: deleting a Trash entry is NOT evidence that its
+      // files were restored. Keep this hidden receipt until provenance commits.
+      await fs.rename(itemRoot, join(trashRootPath(), `.restored-${id}`));
+    } else await fs.rm(itemRoot, { recursive: true, force: true });
+    committed = true;
+    if (log) log("restore", `从回收站恢复 ${metadata.name} -> ${root}`);
+    return { id, name: metadata.name, root: trashRootMetadata(definition) };
+  } catch (caught) { const error = caught as CodedError;
+    if (committed) throw error;
+    for (const item of moved.reverse())
+      await movePathWithFallback(
+        item.destination,
+        item.source,
+        options.renameOptions,
+      ).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function permanentlyDeleteTrash(id: string, log?: Log) {
+  const metadata = await readTrashMetadata(id);
+  if (!metadata)
+    return {
+      ok: false,
+      error: `回收站条目不存在: ${id}`,
+      code: "error.trash.notFound",
+      params: { id },
+    };
+  await fs.rm(join(trashRootPath(), id), { recursive: true, force: true });
+  if (log) log("trash-delete", `永久删除回收站条目 ${metadata.name} (${id})`);
+  return { id, name: metadata.name };
+}
+
+// ── 导入 ────────────────────────────────────────────────────────────────────
+
+/** 分析来源：单 skill 目录 / 单 .md 文件 / 批量目录。 */
+async function analyzeSource(source: string): Promise<SourceAnalysis> {
+  let st;
+  try {
+    st = await fs.lstat(source);
+  } catch {
+    return {
+      kind: "none",
+      error: `路径不存在: ${source}`,
+      code: "error.source.notFound",
+      params: { path: source },
+    };
+  }
+  if (st.isSymbolicLink())
+    return {
+      kind: "none",
+      error: `不支持包含符号链接的 skill 来源: ${source}`,
+      code: "error.source.symlink",
+      params: { path: source },
+    };
+  if (st.isDirectory()) {
+    const sk = join(source, "SKILL.md");
+    const skSt = await lstatOrNull(sk);
+    // 预检与实际导入口径一致：SKILL.md 本身是链接时直接拒绝，避免 dry-run 通过、正式导入才失败。
+    if (skSt && skSt.isSymbolicLink())
+      return {
+        kind: "none",
+        error: `不支持包含符号链接的 skill 来源: ${sk}`,
+        code: "error.source.symlink",
+        params: { path: sk },
+      };
+    if (skSt && skSt.isFile()) {
+      return {
+        kind: "single",
+        rawName: basename(source),
+        kebab: toKebab(basename(source)),
+        source,
+        isDir: true,
+        skillFile: sk,
+      };
+    }
+    return { kind: "batch", rawName: basename(source), source, isDir: true };
+  }
+  if (st.isFile() && source.toLowerCase().endsWith(".md")) {
+    if (basename(source).toLowerCase() === "skill.md") {
+      const parent = dirname(source);
+      return {
+        kind: "single",
+        rawName: basename(parent),
+        kebab: toKebab(basename(parent)),
+        source: parent,
+        isDir: true,
+        skillFile: source,
+      };
+    }
+    const rawName = basename(source).slice(0, -3);
+    return {
+      kind: "single",
+      rawName,
+      kebab: toKebab(rawName),
+      source,
+      isDir: false,
+      skillFile: source,
+    };
+  }
+  return {
+    kind: "none",
+    error: `无法识别的 skill 来源: ${source}`,
+    code: "error.source.unrecognized",
+    params: { path: source },
+  };
+}
+
+async function collectCandidates(dir: string): Promise<ImportCandidate[]> {
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  const out = [];
+  for (const it of items) {
+    if (it.isSymbolicLink())
+      throw codedError(
+        `不支持包含符号链接的 skill 来源: ${join(dir, it.name)}`,
+        "error.source.symlink",
+        { path: join(dir, it.name) },
+      );
+    if (it.isDirectory()) {
+      const sk = join(dir, it.name, "SKILL.md");
+      // lstatOrNull 吞掉 IO 异常（返回 null 即跳过）；symlink 必须抛出，不能被“跳过”逻辑掩盖。
+      const st = await lstatOrNull(sk);
+      if (st && st.isSymbolicLink())
+        throw codedError(
+          `不支持包含符号链接的 skill 来源: ${sk}`,
+          "error.source.symlink",
+          { path: sk },
+        );
+      if (st && st.isFile()) {
+        out.push({
+          source: join(dir, it.name),
+          kebab: toKebab(it.name),
+          rawName: it.name,
+          isDir: true,
+        });
+      }
+    } else if (
+      it.isFile() &&
+      it.name.toLowerCase().endsWith(".md") &&
+      it.name.toLowerCase() !== "skill.md"
+    ) {
+      out.push({
+        source: join(dir, it.name),
+        kebab: toKebab(it.name.slice(0, -3)),
+        rawName: it.name.slice(0, -3),
+        isDir: false,
+      });
+    }
+  }
+  return out;
+}
+
+/** 导入内容不接受符号链接，避免把目标目录外的内容带入技能目录。 */
+async function assertNoSymbolicLinks(source: string) {
+  const pending = [{ path: source, depth: 0 }];
+  while (pending.length) {
+    const current = pending.pop()!;
+    if (current.depth > MAX_SOURCE_DEPTH)
+      throw codedError(
+        `skill 来源目录层级超过 ${MAX_SOURCE_DEPTH} 层: ${source}`,
+        "error.source.tooDeep",
+        { depth: MAX_SOURCE_DEPTH, path: source },
+      );
+    const st = await fs.lstat(current.path);
+    if (st.isSymbolicLink())
+      throw codedError(
+        `不支持包含符号链接的 skill 来源: ${current.path}`,
+        "error.source.symlink",
+        { path: current.path },
+      );
+    if (!st.isDirectory()) continue;
+    const items = await fs.readdir(current.path, { withFileTypes: true });
+    for (const item of items) {
+      const path = join(current.path, item.name);
+      if (item.isSymbolicLink())
+        throw codedError(
+          `不支持包含符号链接的 skill 来源: ${path}`,
+          "error.source.symlink",
+          { path },
+        );
+      if (item.isDirectory()) pending.push({ path, depth: current.depth + 1 });
+    }
+  }
+}
+
+function temporaryPath(target: string, kind: string) {
+  return join(
+    dirname(target),
+    `.${basename(target)}.dssm-${kind}-${randomUUID()}`,
+  );
+}
+
+/** dry-run 预检执行与正式导入相同的符号链接/深度检查，预检失败即结论，不再进入覆盖确认。
+ *  预检与实导之间来源被替换的竞态仍由实导阶段的复制后校验兜底。 */
+async function preflightCandidates(pending: ImportPending[], conflicts: ImportConflict[], failed: ImportFailure[]) {
+  for (const group of [pending, conflicts]) {
+    for (let i = group.length - 1; i >= 0; i--) {
+      const candidate = group[i];
+      try {
+        await assertNoSymbolicLinks(candidate.source);
+      } catch (caught) { const error = caught as CodedError;
+        failed.push(
+          attachCode(
+            {
+              source: candidate.source,
+              error: String(error && error.message ? error.message : error),
+            },
+            error,
+          ),
+        );
+        group.splice(i, 1);
+      }
+    }
+  }
+}
+
+/** 先复制到同目录临时路径，复制失败时不触碰现有技能。 */
+async function copyToTemporary(source: string, target: string, isDir: boolean) {
+  const temp = temporaryPath(target, "stage");
+  try {
+    await assertNoSymbolicLinks(source);
+    if (isDir)
+      await fs.cp(source, temp, { recursive: true, dereference: false });
+    else await fs.copyFile(source, temp);
+    await assertNoSymbolicLinks(temp);
+    return temp;
+  } catch (caught) { const error = caught as CodedError;
+    await fs.rm(temp, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
+}
+
+/** 临时副本就绪后再替换；替换失败时尽力恢复旧条目。 */
+async function replaceWithCopy(source: string, dest: string, isDir: boolean, existing: string[] = []) {
+  const stage = await copyToTemporary(source, dest, isDir);
+  const backups = [];
+  try {
+    for (const path of existing) {
+      const backup = temporaryPath(path, "backup");
+      await fs.rename(path, backup);
+      backups.push({ path, backup });
+    }
+    await fs.rename(stage, dest);
+  } catch (caught) { const error = caught as CodedError;
+    await fs.rm(stage, { recursive: true, force: true }).catch(() => undefined);
+    const rollbackFailures = [];
+    for (const item of backups.reverse()) {
+      try {
+        await fs.rename(item.backup, item.path);
+      } catch (caught) { const rollbackError = caught as CodedError;
+        rollbackFailures.push(item.backup);
+      }
+    }
+    if (rollbackFailures.length) {
+      const causeText = String(error && error.message ? error.message : error);
+      throw codedError(
+        `${causeText}；覆盖导入回滚失败，备份保留在: ${rollbackFailures.join("、")}`,
+        "error.import.rollbackFailed",
+        { path: rollbackFailures.join("; "), error: causeText },
+      );
+    }
+    throw error;
+  }
+  const warnings: Diagnostic[] = [];
+  for (const item of backups) {
+    try {
+      await fs.rm(item.backup, { recursive: true, force: true });
+    } catch (caught) { const error = caught as CodedError;
+      warnings.push({
+        code: "warning.backupUncleaned",
+        params: {
+          path: item.backup,
+          error: String(error && error.message ? error.message : error),
+        },
+        error: `旧版本备份未清理: ${item.backup}（${String(error && error.message ? error.message : error)}）`,
+      });
+    }
+  }
+  return warnings;
+}
+
+/**
+ * 导入技能到目标根。
+ * options: { conflict: 'skip'|'overwrite', dryRun: boolean }
+ * 成功返回 { kind, imported, skipped, failed }；失败返回 { ok:false, error }。
+ */
+export async function importSkill(source: string, log?: Log, options: MutationOptions = {}): Promise<ImportResult> {
+  const requestedRoot = Object.prototype.hasOwnProperty.call(options, "root") ? options.root : rootByKey("dsh");
+  const definition = await checkedWritableRootDefinition(requestedRoot, options.allowRepositoryRoot === true);
+  if (definition && definition.ok === false) return definition;
+  if (!definition) return readonlyError("create");
+  const targetRoot = definition.path;
+  const conflict = options.conflict === "overwrite" ? "overwrite" : "skip";
+  const dryRun = options.dryRun === true;
+
+  const analysis = await analyzeSource(source);
+  if (analysis.kind === "none")
+    return {
+      ok: false,
+      error: analysis.error || "无法识别的 skill 来源",
+      code: analysis.code || "error.source.unrecognized",
+      params: analysis.params,
+    };
+  if (await pathsOverlap(analysis.source, targetRoot))
+    return {
+      ok: false,
+      error: "导入来源不能与 DSH 技能目录相同、包含或位于其中",
+      code: "error.import.overlap",
+    };
+
+  let candidates = [];
+  if (analysis.kind === "single") {
+    candidates = [
+      {
+        source: analysis.source,
+        kebab: analysis.kebab,
+        rawName: analysis.rawName,
+        isDir: analysis.isDir,
+      },
+    ];
+  } else {
+    try {
+      candidates = await collectCandidates(source);
+    } catch (caught) { const error = caught as CodedError;
+      return attachCode(
+        {
+          ok: false,
+          error: String(error && error.message ? error.message : error),
+        },
+        error,
+      );
+    }
+    if (candidates.length === 0)
+      return {
+        ok: false,
+        error: `目录下未找到任何 skill 条目（需含 SKILL.md 的子目录或 .md 文件）: ${source}`,
+        code: "error.import.emptySource",
+        params: { path: source },
+      };
+  }
+
+  const pending: ImportPending[] = [];
+  const conflicts: ImportConflict[] = [];
+  const failed: ImportFailure[] = [];
+  const imported: NonNullable<ImportResult["imported"]> = [];
+  const skipped: NonNullable<ImportResult["skipped"]> = [];
+
+  const nameCount = new Map<string, number>();
+  for (const candidate of candidates) {
+    if (
+      candidate.kebab &&
+      KEBAB_RE.test(candidate.kebab) &&
+      entryPath(targetRoot, candidate.kebab) !== null
+    )
+      nameCount.set(candidate.kebab, (nameCount.get(candidate.kebab) || 0) + 1);
+  }
+
+  function failureResult() {
+    return {
+      ok: false,
+      // 聚合失败明细的原文；前端优先展示已翻译的 failed 明细，此处仅作兜底。
+      error: failed.map((item) => item.error).join("；"),
+      code: "error.import.failed",
+      kind: analysis.kind,
+      imported,
+      skipped,
+      failed,
+    };
+  }
+
+  for (const c of candidates) {
+    if (
+      !c.kebab ||
+      !KEBAB_RE.test(c.kebab) ||
+      entryPath(targetRoot, c.kebab) === null
+    ) {
+      failed.push({
+        source: c.source,
+        error: `无法生成合法 kebab-case 名称（原始名: ${c.rawName || basename(c.source)}）`,
+        code: "error.import.invalidName",
+        params: { name: c.rawName || basename(c.source) },
+      });
+      continue;
+    }
+    if (nameCount.get(c.kebab)! > 1) {
+      failed.push({
+        source: c.source,
+        error: `批量来源中存在多个同名插件: ${c.kebab}`,
+        code: "error.import.duplicateName",
+        params: { name: c.kebab },
+      });
+      continue;
+    }
+    const dest = c.isDir
+      ? join(targetRoot, c.kebab)
+      : join(targetRoot, `${c.kebab}.md`);
+    const paths = [
+      join(targetRoot, c.kebab),
+      join(targetRoot, `${c.kebab}.md`),
+    ];
+    const existing = [];
+    for (const path of paths) {
+      try {
+        await fs.stat(path);
+        existing.push(path);
+      } catch {}
+    }
+    if (existing.length) {
+      conflicts.push({
+        name: c.kebab,
+        source: c.source,
+        isDir: c.isDir,
+        paths: existing,
+      });
+      continue;
+    }
+    pending.push({ name: c.kebab, source: c.source, isDir: c.isDir, dest });
+  }
+
+  if (pending.length === 0 && conflicts.length === 0) return failureResult();
+
+  if (dryRun) {
+    // 预检即结论：与正式导入同口径执行符号链接/深度检查，避免预检通过、确认覆盖后实导才失败。
+    await preflightCandidates(pending, conflicts, failed);
+    if (pending.length === 0 && conflicts.length === 0) return failureResult();
+    return { kind: analysis.kind, pending, conflicts, failed };
+  }
+
+  if (
+    pending.length > 0 ||
+    (conflict === "overwrite" && conflicts.length > 0)
+  ) {
+    await fs.mkdir(targetRoot, { recursive: true });
+  }
+
+  for (const p of pending) {
+    try {
+      const warnings = await replaceWithCopy(p.source, p.dest, p.isDir);
+      imported.push({ name: p.name, overwritten: false, warnings });
+      if (log) log("import", `导入 ${p.source} -> ${p.dest}`);
+    } catch (caught) { const e = caught as CodedError;
+      failed.push(
+        attachCode(
+          { source: p.source, error: String(e && e.message ? e.message : e) },
+          e,
+        ),
+      );
+    }
+  }
+
+  if (conflict === "overwrite") {
+    for (const c of conflicts) {
+      try {
+        const dest = c.isDir
+          ? join(targetRoot, c.name)
+          : join(targetRoot, `${c.name}.md`);
+        const warnings = await replaceWithCopy(
+          c.source,
+          dest,
+          c.isDir,
+          c.paths,
+        );
+        imported.push({ name: c.name, overwritten: true, warnings });
+        if (log) log("import-overwrite", `覆盖导入 ${c.source} -> ${dest}`);
+      } catch (caught) { const e = caught as CodedError;
+        failed.push(
+          attachCode(
+            { source: c.source, error: String(e && e.message ? e.message : e) },
+            e,
+          ),
+        );
+      }
+    }
+  } else {
+    for (const c of conflicts) skipped.push({ name: c.name, source: c.source });
+  }
+
+  if (failed.length && imported.length === 0) return failureResult();
+  return { kind: analysis.kind, imported, skipped, failed };
+}
+
+// ── 浏览器上传导入 ──────────────────────────────────────────────────────────
+
+/**
+ * 校验浏览器或 ZIP 提供的相对路径。上传内容始终写成普通文件，不解释 ZIP 的链接元数据。
+ * 这样既不依赖浏览器泄露本机绝对路径，也不会让归档跨出管理器暂存目录。
+ */
+function normalizeUploadPath(input: string) {
+  const raw = String(input == null ? "" : input).replace(/\\/g, "/");
+  if (
+    !raw ||
+    raw.length > MAX_UPLOAD_PATH_LENGTH ||
+    raw.includes("\0") ||
+    raw.startsWith("/") ||
+    /^[A-Za-z]:/.test(raw) ||
+    raw.startsWith("//")
+  ) {
+    throw codedError(`上传条目路径非法: ${raw}`, "error.upload.path", {
+      path: raw,
+    });
+  }
+  const directory = raw.endsWith("/");
+  const parts = raw
+    .split("/")
+    .filter((part, index, all) =>
+      directory && index === all.length - 1 ? false : true,
+    );
+  if (
+    !parts.length ||
+    parts.length > MAX_SOURCE_DEPTH ||
+    parts.some(
+      (part) =>
+        !part ||
+        part === "." ||
+        part === ".." ||
+        part.length > MAX_ENTRY_NAME_LENGTH ||
+        /[. ]$/.test(part) || /[:<>"|?*\x00-\x1f]/.test(part) ||
+        WINDOWS_DEVICE_NAME_RE.test(part),
+    )
+  ) {
+    throw codedError(`上传条目路径非法: ${raw}`, "error.upload.path", {
+      path: raw,
+    });
+  }
+  return { path: parts.join("/"), directory };
+}
+
+function decodeUploadBase64(value: string, maxBytes: number, code = "error.upload.tooLarge") {
+  const raw = String(value == null ? "" : value);
+  const padding = raw.endsWith("==") ? 2 : raw.endsWith("=") ? 1 : 0;
+  const dataLength = raw.length - padding;
+  const firstPadding = raw.indexOf("=");
+  if (
+    raw.length % 4 !== 0 ||
+    (firstPadding !== -1 && firstPadding !== dataLength)
+  ) {
+    throw codedError("上传内容不是合法 Base64", "error.upload.encoding");
+  }
+  const decodedLength = (raw.length / 4) * 3 - padding;
+  if (decodedLength > maxBytes)
+    throw codedError(`上传内容超过 ${maxBytes} 字节限制`, code, {
+      limit: maxBytes,
+    });
+  // 避免对数 MiB 字符串使用带重复分组的正则；V8 可能在合法大文件上耗尽调用栈。
+  for (let index = 0; index < dataLength; index += 1) {
+    const char = raw.charCodeAt(index);
+    if (
+      !(
+        (char >= 65 && char <= 90) ||
+        (char >= 97 && char <= 122) ||
+        (char >= 48 && char <= 57) ||
+        char === 43 ||
+        char === 47
+      )
+    ) {
+      throw codedError("上传内容不是合法 Base64", "error.upload.encoding");
+    }
+  }
+  const bytes = Buffer.from(raw, "base64");
+  return bytes;
+}
+
+function uploadError(error: CodedError): OperationError {
+  return attachCode(
+    {
+      ok: false,
+      error: String(error && error.message ? error.message : error),
+    },
+    error,
+  );
+}
+
+async function writeUploadedEntries(contentRoot: string, entries: UploadInput["entries"]) {
+  if (!Array.isArray(entries) || entries.length === 0)
+    throw codedError("上传内容为空", "error.upload.empty");
+  if (entries.length > MAX_UPLOAD_ENTRIES)
+    throw codedError(
+      `上传条目超过 ${MAX_UPLOAD_ENTRIES} 个`,
+      "error.upload.tooMany",
+      { limit: MAX_UPLOAD_ENTRIES },
+    );
+  let total = 0;
+  const seen = new Set();
+  for (const entry of entries) {
+    const normalized = normalizeUploadPath(entry && entry.path);
+    const key = normalized.path.toLowerCase();
+    if (seen.has(key))
+      throw codedError(
+        `上传内容包含重复路径: ${normalized.path}`,
+        "error.upload.duplicate",
+        { path: normalized.path },
+      );
+    seen.add(key);
+    if (normalized.directory) continue;
+    const bytes = decodeUploadBase64(
+      entry && entry.data,
+      MAX_UPLOAD_ENTRY_BYTES,
+    );
+    total += bytes.length;
+    if (total > MAX_UPLOAD_TOTAL_BYTES)
+      throw codedError(
+        `上传内容总大小超过 ${MAX_UPLOAD_TOTAL_BYTES} 字节`,
+        "error.upload.tooLarge",
+        { limit: MAX_UPLOAD_TOTAL_BYTES },
+      );
+    const target = join(contentRoot, ...normalized.path.split("/"));
+    if (!isSameOrDescendant(contentRoot, target))
+      throw codedError(
+        `上传条目路径非法: ${normalized.path}`,
+        "error.upload.path",
+        { path: normalized.path },
+      );
+    await fs.mkdir(dirname(target), { recursive: true });
+    await fs.writeFile(target, bytes);
+  }
+}
+
+async function writeUploadedZip(contentRoot: string, encoded: string) {
+  const archive = decodeUploadBase64(
+    encoded,
+    MAX_UPLOAD_ARCHIVE_BYTES,
+    "error.upload.archiveTooLarge",
+  );
+  let count = 0;
+  let total = 0;
+  let files;
+  try {
+    files = unzipSync(archive, {
+      filter(info) {
+        const normalized = normalizeUploadPath(info.name);
+        count += 1;
+        if (count > MAX_UPLOAD_ENTRIES)
+          throw codedError(
+            `ZIP 条目超过 ${MAX_UPLOAD_ENTRIES} 个`,
+            "error.upload.tooMany",
+            { limit: MAX_UPLOAD_ENTRIES },
+          );
+        if (!normalized.directory && info.originalSize > MAX_UPLOAD_ENTRY_BYTES)
+          throw codedError(
+            `ZIP 条目过大: ${normalized.path}`,
+            "error.upload.tooLarge",
+            { limit: MAX_UPLOAD_ENTRY_BYTES },
+          );
+        total += normalized.directory ? 0 : info.originalSize;
+        if (total > MAX_UPLOAD_TOTAL_BYTES)
+          throw codedError(
+            `ZIP 解压后总大小超过 ${MAX_UPLOAD_TOTAL_BYTES} 字节`,
+            "error.upload.tooLarge",
+            { limit: MAX_UPLOAD_TOTAL_BYTES },
+          );
+        return !normalized.directory;
+      },
+    });
+  } catch (caught) { const error = caught as CodedError;
+    if (error && /^error\./.test(String(error.code || ""))) throw error;
+    throw codedError(
+      `ZIP 无法解压: ${String(error && error.message ? error.message : error)}`,
+      "error.upload.zipInvalid",
+    );
+  }
+  const entries = Object.entries(files).map(([path, bytes]) => ({
+    path,
+    data: Buffer.from(bytes).toString("base64"),
+  }));
+  await writeUploadedEntries(contentRoot, entries);
+}
+
+async function prepareUploadedSource(sessionRoot: string, input: UploadInput) {
+  const contentRoot = join(sessionRoot, "content");
+  await fs.mkdir(contentRoot, { recursive: true });
+  if (input && input.zip !== undefined)
+    await writeUploadedZip(contentRoot, input.zip);
+  else await writeUploadedEntries(contentRoot, input && input.entries);
+
+  const rootSkill = join(contentRoot, "SKILL.md");
+  const rootSkillStat = await lstatOrNull(rootSkill);
+  if (!rootSkillStat || !rootSkillStat.isFile()) return contentRoot;
+
+  const doc = parseSkillDoc(await fs.readFile(rootSkill, "utf8"));
+  const fallback = String((input && input.name) || "uploaded-skill")
+    .replace(/\.zip$/i, "")
+    .replace(/^skill\.md$/i, "uploaded-skill");
+  const skillName = toKebab(doc.map.name || fallback);
+  if (
+    !skillName ||
+    !KEBAB_RE.test(skillName) ||
+    entryPath(contentRoot, skillName) === null
+  ) {
+    throw codedError(
+      `无法生成合法 kebab-case 名称（原始名: ${doc.map.name || fallback}）`,
+      "error.import.invalidName",
+      { name: doc.map.name || fallback },
+    );
+  }
+  const batchRoot = join(sessionRoot, "batch");
+  const wrappedRoot = join(batchRoot, skillName);
+  await fs.mkdir(batchRoot, { recursive: true });
+  await fs.rename(contentRoot, wrappedRoot);
+  return batchRoot;
+}
+
+/**
+ * 接收浏览器读取后的内容，在 manager 私有目录暂存并复用现有原子导入链路。
+ * input: { name, entries:[{path,data(base64)}] } 或 { name, zip:base64 }。
+ */
+export async function importUploadedSkill(input: UploadInput, log?: Log, options: MutationOptions = {}): Promise<ImportResult> {
+  const uploadHome = join(managerHomePath(), "uploads");
+  const sessionRoot = join(uploadHome, `.upload-${randomUUID()}`);
+  try {
+    await fs.mkdir(sessionRoot, { recursive: true });
+    const source = await prepareUploadedSource(sessionRoot, input || {});
+    return await importSkill(source, log, options);
+  } catch (caught) { const error = caught as CodedError;
+    return uploadError(error);
+  } finally {
+    await fs
+      .rm(sessionRoot, { recursive: true, force: true })
+      .catch(() => undefined);
+  }
+}
+
+// ── 创建 / 详情 / Provider ─────────────────────────────────────────────────
+
+function yamlString(value: string) {
+  return JSON.stringify(String(value));
+}
+
+export async function createSkill(input: CreateInput, log?: Log, options: MutationOptions = {}) {
+  const requestedRoot = Object.prototype.hasOwnProperty.call(options, "root")
+    ? options.root
+    : rootByKey("dsh");
+  const definition = await checkedWritableRootDefinition(requestedRoot);
+  if (definition && definition.ok === false) return definition;
+  if (!definition) return readonlyError("create");
+  const root = definition.path;
+  const requestedName = String((input && input.name) || "").trim();
+  const name = toKebab(requestedName);
+  const description = String((input && input.description) || "").trim();
+  const body = String((input && input.body) || "").trim();
+  if (!name || !KEBAB_RE.test(name) || entryPath(root, name) === null)
+    return {
+      ok: false,
+      error: `无法生成合法 kebab-case 名称（原始名: ${requestedName}）`,
+      code: "error.import.invalidName",
+      params: { name: requestedName },
+    };
+  if (!description)
+    return {
+      ok: false,
+      error: "技能简介不能为空",
+      code: "error.create.descriptionRequired",
+    };
+  if (!body)
+    return {
+      ok: false,
+      error: "技能正文不能为空",
+      code: "error.create.bodyRequired",
+    };
+  if (description.length > 500 || body.length > 1 << 18)
+    return { ok: false, error: "技能内容过长", code: "error.create.tooLarge" };
+  if (
+    await safeExistingEntryPaths(root, name).then((items) => items.length > 0)
+  )
+    return {
+      ok: false,
+      error: `同名技能已存在: ${name}`,
+      code: "error.create.conflict",
+      params: { name },
+    };
+  await fs.mkdir(root, { recursive: true });
+  const target = entryPath(root, name)!;
+  const stage = temporaryPath(target, "create");
+  try {
+    await fs.mkdir(stage);
+    const content = `---\nname: ${name}\ndescription: ${yamlString(description)}\n---\n\n${body}\n`;
+    await fs.writeFile(join(stage, "SKILL.md"), content, "utf8");
+    await fs.rename(stage, target);
+  } catch (caught) { const error = caught as CodedError;
+    await fs.rm(stage, { recursive: true, force: true }).catch(() => undefined);
+    throw error;
+  }
+  if (log) log("create", `创建 ${join(target, "SKILL.md")}`);
+  return { name, path: join(target, "SKILL.md"), root: definition.key };
+}
+
+export async function skillDetail(key: string, name: string, options: ScopeOptions = {}) {
+  const scopedRoots = await projectRoots(options.projectCwds);
+  const root = rootByKey(key) || scopedRoots.find((item) => item.key === key);
+  if (!root)
+    return {
+      ok: false,
+      error: `未知技能来源: ${key}`,
+      code: "error.root.unknown",
+      params: { root: key },
+    };
+  const entry = await visibleEntryForRoot(root, name);
+  if (!entry)
+    return {
+      ok: false,
+      error: `技能不存在: ${name}`,
+      code: "error.skill.notFound",
+      params: { name },
+    };
+  let raw;
+  try {
+    raw = await fs.readFile(entry.realDocPath || entry.docPath, "utf8");
+  } catch {
+    return {
+      ok: false,
+      error: `技能不存在: ${name}`,
+      code: "error.skill.notFound",
+      params: { name },
+    };
+  }
+  const doc = parseSkillDoc(raw);
+  const summary = entryOf(name, entry.kind, entry.docPath, doc);
+  return {
+    root: root.key,
+    name,
+    declaredName: summary.declaredName,
+    description: summary.description,
+    path: entry.docPath,
+    kind: entry.kind,
+    body: doc.body.trim(),
+    document: raw,
+    frontmatter: summary.hasFrontmatter
+      ? Object.fromEntries(Object.entries(doc.map))
+      : null,
+    diagnostics: summary.diagnostics,
+    loadable: summary.loadable,
+    sourceReadOnly: !root.mutable,
+  };
+}
+
+/** 选择未停用的最高优先级副本；全部停用时输出阻断候选覆盖原生扫描。 */
+export async function listProviderCandidates(options: ScopeOptions = {}) {
+  const policyResult = await readManagerState();
+  const candidates = [];
+  // Foreign sources are opt-in. Do not read or shadow native candidates before consent.
+  const allowed = (root: SkillRoot) => root.native || policyResult.state.sources[root.key] === true;
+  const user = userRoots().filter(allowed);
+  const userScans = await scanDeduplicatedRoots(user);
+  const items = user.flatMap((root) =>
+    userScans.get(root.key)!.entries.map((entry) => ({ root, entry, policy: effectiveSkillPolicy(policyResult, root, entry) })),
+  );
+  const cwd =
+    options && typeof options.cwd === "string" ? options.cwd : undefined;
+  if (cwd) {
+    const roots = (await projectRoots([cwd])).filter(allowed);
+    for (const root of roots) {
+      const scanned = (await scanDeduplicatedRoots([root])).get(root.key)!;
+      for (const entry of scanned.entries) items.push({ root, entry, policy: effectiveSkillPolicy(policyResult, root, entry) });
+    }
+  }
+  for (const group of groupLoadableSkillsByName(items).values()) {
+    const { root, entry, policy } = selectSkillWinner(group);
+    const project = root.scope === "project";
+    const policyOnly = root.mutable;
+    // 回退副本也必须覆盖组内更高优先级的原生条目，防止宿主重新选中已停用副本。
+    const overlayRank = group.length > 1
+      ? Math.min(...group.map((item) => Math.min(item.root.rank, item.entry.providerRank ?? item.root.rank))) - 1
+      : undefined;
+    // Native roots with no manager choice belong to Cortex's provider. Preserve
+    // native precedence and invocation metadata until an explicit policy change.
+    const needsOverlay = group.some(item => !item.root.native || item.policy.override !== undefined || !item.policy.sourceEnabled)
+      || policyResult.writable === false;
+    if (!needsOverlay) continue;
+    candidates.push({
+      name: entry.declaredName,
+      description: entry.description,
+      invocation: {
+        modelInvocable: policy.modelInvocable,
+        userInvocable: policy.userInvocable,
+      },
+      provider: "dsh-skills-manager-external",
+      source: project
+        ? root.kind === "project-dsh" ? "project-cortex" : root.kind!
+        : root.key === "dsh"
+          ? "user-cortex"
+          : `agent-${root.key}`,
+      rank: overlayRank ?? (project
+        ? root.rank - 1
+        : root.key === "dsh"
+          ? USER_DSH_POLICY_RANK
+          : (entry.providerRank ?? root.rank)),
+      locator: {
+        rootKey: root.key,
+        entryName: entry.name,
+        path: entry.docPath,
+        realEntryPath: entry.realEntryPath,
+        realDocPath: entry.realDocPath,
+      },
+      resourceBase: {
+        kind: "directory" as const,
+        path: entry.kind === "bundle" ? entry.realEntryPath : root.path,
+      },
+      path: entry.docPath,
+      metadata: {
+        dshSkillsManager: {
+          root: root.key,
+          readOnly: !root.mutable,
+          sourceReadOnly: !root.mutable,
+          policyOnly,
+        },
+      },
+    });
+  }
+  return candidates;
+}
+
+export async function getProviderSkill(candidate: ProviderCandidate, options: ScopeOptions = {}) {
+  const locator = candidate && candidate.locator;
+  if (
+    !locator ||
+    typeof locator.path !== "string" ||
+    typeof locator.rootKey !== "string" ||
+    typeof locator.realEntryPath !== "string" ||
+    typeof locator.realDocPath !== "string"
+  )
+    return undefined;
+  let root = rootByKey(locator.rootKey);
+  if (
+    !root &&
+    PROJECT_ROOT_KEY_RE.test(locator.rootKey) &&
+    typeof options.cwd === "string"
+  ) {
+    root = (await projectRoots([options.cwd])).find(
+      (item) => item.key === locator.rootKey,
+    );
+  }
+  if (!root) return undefined;
+  try {
+    const entry = await resolveEntry(root, String(locator.entryName || ""));
+    if (!entry || resolve(entry.docPath) !== resolve(locator.path))
+      return undefined;
+    if (
+      pathIdentity(entry.realEntryPath) !== pathIdentity(locator.realEntryPath)
+    )
+      return undefined;
+    if (pathIdentity(entry.realDocPath) !== pathIdentity(locator.realDocPath))
+      return undefined;
+    const doc = parseSkillDoc(
+      await fs.readFile(entry.realDocPath || entry.docPath, "utf8"),
+    );
+    const summary = entryOf(locator.entryName, entry.kind, entry.docPath, doc);
+    if (!summary.loadable || summary.declaredName !== candidate.name)
+      return undefined;
+    return {
+      name: candidate.name,
+      description: candidate.description,
+      invocation: candidate.invocation,
+      provider: candidate.provider,
+      source: candidate.source,
+      resourceBase: candidate.resourceBase,
+      path: candidate.path,
+      metadata: candidate.metadata,
+      content: doc.body.trim(),
+    };
+  } catch {
+    return undefined;
+  }
+}
+
+// ── 状态快照 ────────────────────────────────────────────────────────────────
+
+function canonicalSkillName(item: SkillItem) {
+  return item.entry.declaredName || item.entry.name;
+}
+
+/** 真实路径去重后按声明名分组；管理页与当前工作区 provider 共用来源优先级。 */
+function groupLoadableSkillsByName<T extends SkillItem>(items: T[]): Map<string, T[]> {
+  const groups = new Map<string, T[]>();
+  // 同分时明确优先项目作用域，再按来源与条目标识决胜，不依赖调用方插入顺序。
+  const compareText = (a: string, b: string) => a < b ? -1 : a > b ? 1 : 0;
+  for (const item of [...items].sort((a, b) =>
+    a.root.rank - b.root.rank ||
+    Number(b.root.scope === "project") - Number(a.root.scope === "project") ||
+    compareText(a.root.key, b.root.key) ||
+    compareText(a.entry.name, b.entry.name),
+  )) {
+    if (!item.entry.loadable) continue;
+    const name = canonicalSkillName(item);
+    const group = groups.get(name) || [];
+    group.push(item);
+    groups.set(name, group);
+  }
+  return groups;
+}
+
+// 只跳过 manager 明确停用的副本；frontmatter 的分通道限制和非法策略仍按原规则失败关闭。
+function isCopyDisabled(item: SkillItem) {
+  return !item.policy.sourceEnabled || item.policy.override === false;
+}
+function selectSkillWinner<T extends SkillItem>(group: T[]): T {
+  return group.find((item) => !isCopyDisabled(item)) || group[0];
+}
+function markWinners(items: ViewItem[]) {
+  const winners = new Map<string, ViewItem>();
+  for (const [canonicalName, group] of groupLoadableSkillsByName(items)) {
+    const winner = selectSkillWinner(group);
+    winners.set(canonicalName, winner);
+    for (const item of group) {
+      delete item.view.winner;
+      delete item.view.shadowedBy;
+      delete item.view.fallbackTo;
+      delete item.view.enabled;
+      if (isCopyDisabled(item)) {
+        item.view.enabled = false;
+        if (item !== winner && (winner.policy.modelInvocable || winner.policy.userInvocable)) {
+          item.view.fallbackTo = { root: winner.root.key, name: winner.entry.name, scope: winner.root.scope || "user" };
+        }
+      } else if (item !== winner) {
+        item.view.shadowedBy = { root: winner.root.key, name: winner.entry.name };
+      }
+    }
+    if (!isCopyDisabled(winner)) winner.view.winner = true;
+    winner.view.enabled = winner.policy.enabled;
+    winner.view.canonicalName = canonicalName;
+  }
+  return winners;
+}
+
+/** DSH、常见 Agent 与活动 Session 项目根的技能快照。 */
+export async function state(options: ScopeOptions = {}) {
+  const policyResult = await readManagerState();
+  const allowed = (root: SkillRoot) => root.native || policyResult.state.sources[root.key] === true;
+  const user = userRoots();
+  const userScans = await scanDeduplicatedRoots(user.filter(allowed));
+  const projectWarnings: Diagnostic[] = [];
+  const scoped = await projectRoots(options.projectCwds, projectWarnings);
+  const trash = await listTrash();
+  const result = {
+    roots: [] as RootView[],
+    projects: [] as {root?: string; name?: string; workspaceCwds?: string[]}[],
+    summary: {total: 0, enabled: 0, disabled: 0, issues: 0},
+    trash,
+    warnings: [
+      ...(policyResult.warning ? [policyResult.warning] : []),
+      ...projectWarnings,
+    ],
+  };
+  const all: ViewItem[] = [];
+  for (const root of [...scoped, ...user]) {
+    const { exists, entries, truncated } =
+      !allowed(root)
+        ? { exists: await fs.stat(root.path).then(info => info.isDirectory(), () => false), entries: [] as SkillEntry[], truncated: false }
+        : root.scope === "project"
+          ? (await scanDeduplicatedRoots([root])).get(root.key)!
+          : userScans.get(root.key)!;
+    // 即使项目 .cortex/skills 尚不存在，也要把可写根返回给创建表单；只读项目根仍按实际存在性展示。
+    if (root.scope === "project" && !exists && root.kind !== "project-dsh")
+      continue;
+    if (truncated)
+      result.warnings.push({
+        code: "warning.scan.truncated",
+        params: { path: root.path },
+        error: `技能扫描达到遍历上限，部分技能未显示: ${root.path}`,
+      });
+    const skills: SkillView[] = [];
+    for (const e of entries) {
+      const policy = effectiveSkillPolicy(policyResult, root, e);
+      const managerEnabled =
+        policyResult.writable !== false &&
+        policy.sourceEnabled &&
+        policy.override !== false;
+      skills.push({
+        name: e.name,
+        declaredName: e.declaredName,
+        kind: e.kind,
+        description: e.description,
+        modelInvocable: e.modelInvocable,
+        userInvocable: e.userInvocable,
+        invocationPolicyValid: e.invocationPolicyValid,
+        hasFrontmatter: e.hasFrontmatter,
+        loadable: e.loadable,
+        managerEnabled,
+        managerOverride: policy.override === undefined ? null : policy.override,
+        effectiveModelInvocable: policy.modelInvocable,
+        effectiveUserInvocable: policy.userInvocable,
+        diagnostics: e.diagnostics,
+        path: e.docPath,
+      });
+      all.push({
+        root,
+        entry: e,
+        managerEnabled,
+        policy,
+        view: skills[skills.length - 1],
+      });
+    }
+    result.roots.push({
+      key: root.key,
+      ...(root.kind ? { kind: root.kind } : {}),
+      ...(root.localeKey ? { localeKey: root.localeKey } : {}),
+      path: root.path,
+      label: root.label,
+      mutable: root.mutable,
+      toggleable: root.toggleable,
+      native: root.native,
+      rank: root.rank,
+      scope: root.scope || "user",
+      ...(root.projectRoot
+        ? {
+            projectRoot: root.projectRoot,
+            projectName: root.projectName,
+            workspaceCwds: root.workspaceCwds,
+          }
+        : {}),
+      exists,
+      truncated: truncated === true,
+      enabled:
+        policyResult.writable !== false &&
+        (root.key === "dsh" ||
+          root.kind === "project-dsh" ||
+          (root.native ? policyResult.state.sources[root.key] !== false : policyResult.state.sources[root.key] === true)),
+      skills,
+    });
+  }
+  const userItems = all.filter((item) => item.root.scope !== "project");
+  markWinners(userItems);
+  const projectGroups = new Map<string | undefined, ViewItem[]>();
+  for (const item of all.filter(
+    (candidate) => candidate.root.scope === "project",
+  )) {
+    const group = projectGroups.get(item.root.projectRoot) || [];
+    group.push(item);
+    projectGroups.set(item.root.projectRoot, group);
+  }
+  for (const projectItems of projectGroups.values()) {
+    // 用户级条目参与该 workspace 的优先级判定，但不把其全局视图标记为“被某项目覆盖”。
+    const userCopies = userItems.map((item) => ({
+      ...item,
+      view: { ...item.view },
+    }));
+    markWinners([...projectItems, ...userCopies]);
+  }
+  const seenProjects = new Set();
+  for (const root of result.roots.filter((item) => item.scope === "project")) {
+    if (seenProjects.has(root.projectRoot)) continue;
+    seenProjects.add(root.projectRoot);
+    result.projects.push({
+      root: root.projectRoot,
+      name: root.projectName,
+      workspaceCwds: root.workspaceCwds,
+    });
+  }
+  // 保留既有 HTTP 摘要契约；页面可独立计算当前 Tab 的互斥状态统计。
+  result.summary = {
+    total: all.length,
+    enabled: all.filter((item) => item.view.enabled === true).length,
+    disabled: all.filter((item) => item.entry.loadable && item.policy.enabled === false).length,
+    issues: all.reduce((count, item) => count + item.entry.diagnostics.length + (item.view.shadowedBy ? 1 : 0), 0),
+  };
+  return result;
+}
+
+export { KEBAB_RE };
+
+export type ProviderCandidate = Awaited<ReturnType<typeof listProviderCandidates>>[number];
+
+type SourceAnalysis = ({kind: "none"} & Diagnostic) | ({kind: "single"; skillFile: string} & ImportCandidate) | {kind: "batch"; rawName: string; source: string; isDir: boolean};
+type MetadataEntry = DiscoveredEntry & {name: string; providerRank?: number; policyAliases?: {rootKey: string; name: string}[]};
+interface MetadataScan {exists: boolean; entries: MetadataEntry[]; truncated?: boolean}
+interface TrashMetadata { id: string; name: string; deletedAt: string; repository?: {id: string; path: string}; root?: {key: string; scope: string; label: string; localeKey?: string; projectRoot?: string; projectName?: string; kind?: string}; entries: string[] }

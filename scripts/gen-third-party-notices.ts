@@ -406,6 +406,21 @@ function collectNpmDeps(manifests: Map<string, Manifest>, names: Set<string>, br
 }
 
 /**
+ * Whether a `link:` range names a directory inside this repository (the
+ * built-in integrations under `integrations/`). Such code is first-party and
+ * carries its own license; a link leaving the repository stays external.
+ * @param manifestPath - repository-relative path of the declaring manifest.
+ * @param range - the declared dependency range.
+ * @returns true for an in-repository link.
+ */
+function isRepositoryLink(manifestPath: string, range: string): boolean {
+  if (!range.startsWith('link:')) return false
+  const target = resolve(root, dirname(manifestPath), range.slice('link:'.length))
+  const inside = target.slice(root.length + 1)
+  return target.startsWith(root) && inside !== '' && !inside.startsWith('..') && !/(^|[\\/])node_modules([\\/]|$)/.test(inside)
+}
+
+/**
  * Tier every external dependency the workspace declares.
  * @param manifests - workspace manifests keyed by repository-relative path.
  * @param names - every workspace package name, which never counts as external.
@@ -422,7 +437,7 @@ export function tierExternalDeps(
     const devOnly = DEV_ONLY_AREAS.some(area => (area.endsWith('/') ? path.startsWith(area) : path === area))
     for (const kind of ALL_KINDS) {
       for (const [dep, range] of Object.entries(manifest[kind] ?? {})) {
-        if (names.has(dep) || range.startsWith('workspace:')) continue
+        if (names.has(dep) || range.startsWith('workspace:') || isRepositoryLink(path, range)) continue
         const runtime = browser.has(dep) || !devOnly && (RUNTIME_KINDS as readonly string[]).includes(kind)
         tiers.set(dep, (tiers.get(dep) ?? false) || runtime)
       }

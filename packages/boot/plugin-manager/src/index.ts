@@ -73,6 +73,9 @@ const protectedModules = new Set([
   '@cortex/cordis-plugin-timer', '@cortex/client-connection',
   '@cortex/host-frontend-static', '@cortex/tools',
   '@cortex/hmr',
+  // Built-in features the web bundle ships; memory is paused from its Brain tab instead.
+  '@cortex/memos-local-memory/dist/adapters/deepseek-harness/index.js', '@cortex/memos-brain',
+  '@cortex/progress-board', '@michengai/dsh-skills-manager',
 ])
 
 /** The profile files an installation writes and a failed or cancelled one restores. */

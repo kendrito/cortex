@@ -1,0 +1,4 @@
+# Local Cortex bundle; the Plugins page controls whether this bundle is loaded.
+- insert:
+    - id: skills-manager
+      name: '@michengai/dsh-skills-manager'
